@@ -1,0 +1,9 @@
+{
+    "name": "@raskha/core",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "dependencies": {
+        "firebase": "^12.19.0"
+    }
+}

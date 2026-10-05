@@ -1,0 +1,24 @@
+{
+    "name": "raskha-ai-solution",
+    "private": true,
+    "workspaces": [
+        "core",
+        "modules/*",
+        "shared",
+        "Panels/*/frontend",
+        "Panels/*/backend",
+        "Panels/Employee Panel/Employee Web/frontend",
+        "Panels/Employee Panel/Employee Web/backend",
+        "Panels/Employee Panel/Employee App/frontend"
+    ],
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/node": "^26.6.4",
+        "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "dotenv": "^18.0.5",
+        "express": "^5.2.1",
+        "firebase": "^12.19.0"
+    }
+}

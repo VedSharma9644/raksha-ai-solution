@@ -1,0 +1,11 @@
+{
+    "name": "@raskha/hr-backend",
+    "version": "1.0.0",
+    "private": true,
+    "main": "src/index.js",
+    "dependencies": {
+      "@raskha/core": "1.0.0",
+      "@raskha/shared": "1.0.0",
+      "@raskha/attendance": "1.0.0"
+    }
+  }

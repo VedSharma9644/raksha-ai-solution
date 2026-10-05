@@ -1,0 +1,55 @@
+We are building Raskha AI Solution.
+
+Follow the existing architecture in `Docs/ARCHITECTURE_RULES.md`.
+
+For this task ONLY, create the foundation for the Feature system.
+
+Requirements:
+
+1. Create the Feature model inside `Core`.
+2. A Feature represents a capability of Raskha, for example:
+
+   * employee_management
+   * attendance
+   * payroll
+3. The model should contain only the basic fields we currently need:
+
+   * id
+   * name
+   * description
+   * status
+   * dependencies
+   * createdAt
+   * updatedAt
+4. `status` should support active/inactive.
+5. `dependencies` should contain Feature IDs.
+6. Keep the implementation compatible with our current Firebase/Firestore architecture.
+7. Follow the existing TypeScript conventions.
+8. Keep this implementation small and simple.
+
+IMPORTANT:
+
+Do NOT create:
+
+* Plans
+* Subscriptions
+* Licenses
+* Access system
+* Permissions
+* APIs
+* Frontend UI
+* Admin UI
+* New Firebase initialization
+* New database
+* New framework
+* Unrelated files
+
+Do NOT modify existing Firebase initialization or authentication code.
+
+After making the changes, show me:
+
+1. Files created/changed.
+2. The final code of those files.
+3. The command I should run to test/build this step.
+
+Do not implement anything beyond this task.
