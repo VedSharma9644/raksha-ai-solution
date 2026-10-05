@@ -1,0 +1,125 @@
+.leave-management-screen {
+  animation: hr-screen-enter 360ms ease both;
+}
+
+.leave-management-screen__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.leave-management-screen__list {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.leave-management-screen__empty {
+  margin: 0;
+  padding: var(--space-xl);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: center;
+  color: var(--color-on-surface-variant);
+}
+
+.leave-request-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.leave-request-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.leave-request-card__name {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
+}
+
+.leave-request-card__meta {
+  margin-top: 0.2rem;
+  font-size: var(--font-size-small);
+  color: var(--color-secondary);
+}
+
+.leave-request-card__status {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.leave-request-card__status--pending {
+  background: #ffedd5;
+  color: #b45309;
+}
+
+.leave-request-card__status--approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.leave-request-card__status--rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.leave-request-card__dates {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-deep);
+}
+
+.leave-request-card__reason {
+  color: var(--color-on-surface-variant);
+}
+
+.leave-request-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+@keyframes hr-screen-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .leave-management-screen__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .leave-request-card__actions {
+    flex-direction: column-reverse;
+  }
+
+  .leave-request-card__actions .button {
+    width: 100%;
+  }
+}

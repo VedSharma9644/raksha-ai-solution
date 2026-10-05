@@ -1,0 +1,90 @@
+.super-admin-dashboard {
+  min-height: 100svh;
+  padding: var(--space-lg);
+  background:
+    radial-gradient(ellipse 70% 40% at 0% 0%, rgba(30, 94, 99, 0.12), transparent 55%),
+    linear-gradient(180deg, #eef5f6 0%, var(--color-background) 35%);
+}
+
+.super-admin-dashboard__header,
+.super-admin-dashboard__intro,
+.super-admin-dashboard__metrics,
+.super-admin-dashboard__chart,
+.super-admin-dashboard__actions {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.super-admin-dashboard__header {
+  margin-bottom: var(--space-xl);
+}
+
+.super-admin-dashboard__brand-name {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--color-primary-deep);
+}
+
+.super-admin-dashboard__brand-panel {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+}
+
+.super-admin-dashboard__intro {
+  margin-bottom: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.super-admin-dashboard__headline {
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.super-admin-dashboard__support {
+  max-width: 48ch;
+  color: var(--color-on-surface-variant);
+}
+
+.super-admin-dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.super-admin-dashboard__chart {
+  margin-bottom: var(--space-xl);
+}
+
+.super-admin-dashboard__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  gap: var(--space-md);
+  animation: super-admin-enter 420ms ease both;
+}
+
+@keyframes super-admin-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .super-admin-dashboard {
+    padding: var(--space-md);
+  }
+}

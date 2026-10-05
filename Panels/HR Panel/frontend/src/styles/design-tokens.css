@@ -1,0 +1,70 @@
+:root {
+  /* Brand colors — Raksha design system */
+  --color-primary: #1e5e63;
+  --color-primary-dark: #164e52;
+  --color-primary-deep: #00464a;
+  --color-on-primary: #ffffff;
+
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #3f4849;
+  --color-secondary: #595f68;
+
+  --color-border: #cbd5e1;
+  --color-border-strong: #e2e8f0;
+  --color-focus: #1e5e63;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-success: #15803d;
+
+  /* Typography */
+  --font-family: "Public Sans", "Segoe UI", sans-serif;
+
+  --font-size-display: 2.25rem;
+  --font-size-headline: 1.75rem;
+  --font-size-title: 1.25rem;
+  --font-size-body: 1.0625rem;
+  --font-size-label: 0.9375rem;
+  --font-size-small: 0.875rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.2;
+  --line-height-body: 1.45;
+
+  /* Spacing */
+  --space-xs: 0.375rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.25rem;
+  --space-2xl: 3rem;
+
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Elevation */
+  --shadow-surface: 0 2px 4px rgba(18, 24, 32, 0.06);
+  --shadow-raised: 0 4px 12px rgba(18, 24, 32, 0.12);
+
+  /* Motion */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+
+  /* Layout */
+  --login-form-max-width: 26rem;
+  --dashboard-max-width: 72rem;
+  --touch-target-min: 3.5rem;
+}

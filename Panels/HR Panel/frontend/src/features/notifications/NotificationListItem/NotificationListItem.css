@@ -1,0 +1,71 @@
+.notification-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  padding: var(--space-md);
+  border: none;
+  border-bottom: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.notification-list-item:last-child {
+  border-bottom: none;
+}
+
+.notification-list-item:hover {
+  background: #f4fbfb;
+}
+
+.notification-list-item--unread {
+  background: rgba(30, 94, 99, 0.05);
+}
+
+.notification-list-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+}
+
+.notification-list-item__kind {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--color-surface-muted);
+}
+
+.notification-list-item__kind--upcoming_leave,
+.notification-list-item__kind--leave_request {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.notification-list-item__kind--inventory_alert {
+  background: #ffedd5;
+  color: #b45309;
+}
+
+.notification-list-item__kind--guard_update {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.notification-list-item__title {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
+}
+
+.notification-list-item__message {
+  font-size: var(--font-size-small);
+  color: var(--color-on-surface-variant);
+}

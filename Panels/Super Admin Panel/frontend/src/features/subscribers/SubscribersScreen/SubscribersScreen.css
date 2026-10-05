@@ -1,0 +1,98 @@
+.subscribers-screen {
+  animation: sa-enter 360ms ease both;
+}
+
+.subscribers-screen__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.subscribers-screen__table-wrap {
+  overflow-x: auto;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.subscribers-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 52rem;
+}
+
+.subscribers-table th,
+.subscribers-table td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.subscribers-table th {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  background: #f8fbfb;
+}
+
+.subscribers-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.subscribers-table__empty {
+  text-align: center !important;
+  color: var(--color-on-surface-variant);
+  padding: var(--space-xl) !important;
+}
+
+.subscribers-table__status {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.subscribers-table__status--active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.subscribers-table__status--trial {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.subscribers-table__status--expired,
+.subscribers-table__status--cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@keyframes sa-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .subscribers-screen__filters {
+    grid-template-columns: 1fr;
+  }
+}
