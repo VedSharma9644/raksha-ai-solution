@@ -1,6 +1,7 @@
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
+import type { StaffMemberFormProps } from "../StaffMemberForm";
 import { StaffMemberForm } from "../StaffMemberForm";
 import "./AddStaffMemberScreen.css";
 
@@ -24,6 +25,7 @@ const SCREEN_COPY: Record<
 
 export interface AddStaffMemberScreenProps {
   role: StaffRole;
+  initialValues?: StaffMemberFormValues;
   isSubmitting?: boolean;
   onBack: () => void;
   onCancel: () => void;
@@ -32,6 +34,7 @@ export interface AddStaffMemberScreenProps {
 
 export function AddStaffMemberScreen({
   role,
+  initialValues,
   isSubmitting,
   onBack,
   onCancel,
@@ -50,6 +53,7 @@ export function AddStaffMemberScreen({
         />
         <StaffMemberForm
           role={role}
+          initialValues={initialValues}
           isSubmitting={isSubmitting}
           onCancel={onCancel}
           onSubmit={onSubmit}

@@ -35,6 +35,7 @@ const ROLE_COPY: Record<
 
 export interface StaffMemberFormProps {
   role: StaffRole;
+  initialValues?: StaffMemberFormValues;
   isSubmitting?: boolean;
   onSubmit: (values: StaffMemberFormValues) => void | Promise<void>;
   onCancel: () => void;
@@ -42,12 +43,13 @@ export interface StaffMemberFormProps {
 
 export function StaffMemberForm({
   role,
+  initialValues,
   isSubmitting = false,
   onSubmit,
   onCancel,
 }: StaffMemberFormProps) {
   const [values, setValues] = useState<StaffMemberFormValues>(
-    EMPTY_STAFF_MEMBER_FORM,
+    initialValues ?? EMPTY_STAFF_MEMBER_FORM,
   );
   const [errors, setErrors] = useState<Partial<StaffMemberFormValues>>({});
   const roleCopy = ROLE_COPY[role];

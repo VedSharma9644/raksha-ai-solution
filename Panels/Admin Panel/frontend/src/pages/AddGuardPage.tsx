@@ -1,22 +1,15 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
-import type { StaffMemberFormValues } from "../features/staff";
 import { AddStaffMemberScreen } from "../features/staff";
+import type { StaffMemberFormValues } from "../features/staff";
+import { useAddGuard } from "../features/guards";
 
 export function AddGuardPage() {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { saveGuard, isSubmitting, error } = useAddGuard();
 
   async function handleSubmit(values: StaffMemberFormValues) {
-    setIsSubmitting(true);
-
-    try {
-      console.info("Guard saved", values);
-      navigate(APP_ROUTES.dashboard);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await saveGuard(values);
   }
 
   function goBack() {
@@ -24,12 +17,19 @@ export function AddGuardPage() {
   }
 
   return (
-    <AddStaffMemberScreen
-      role="guard"
-      isSubmitting={isSubmitting}
-      onBack={goBack}
-      onCancel={goBack}
-      onSubmit={handleSubmit}
-    />
+    <>
+      {error ? (
+        <p role="alert" style={{ color: "red", padding: "1rem" }}>
+          {error}
+        </p>
+      ) : null}
+      <AddStaffMemberScreen
+        role="guard"
+        isSubmitting={isSubmitting}
+        onBack={goBack}
+        onCancel={goBack}
+        onSubmit={handleSubmit}
+      />
+    </>
   );
 }

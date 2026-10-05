@@ -8,3 +8,5 @@ export {
 } from "./staffFormTypes";
 export { StaffMemberForm } from "./StaffMemberForm";
 export { AddStaffMemberScreen } from "./AddStaffMemberScreen";
+export { EditStaffMemberScreen } from "./EditStaffMemberScreen";
+export type { EditStaffMemberScreenProps } from "./EditStaffMemberScreen";

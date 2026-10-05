@@ -1,0 +1,21 @@
+{
+  "name": "@raskha/admin-backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "seed": "tsx src/scripts/seedAgency.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@raskha/core": "1.0.0",
+    "@raskha/guard-management": "1.0.0",
+    "@raskha/shared": "1.0.0",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
