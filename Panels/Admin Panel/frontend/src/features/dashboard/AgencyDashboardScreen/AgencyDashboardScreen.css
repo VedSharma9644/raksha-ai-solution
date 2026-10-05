@@ -1,0 +1,95 @@
+.agency-dashboard {
+  min-height: 100svh;
+  padding: var(--space-lg);
+  background:
+    radial-gradient(
+      ellipse 70% 40% at 0% 0%,
+      rgba(30, 94, 99, 0.1),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #eef5f6 0%, var(--color-background) 35%);
+}
+
+.agency-dashboard__header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  max-width: 72rem;
+  margin: 0 auto var(--space-xl);
+}
+
+.agency-dashboard__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.agency-dashboard__brand-name {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.03em;
+  color: var(--color-primary-deep);
+}
+
+.agency-dashboard__brand-panel {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+}
+
+.agency-dashboard__intro {
+  max-width: 72rem;
+  margin: 0 auto var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.agency-dashboard__headline {
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--color-on-surface);
+}
+
+.agency-dashboard__support {
+  max-width: 42ch;
+  color: var(--color-on-surface-variant);
+}
+
+.agency-dashboard__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  gap: var(--space-md);
+  max-width: 72rem;
+  margin: 0 auto;
+  animation: agency-dashboard-enter 420ms ease both;
+}
+
+@keyframes agency-dashboard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .agency-dashboard {
+    padding: var(--space-md);
+  }
+
+  .agency-dashboard__header {
+    flex-wrap: wrap;
+  }
+}

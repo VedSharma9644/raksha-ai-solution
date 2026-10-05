@@ -1,0 +1,15 @@
+.add-staff-member-screen {
+  animation: add-staff-enter 360ms ease both;
+}
+
+@keyframes add-staff-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,65 @@
+import { ActionCard } from "../../../components/ActionCard";
+import { NotificationMenu } from "../../notifications";
+import type { AgencyNotification } from "../../notifications";
+import type { DashboardActionId } from "../dashboardActions";
+import { DASHBOARD_ACTIONS } from "../dashboardActions";
+import "./AgencyDashboardScreen.css";
+
+export interface AgencyDashboardScreenProps {
+  notifications: AgencyNotification[];
+  onSelectNotification: (notificationId: string) => void;
+  onMarkAllNotificationsRead?: () => void;
+  onActionClick: (actionId: DashboardActionId) => void;
+}
+
+export function AgencyDashboardScreen({
+  notifications,
+  onSelectNotification,
+  onMarkAllNotificationsRead,
+  onActionClick,
+}: AgencyDashboardScreenProps) {
+  return (
+    <main className="agency-dashboard">
+      <header className="agency-dashboard__header">
+        <div className="agency-dashboard__brand">
+          <p className="agency-dashboard__brand-name">Raskha</p>
+          <p className="agency-dashboard__brand-panel">Agency Dashboard</p>
+        </div>
+
+        <NotificationMenu
+          notifications={notifications}
+          onSelectNotification={onSelectNotification}
+          onMarkAllRead={onMarkAllNotificationsRead}
+        />
+      </header>
+
+      <section
+        className="agency-dashboard__intro"
+        aria-labelledby="dashboard-heading"
+      >
+        <h1 id="dashboard-heading" className="agency-dashboard__headline">
+          Operations hub
+        </h1>
+        <p className="agency-dashboard__support">
+          Jump into the tasks you use most. More modules can plug into this
+          board as the agency grows.
+        </p>
+      </section>
+
+      <section
+        className="agency-dashboard__actions"
+        aria-label="Agency quick actions"
+      >
+        {DASHBOARD_ACTIONS.map((action) => (
+          <ActionCard
+            key={action.id}
+            title={action.title}
+            description={action.description}
+            icon={action.iconLabel}
+            onClick={() => onActionClick(action.id)}
+          />
+        ))}
+      </section>
+    </main>
+  );
+}
