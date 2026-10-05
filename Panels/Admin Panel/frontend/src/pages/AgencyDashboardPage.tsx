@@ -7,13 +7,13 @@ import type { AgencyNotification } from "../features/notifications";
 import { SAMPLE_AGENCY_NOTIFICATIONS } from "../features/notifications";
 
 const DASHBOARD_ACTION_ROUTES: Partial<
-  Record<DashboardActionId, (typeof APP_ROUTES)[keyof typeof APP_ROUTES]>
+  Record<DashboardActionId, string>
 > = {
   "add-guard": APP_ROUTES.addGuard,
   "add-site": APP_ROUTES.addSite,
   "employee-guard-list": APP_ROUTES.employeeList,
-  "add-supervisor": APP_ROUTES.addSupervisor,
-  "add-hr": APP_ROUTES.addHr,
+  "add-hr": APP_ROUTES.addHrStaff,
+  "hr-list": APP_ROUTES.hrList,
 };
 
 export function AgencyDashboardPage() {

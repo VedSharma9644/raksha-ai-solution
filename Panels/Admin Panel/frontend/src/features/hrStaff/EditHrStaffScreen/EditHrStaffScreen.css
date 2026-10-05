@@ -1,0 +1,8 @@
+.edit-hr-staff-screen {
+  animation: edit-hr-staff-enter 360ms ease both;
+}
+
+@keyframes edit-hr-staff-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -18,6 +18,8 @@ export default defineConfig({
       "@raskha/core": path.resolve(projectRoot, "../../../core/index.ts"),
       // Resolve @raskha/guard-management from TypeScript source
       "@raskha/guard-management": path.resolve(projectRoot, "../../../modules/Guard Management/index.ts"),
+      // Resolve @raskha/hr-management from TypeScript source
+      "@raskha/hr-management": path.resolve(projectRoot, "../../../modules/HR Management/index.ts"),
     },
   },
 });

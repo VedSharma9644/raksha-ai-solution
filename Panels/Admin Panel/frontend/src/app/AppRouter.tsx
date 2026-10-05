@@ -3,12 +3,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { EditGuardPage } from "../pages/EditGuardPage";
-import { AddHrPage } from "../pages/AddHrPage";
 import { AddSitePage } from "../pages/AddSitePage";
-import { AddSupervisorPage } from "../pages/AddSupervisorPage";
 import { AgencyDashboardPage } from "../pages/AgencyDashboardPage";
 import { EmployeeListPage } from "../pages/EmployeeListPage";
 import { LoginPage } from "../pages/LoginPage";
+import { AddHrStaffPage } from "../pages/AddHrStaffPage";
+import { EditHrStaffPage } from "../pages/EditHrStaffPage";
+import { HrStaffListPage } from "../pages/HrStaffListPage";
 import { APP_ROUTES } from "./routePaths";
 
 // Redirects to login if not authenticated
@@ -95,19 +96,28 @@ export function AppRouter() {
           </ProtectedRoute>
         }
       />
+      {/* HR Staff routes */}
       <Route
-        path={APP_ROUTES.addSupervisor}
+        path={APP_ROUTES.addHrStaff}
         element={
           <ProtectedRoute>
-            <AddSupervisorPage />
+            <AddHrStaffPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={APP_ROUTES.addHr}
+        path={APP_ROUTES.editHrStaff}
         element={
           <ProtectedRoute>
-            <AddHrPage />
+            <EditHrStaffPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.hrList}
+        element={
+          <ProtectedRoute>
+            <HrStaffListPage />
           </ProtectedRoute>
         }
       />

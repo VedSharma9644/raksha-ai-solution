@@ -3,8 +3,8 @@ export type DashboardActionId =
   | "add-site"
   | "manage-inventory"
   | "employee-guard-list"
-  | "add-supervisor"
-  | "add-hr";
+  | "add-hr"
+  | "hr-list";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -39,15 +39,15 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     iconLabel: "L",
   },
   {
-    id: "add-supervisor",
-    title: "Add Supervisor",
-    description: "Onboard a supervisor to oversee sites and shifts.",
-    iconLabel: "V",
-  },
-  {
     id: "add-hr",
     title: "Add HR",
     description: "Add an HR user to manage leave, payroll, and records.",
     iconLabel: "H",
+  },
+  {
+    id: "hr-list",
+    title: "HR List",
+    description: "View and manage all HR users in your agency.",
+    iconLabel: "R",
   },
 ];
