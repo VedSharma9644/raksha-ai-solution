@@ -7,6 +7,7 @@ export interface LoginScreenProps {
   onForgotPassword: () => void;
   isSubmitting?: boolean;
   formError?: string;
+  statusMessage?: string;
 }
 
 export function LoginScreen({
@@ -14,6 +15,7 @@ export function LoginScreen({
   onForgotPassword,
   isSubmitting,
   formError,
+  statusMessage,
 }: LoginScreenProps) {
   return (
     <main className="login-screen">
@@ -40,6 +42,7 @@ export function LoginScreen({
           onForgotPassword={onForgotPassword}
           isSubmitting={isSubmitting}
           formError={formError}
+          statusMessage={statusMessage}
         />
       </section>
     </main>

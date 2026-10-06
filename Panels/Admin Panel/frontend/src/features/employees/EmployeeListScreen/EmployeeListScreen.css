@@ -54,7 +54,7 @@
 }
 
 .employee-list-table__row--clickable:hover {
-  background: #f4fbfb;
+  background: var(--color-hover-tint);
 }
 
 .employee-list-table__empty {

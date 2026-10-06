@@ -15,6 +15,7 @@ export interface LoginFormProps {
   onForgotPassword: () => void;
   isSubmitting?: boolean;
   formError?: string;
+  statusMessage?: string;
 }
 
 export function LoginForm({
@@ -22,6 +23,7 @@ export function LoginForm({
   onForgotPassword,
   isSubmitting = false,
   formError,
+  statusMessage,
 }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,6 +113,12 @@ export function LoginForm({
       {formError ? (
         <p className="login-form__error" role="alert">
           {formError}
+        </p>
+      ) : null}
+
+      {statusMessage && !formError ? (
+        <p className="login-form__status" role="status" aria-live="polite">
+          {statusMessage}
         </p>
       ) : null}
 

@@ -6,8 +6,9 @@ import {
 import type { Auth, UserCredential } from "firebase/auth";
 import {
   doc,
-  setDoc,
   getDoc,
+  getDocFromServer,
+  setDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
@@ -81,10 +82,13 @@ export async function signInAgency(
 
 export async function getAgencyById(
   db: Firestore,
-  agencyId: string
+  agencyId: string,
+  options?: { fromServer?: boolean }
 ): Promise<Agency | null> {
   const ref = doc(db, AGENCIES_COLLECTION, agencyId);
-  const snapshot = await getDoc(ref);
+  const snapshot = options?.fromServer
+    ? await getDocFromServer(ref)
+    : await getDoc(ref);
 
   if (!snapshot.exists()) {
     return null;
@@ -114,8 +118,8 @@ export async function loginAgency(
   const credential = await signInWithEmailAndPassword(auth, email, password);
   const uid = credential.user.uid;
 
-  // Step 2: Verify agency exists in Firestore
-  const agency = await getAgencyById(db, uid);
+  // Step 2: Verify agency exists in Firestore (server read — avoid stale cache)
+  const agency = await getAgencyById(db, uid, { fromServer: true });
 
   if (!agency) {
     await signOut(auth);

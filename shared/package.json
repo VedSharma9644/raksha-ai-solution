@@ -1,6 +1,7 @@
 {
-    "name": "@raskha/shared",
-    "version": "1.0.0",
-    "private": true,
-    "main": "index.js"
-  }
+  "name": "@raskha/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts"
+}

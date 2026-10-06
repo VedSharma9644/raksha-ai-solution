@@ -18,15 +18,15 @@
 }
 
 .notification-list-item:hover {
-  background: #f4fbfb;
+  background: var(--color-hover-tint);
 }
 
 .notification-list-item--unread {
-  background: rgba(30, 94, 99, 0.05);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
 .notification-list-item--unread:hover {
-  background: rgba(30, 94, 99, 0.09);
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
 }
 
 .notification-list-item__meta {

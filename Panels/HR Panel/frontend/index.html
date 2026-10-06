@@ -11,6 +11,40 @@
       rel="stylesheet"
     />
     <title>Raskha HR Panel</title>
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem("raskha.uiTheme") || "system";
+          var dark =
+            pref === "dark" ||
+            (pref === "system" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+
+          var raw = localStorage.getItem("raskha.uiAppearance");
+          if (raw) {
+            var appearance = JSON.parse(raw);
+            if (appearance && appearance.primary) {
+              document.documentElement.style.setProperty(
+                "--color-primary",
+                appearance.primary
+              );
+              document.documentElement.style.setProperty(
+                "--color-focus",
+                appearance.primary
+              );
+            }
+            if (appearance && appearance.secondary) {
+              document.documentElement.style.setProperty(
+                "--color-secondary",
+                appearance.secondary
+              );
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

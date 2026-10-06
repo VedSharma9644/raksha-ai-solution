@@ -14,6 +14,8 @@ export interface Agency {
   logo: string;
   ownerName: string;
   status: AgencyStatus;
+  /** Last successful Super Admin (Raksha) login verification. Used for downtime grace. */
+  lastRakshaVerifiedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

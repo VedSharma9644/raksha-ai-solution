@@ -53,7 +53,7 @@
 }
 
 .guard-list-table__row--clickable:hover {
-  background: #f4fbfb;
+  background: var(--color-hover-tint);
 }
 
 .guard-list-table__empty {

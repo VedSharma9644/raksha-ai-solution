@@ -74,7 +74,7 @@
 }
 
 .button--ghost:hover:not(:disabled) {
-  background: rgba(30, 94, 99, 0.08);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .button--link {

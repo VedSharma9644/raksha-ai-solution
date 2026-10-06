@@ -11,7 +11,8 @@ import {
   where,
   serverTimestamp,
 } from "firebase/firestore";
-import { Site, SiteStatus, SiteType, SITES_COLLECTION } from "./site";
+import { SITES_COLLECTION } from "./site";
+import type { Site, SiteStatus, SiteType } from "./site";
 
 export interface AddSiteParams {
   agencyId: string;

@@ -26,3 +26,13 @@
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
 }
+
+.login-form__status {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-deep);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+}

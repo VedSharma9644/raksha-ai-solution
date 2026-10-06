@@ -1,5 +1,6 @@
 import { ActionCard } from "../../../components/ActionCard";
 import { NotificationMenu } from "../../notifications";
+import { ProfileMenu } from "../../profile";
 import type { HrNotification } from "../../notifications";
 import type { HrDashboardActionId } from "../dashboardActions";
 import { HR_DASHBOARD_ACTIONS } from "../dashboardActions";
@@ -26,11 +27,14 @@ export function HrDashboardScreen({
           <p className="hr-dashboard__brand-panel">HR Dashboard</p>
         </div>
 
-        <NotificationMenu
-          notifications={notifications}
-          onSelectNotification={onSelectNotification}
-          onMarkAllRead={onMarkAllNotificationsRead}
-        />
+        <div className="hr-dashboard__toolbar">
+          <NotificationMenu
+            notifications={notifications}
+            onSelectNotification={onSelectNotification}
+            onMarkAllRead={onMarkAllNotificationsRead}
+          />
+          <ProfileMenu />
+        </div>
       </header>
 
       <section className="hr-dashboard__intro" aria-labelledby="hr-heading">

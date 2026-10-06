@@ -13,5 +13,4 @@ node_modules
 Panels/*/frontend
 Panels/Employee Panel
 Panels/Guard Web
-Panels/Super Admin Panel
 package-lock.json

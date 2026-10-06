@@ -2,7 +2,7 @@ import { LoginScreen } from "../features/authentication";
 import { useLogin } from "../features/authentication";
 
 export function LoginPage() {
-  const { login, isSubmitting, formError } = useLogin();
+  const { login, isSubmitting, formError, statusMessage } = useLogin();
 
   async function handleLogin(credentials: { email: string; password: string }) {
     await login(credentials.email, credentials.password);
@@ -19,6 +19,7 @@ export function LoginPage() {
       onForgotPassword={handleForgotPassword}
       isSubmitting={isSubmitting}
       formError={formError}
+      statusMessage={statusMessage}
     />
   );
 }

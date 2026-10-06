@@ -5,9 +5,9 @@ import {
   Timestamp,
 } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
-import type { SuperAdminRequest } from "../middleware/requireSuperAdmin";
-import { generateOtp, hashOtp, otpsMatch } from "../services/otp";
-import { deliverOtp } from "../services/notify";
+import type { SuperAdminRequest } from "../middleware/requireSuperAdmin.js";
+import { generateOtp, hashOtp, otpsMatch } from "../services/otp.js";
+import { deliverOtp } from "../services/notify.js";
 
 /** Super Admin owns agency lifecycle ops; collection name mirrors Firestore. */
 const AGENCIES_COLLECTION = "agencies";

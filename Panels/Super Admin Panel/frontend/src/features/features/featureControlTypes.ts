@@ -8,6 +8,12 @@ export interface PlatformFeature {
 
 export const PLATFORM_FEATURES: PlatformFeature[] = [
   {
+    id: "form_builder",
+    name: "Form Builder",
+    description: "Custom intake and onboarding forms for guards and sites.",
+    dependencies: [],
+  },
+  {
     id: "employee_management",
     name: "Employee Management",
     description: "Guard and staff profiles, roster basics.",

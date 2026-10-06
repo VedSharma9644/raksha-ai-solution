@@ -50,6 +50,21 @@ a {
   outline-offset: 2px;
 }
 
+/* Hide Google Website Translator chrome; we drive language from Profile → Language */
+#google_translate_element,
+.goog-te-banner-frame,
+.skiptranslate {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+iframe.goog-te-banner-frame {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

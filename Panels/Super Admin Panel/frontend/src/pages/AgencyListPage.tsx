@@ -4,14 +4,18 @@ import {
   AgencyListScreen,
   useAgencyList,
   useDeleteAgency,
-  useFormBuilderManager,
 } from "../features/agencies";
 
 export function AgencyListPage() {
   const navigate = useNavigate();
-  const { agencies, isLoading, error, reload } = useAgencyList();
-  const { isEnabled, toggleFormBuilder, isLoading: fbLoading } =
-    useFormBuilderManager();
+  const {
+    agencies,
+    isLoading,
+    error,
+    reload,
+    setAgencyActive,
+    statusUpdatingId,
+  } = useAgencyList();
   const deleteAgency = useDeleteAgency();
 
   return (
@@ -23,14 +27,12 @@ export function AgencyListPage() {
       onEditAgency={(agencyId) =>
         navigate(APP_ROUTES.editAgency.replace(":agencyId", agencyId))
       }
-      onSelectAgency={(agencyId) => {
-        navigate(APP_ROUTES.featureControl);
-        console.info("Agency selected", agencyId);
-      }}
+      onOpenModules={(agencyId) =>
+        navigate(APP_ROUTES.agencyModules.replace(":agencyId", agencyId))
+      }
       onRequestDelete={deleteAgency.requestDelete}
-      formBuilderStatus={isEnabled}
-      onToggleFormBuilder={toggleFormBuilder}
-      isFormBuilderLoading={fbLoading}
+      onToggleAgencyActive={setAgencyActive}
+      statusUpdatingId={statusUpdatingId}
       deletePendingAgencyId={deleteAgency.pendingAgencyId}
       deleteNotified={deleteAgency.notified}
       deleteDebugOtp={deleteAgency.debugOtp}

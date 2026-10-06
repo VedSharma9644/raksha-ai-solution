@@ -11,7 +11,7 @@ import {
 export function FeatureControlPage() {
   const navigate = useNavigate();
   const [configs, setConfigs] = useState<AgencyFeatureConfig[]>(
-    SAMPLE_AGENCY_FEATURE_CONFIGS,
+    SAMPLE_AGENCY_FEATURE_CONFIGS
   );
 
   function handleSave(agencyId: string, enabledFeatureIds: string[]) {
@@ -19,16 +19,19 @@ export function FeatureControlPage() {
       current.map((config) =>
         config.agencyId === agencyId
           ? { ...config, enabledFeatureIds }
-          : config,
-      ),
+          : config
+      )
     );
-    console.info("Feature access saved", { agencyId, enabledFeatureIds });
+    console.info("Module access saved", { agencyId, enabledFeatureIds });
   }
 
   return (
     <FeatureControlScreen
       agencies={configs}
       features={PLATFORM_FEATURES}
+      title="Modules"
+      subtitle="Turn modules on or off for each agency. Dependencies stay enforced."
+      backLabel="Back to dashboard"
       onBack={() => navigate(APP_ROUTES.dashboard)}
       onSave={handleSave}
     />

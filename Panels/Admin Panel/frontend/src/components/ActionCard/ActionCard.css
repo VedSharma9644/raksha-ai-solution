@@ -22,7 +22,7 @@
 
 .action-card:hover {
   border-color: var(--color-primary);
-  background: #f4fbfb;
+  background: var(--color-hover-tint);
   box-shadow: var(--shadow-raised);
 }
 
@@ -37,7 +37,7 @@
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md);
-  background: rgba(30, 94, 99, 0.1);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
   font-size: 1.35rem;
   font-weight: var(--font-weight-bold);

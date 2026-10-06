@@ -3,6 +3,7 @@ export const APP_ROUTES = {
   dashboard: "/dashboard",
   addAgency: "/agencies/add",
   editAgency: "/agencies/:agencyId/edit",
+  agencyModules: "/agencies/:agencyId/modules",
   agencyList: "/agencies",
   featureControl: "/features",
   subscribers: "/subscribers",

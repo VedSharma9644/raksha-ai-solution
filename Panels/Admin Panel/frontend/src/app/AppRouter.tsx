@@ -29,15 +29,15 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// Redirects to dashboard if already logged in
+// Redirects to dashboard if already logged in (not mid login+verify)
 function GuestRoute({ children }: { children: ReactNode }) {
-  const { agency, isLoading } = useAuthContext();
+  const { agency, isLoading, isLoginPending } = useAuthContext();
 
   if (isLoading) {
     return null;
   }
 
-  if (agency) {
+  if (agency && !isLoginPending) {
     return <Navigate to={APP_ROUTES.dashboard} replace />;
   }
 

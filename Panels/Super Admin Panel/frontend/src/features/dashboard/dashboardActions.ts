@@ -27,9 +27,9 @@ export const SUPER_ADMIN_DASHBOARD_ACTIONS: SuperAdminDashboardAction[] = [
   },
   {
     id: "feature-control",
-    title: "Feature Control",
+    title: "Modules",
     description: "Enable or disable modules for each agency.",
-    iconLabel: "F",
+    iconLabel: "M",
   },
   {
     id: "subscribers",

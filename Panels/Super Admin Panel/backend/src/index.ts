@@ -3,9 +3,10 @@ import { resolve } from "node:path";
 import { config } from "dotenv";
 import { initializeApp as initializeAdminApp, cert, getApps } from "firebase-admin/app";
 import express from "express";
-import { isAllowedCorsOrigin } from "./cors";
-import { requireSuperAdmin } from "./middleware/requireSuperAdmin";
-import { createAgencyRoutes } from "./routes/agencyRoutes";
+import { isAllowedCorsOrigin } from "./cors.js";
+import { requireSuperAdmin } from "./middleware/requireSuperAdmin.js";
+import { createAgencyRoutes } from "./routes/agencyRoutes.js";
+import { verifyAgencyLogin } from "./routes/verifyLogin.js";
 
 const rootEnv = resolve(process.cwd(), "../../../.env");
 if (existsSync(rootEnv)) {
@@ -73,6 +74,9 @@ app.get("/health", (_req, res) => {
     adminSdk: true,
   });
 });
+
+/** Public to signed-in agencies (Firebase Bearer). Must stay above requireSuperAdmin. */
+app.post("/api/agencies/verify-login", verifyAgencyLogin);
 
 app.use("/api/agencies", requireSuperAdmin, createAgencyRoutes());
 

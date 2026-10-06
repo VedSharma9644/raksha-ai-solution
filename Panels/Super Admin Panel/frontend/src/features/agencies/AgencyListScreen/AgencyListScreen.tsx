@@ -8,23 +8,16 @@ import { ToggleSwitch } from "../../../components/ToggleSwitch";
 import type { AgencyListItem } from "../agencyTypes";
 import "./AgencyListScreen.css";
 
-const STATUS_LABELS = {
-  active: "Active",
-  trial: "Trial",
-  suspended: "Suspended",
-} as const;
-
 export interface AgencyListScreenProps {
   agencies: AgencyListItem[];
   isLoading?: boolean;
   listError?: string;
   onBack: () => void;
   onEditAgency?: (agencyId: string) => void;
-  onSelectAgency?: (agencyId: string) => void;
+  onOpenModules?: (agencyId: string) => void;
   onRequestDelete?: (agencyId: string) => void;
-  formBuilderStatus: (agencyId: string) => boolean;
-  onToggleFormBuilder: (agencyId: string, enabled: boolean) => void;
-  isFormBuilderLoading?: boolean;
+  onToggleAgencyActive?: (agencyId: string, active: boolean) => void;
+  statusUpdatingId?: string | null;
   deletePendingAgencyId?: string | null;
   deleteNotified?: string;
   deleteDebugOtp?: string;
@@ -41,11 +34,10 @@ export function AgencyListScreen({
   listError = "",
   onBack,
   onEditAgency,
-  onSelectAgency,
+  onOpenModules,
   onRequestDelete,
-  formBuilderStatus,
-  onToggleFormBuilder,
-  isFormBuilderLoading = false,
+  onToggleAgencyActive,
+  statusUpdatingId = null,
   deletePendingAgencyId = null,
   deleteNotified = "",
   deleteDebugOtp = "",
@@ -67,6 +59,7 @@ export function AgencyListScreen({
     const query = searchQuery.trim().toLowerCase();
 
     return agencies.filter((agency) => {
+      const isActive = agency.status === "active";
       const matchesQuery =
         query.length === 0 ||
         agency.agencyName.toLowerCase().includes(query) ||
@@ -74,7 +67,9 @@ export function AgencyListScreen({
         agency.contactPerson.toLowerCase().includes(query);
 
       const matchesStatus =
-        statusFilter.length === 0 || agency.status === statusFilter;
+        statusFilter.length === 0 ||
+        (statusFilter === "active" && isActive) ||
+        (statusFilter === "paused" && !isActive);
 
       return matchesQuery && matchesStatus;
     });
@@ -108,8 +103,7 @@ export function AgencyListScreen({
             placeholder="All statuses"
             options={[
               { value: "active", label: "Active" },
-              { value: "trial", label: "Trial" },
-              { value: "suspended", label: "Suspended" },
+              { value: "paused", label: "Paused" },
             ]}
           />
         </div>
@@ -128,8 +122,7 @@ export function AgencyListScreen({
                 <th scope="col">Contact</th>
                 <th scope="col">City</th>
                 <th scope="col">Plan</th>
-                <th scope="col">Features</th>
-                <th scope="col">Form Builder</th>
+                <th scope="col">Modules</th>
                 <th scope="col">Status</th>
                 <th scope="col">Actions</th>
               </tr>
@@ -137,115 +130,113 @@ export function AgencyListScreen({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="agency-list-table__empty">
+                  <td colSpan={7} className="agency-list-table__empty">
                     Loading agencies…
                   </td>
                 </tr>
               ) : filteredAgencies.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="agency-list-table__empty">
+                  <td colSpan={7} className="agency-list-table__empty">
                     No agencies match your filters.
                   </td>
                 </tr>
               ) : (
-                filteredAgencies.map((agency) => (
-                  <tr key={agency.id}>
-                    <td
-                      className={
-                        onSelectAgency
-                          ? "agency-list-table__row--clickable"
-                          : undefined
-                      }
-                      onClick={
-                        onSelectAgency
-                          ? () => onSelectAgency(agency.id)
-                          : undefined
-                      }
-                    >
-                      <div className="agency-list-table__primary">
-                        {agency.agencyName}
-                      </div>
-                      <div className="agency-list-table__secondary">
-                        {agency.email}
-                      </div>
-                    </td>
-                    <td>{agency.contactPerson}</td>
-                    <td>{agency.city}</td>
-                    <td>{agency.planName}</td>
-                    <td>{agency.enabledFeatureCount}</td>
-                    <td className="agency-list-table__toggle-cell">
-                      <ToggleSwitch
-                        label=""
-                        checked={formBuilderStatus(agency.id)}
-                        disabled={isFormBuilderLoading}
-                        onChange={(enabled) =>
-                          onToggleFormBuilder(agency.id, enabled)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <span
-                        className={`agency-list-table__status agency-list-table__status--${agency.status}`}
-                      >
-                        {STATUS_LABELS[agency.status]}
-                      </span>
-                    </td>
-                    <td className="agency-list-table__actions">
-                      {onEditAgency ? (
-                        <button
-                          type="button"
-                          className="agency-icon-btn agency-icon-btn--edit"
-                          aria-label={`Edit ${agency.agencyName}`}
-                          title="Edit agency"
-                          onClick={() => onEditAgency(agency.id)}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="18"
-                            height="18"
-                            aria-hidden="true"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                filteredAgencies.map((agency) => {
+                  const isActive = agency.status === "active";
+                  return (
+                    <tr key={agency.id}>
+                      <td>
+                        <div className="agency-list-table__primary">
+                          {agency.agencyName}
+                        </div>
+                        <div className="agency-list-table__secondary">
+                          {agency.email}
+                        </div>
+                      </td>
+                      <td>{agency.contactPerson}</td>
+                      <td>{agency.city}</td>
+                      <td>{agency.planName}</td>
+                      <td>
+                        {onOpenModules ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="medium"
+                            onClick={() => onOpenModules(agency.id)}
                           >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                          </svg>
-                        </button>
-                      ) : null}
-                      {onRequestDelete ? (
-                        <button
-                          type="button"
-                          className="agency-icon-btn agency-icon-btn--remove"
-                          aria-label={`Remove ${agency.agencyName}`}
-                          title="Remove agency"
-                          onClick={() => onRequestDelete(agency.id)}
-                          disabled={isDeleteRequesting}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            width="18"
-                            height="18"
-                            aria-hidden="true"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            Modules
+                          </Button>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="agency-list-table__toggle-cell">
+                        <ToggleSwitch
+                          label={isActive ? "Active" : "Paused"}
+                          checked={isActive}
+                          disabled={statusUpdatingId === agency.id}
+                          onChange={(enabled) =>
+                            onToggleAgencyActive?.(agency.id, enabled)
+                          }
+                        />
+                      </td>
+                      <td className="agency-list-table__actions">
+                        {onEditAgency ? (
+                          <button
+                            type="button"
+                            className="agency-icon-btn agency-icon-btn--edit"
+                            aria-label={`Edit ${agency.agencyName}`}
+                            title="Edit agency"
+                            onClick={() => onEditAgency(agency.id)}
                           >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4h8v2" />
-                            <path d="M19 6l-1 14H6L5 6" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                          </svg>
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="18"
+                              height="18"
+                              aria-hidden="true"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                          </button>
+                        ) : null}
+                        {onRequestDelete ? (
+                          <button
+                            type="button"
+                            className="agency-icon-btn agency-icon-btn--remove"
+                            aria-label={`Remove ${agency.agencyName}`}
+                            title="Remove agency"
+                            onClick={() => onRequestDelete(agency.id)}
+                            disabled={isDeleteRequesting}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="18"
+                              height="18"
+                              aria-hidden="true"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                            </svg>
+                          </button>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -256,11 +247,13 @@ export function AgencyListScreen({
             <div className="agency-delete-otp__panel">
               <h2 className="agency-delete-otp__title">Confirm agency removal</h2>
               <p className="agency-delete-otp__copy">
-                An OTP was sent to <strong>{deleteNotified || "the Super Admin email"}</strong>
+                An OTP was sent to{" "}
+                <strong>{deleteNotified || "the Super Admin email"}</strong>
                 {pendingAgency ? (
                   <>
                     {" "}
-                    to permanently delete <strong>{pendingAgency.agencyName}</strong>.
+                    to permanently delete{" "}
+                    <strong>{pendingAgency.agencyName}</strong>.
                   </>
                 ) : (
                   "."

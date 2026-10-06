@@ -27,6 +27,7 @@ export default defineConfig({
         projectRoot,
         "../../../modules/Form Builder/index.ts"
       ),
+      "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },
 });

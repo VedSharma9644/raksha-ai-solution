@@ -21,7 +21,7 @@
 
 .notification-button:hover {
   border-color: var(--color-primary);
-  background: #f4fbfb;
+  background: var(--color-hover-tint);
 }
 
 .notification-button:active {

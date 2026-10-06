@@ -13,15 +13,20 @@
   background:
     radial-gradient(
       ellipse 80% 60% at 10% 20%,
-      rgba(30, 94, 99, 0.18),
+      var(--color-atmosphere-a),
       transparent 55%
     ),
     radial-gradient(
       ellipse 70% 50% at 90% 80%,
-      rgba(0, 70, 74, 0.14),
+      var(--color-atmosphere-b),
       transparent 50%
     ),
-    linear-gradient(160deg, #eef5f6 0%, #f8fafc 45%, #e8f0f4 100%);
+    linear-gradient(
+      160deg,
+      var(--color-page-wash) 0%,
+      var(--color-background) 45%,
+      var(--color-page-wash-deep) 100%
+    );
   z-index: 0;
 }
 
@@ -30,8 +35,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(11, 28, 48, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(11, 28, 48, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(circle at center, black 20%, transparent 75%);
   pointer-events: none;

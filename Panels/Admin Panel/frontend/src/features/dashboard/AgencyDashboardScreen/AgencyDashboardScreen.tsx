@@ -1,5 +1,6 @@
 import { ActionCard } from "../../../components/ActionCard";
 import { NotificationMenu } from "../../notifications";
+import { ProfileMenu } from "../../profile";
 import type { AgencyNotification } from "../../notifications";
 import type { DashboardActionId } from "../dashboardActions";
 import { DASHBOARD_ACTIONS } from "../dashboardActions";
@@ -26,11 +27,14 @@ export function AgencyDashboardScreen({
           <p className="agency-dashboard__brand-panel">Agency Dashboard</p>
         </div>
 
-        <NotificationMenu
-          notifications={notifications}
-          onSelectNotification={onSelectNotification}
-          onMarkAllRead={onMarkAllNotificationsRead}
-        />
+        <div className="agency-dashboard__toolbar">
+          <NotificationMenu
+            notifications={notifications}
+            onSelectNotification={onSelectNotification}
+            onMarkAllRead={onMarkAllNotificationsRead}
+          />
+          <ProfileMenu />
+        </div>
       </header>
 
       <section
