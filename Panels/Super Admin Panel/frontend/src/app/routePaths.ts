@@ -2,6 +2,7 @@ export const APP_ROUTES = {
   login: "/",
   dashboard: "/dashboard",
   addAgency: "/agencies/add",
+  editAgency: "/agencies/:agencyId/edit",
   agencyList: "/agencies",
   featureControl: "/features",
   subscribers: "/subscribers",

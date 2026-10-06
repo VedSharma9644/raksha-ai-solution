@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Guard/agency document uploads:
+// agencies/{agencyId}/guards/{...}
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAgencyOwner(agencyId) {
+      return isSignedIn() && request.auth.uid == agencyId;
+    }
+
+    function isAllowedDoc() {
+      return request.resource.size < 10 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*')
+          || request.resource.contentType == 'application/pdf'
+        );
+    }
+
+    match /agencies/{agencyId}/{allPaths=**} {
+      allow read: if isAgencyOwner(agencyId);
+      allow write: if isAgencyOwner(agencyId) && isAllowedDoc();
+      allow delete: if isAgencyOwner(agencyId);
+    }
+  }
+}

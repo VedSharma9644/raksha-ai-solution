@@ -12,8 +12,13 @@ async function uploadDocumentIfPresent(
   path: string
 ): Promise<string> {
   if (!file) return "";
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
+  const extension = file.name.includes(".")
+    ? file.name.slice(file.name.lastIndexOf("."))
+    : "";
+  const storageRef = ref(storage, `${path}${extension}`);
+  await uploadBytes(storageRef, file, {
+    contentType: file.type || "application/octet-stream",
+  });
   return getDownloadURL(storageRef);
 }
 

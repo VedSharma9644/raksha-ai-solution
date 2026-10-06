@@ -132,3 +132,107 @@
     grid-template-columns: 1fr;
   }
 }
+
+.agency-list-screen__error {
+  color: #b42318;
+  margin: 0 0 1rem;
+}
+
+.agency-list-table__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.agency-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: none;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  color: #fff;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.agency-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.04);
+  filter: brightness(1.05);
+}
+
+.agency-icon-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.agency-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.agency-icon-btn--edit {
+  background: linear-gradient(145deg, #38bdf8 0%, #2563eb 55%, #1d4ed8 100%);
+  box-shadow:
+    0 8px 16px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.agency-icon-btn--edit:hover:not(:disabled) {
+  box-shadow:
+    0 12px 20px rgba(37, 99, 235, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.agency-icon-btn--remove {
+  background: linear-gradient(145deg, #fb7185 0%, #f43f5e 55%, #e11d48 100%);
+  box-shadow:
+    0 8px 16px rgba(244, 63, 94, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.agency-icon-btn--remove:hover:not(:disabled) {
+  box-shadow:
+    0 12px 20px rgba(244, 63, 94, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.agency-delete-otp {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.agency-delete-otp__panel {
+  width: min(28rem, 100%);
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+}
+
+.agency-delete-otp__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.agency-delete-otp__copy,
+.agency-delete-otp__debug {
+  margin: 0 0 1rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.agency-delete-otp__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

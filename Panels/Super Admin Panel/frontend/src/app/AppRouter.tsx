@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AddAgencyPage } from "../pages/AddAgencyPage";
 import { AgencyListPage } from "../pages/AgencyListPage";
 import { ChartsPage } from "../pages/ChartsPage";
+import { EditAgencyPage } from "../pages/EditAgencyPage";
 import { FeatureControlPage } from "../pages/FeatureControlPage";
 import { LoginPage } from "../pages/LoginPage";
 import { SubscribersPage } from "../pages/SubscribersPage";
@@ -17,6 +18,7 @@ export function AppRouter() {
         element={<SuperAdminDashboardPage />}
       />
       <Route path={APP_ROUTES.addAgency} element={<AddAgencyPage />} />
+      <Route path={APP_ROUTES.editAgency} element={<EditAgencyPage />} />
       <Route path={APP_ROUTES.agencyList} element={<AgencyListPage />} />
       <Route
         path={APP_ROUTES.featureControl}

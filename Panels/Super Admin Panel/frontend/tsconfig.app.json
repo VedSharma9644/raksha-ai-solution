@@ -10,7 +10,9 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@raskha/core": ["../../../core/index.ts"],
+      "@raskha/form-builder": ["../../../modules/Form Builder/index.ts"]
     },
 
     /* Bundler mode */

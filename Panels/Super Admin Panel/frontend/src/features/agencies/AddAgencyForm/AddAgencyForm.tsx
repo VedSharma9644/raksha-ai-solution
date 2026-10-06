@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
 import { SelectField } from "../../../components/SelectField";
@@ -11,17 +11,30 @@ import "./AddAgencyForm.css";
 
 export interface AddAgencyFormProps {
   isSubmitting?: boolean;
+  /** When true, password is required (create). When false, blank keeps current. */
+  requirePassword?: boolean;
+  initialValues?: AgencyFormValues;
+  submitLabel?: string;
+  formError?: string;
   onSubmit: (values: AgencyFormValues) => void | Promise<void>;
   onCancel: () => void;
 }
 
 export function AddAgencyForm({
   isSubmitting = false,
+  requirePassword = true,
+  initialValues = EMPTY_AGENCY_FORM,
+  submitLabel = "Save Agency",
+  formError = "",
   onSubmit,
   onCancel,
 }: AddAgencyFormProps) {
-  const [values, setValues] = useState<AgencyFormValues>(EMPTY_AGENCY_FORM);
+  const [values, setValues] = useState<AgencyFormValues>(initialValues);
   const [errors, setErrors] = useState<Partial<AgencyFormValues>>({});
+
+  useEffect(() => {
+    setValues(initialValues);
+  }, [initialValues]);
 
   function updateField<K extends keyof AgencyFormValues>(
     field: K,
@@ -45,6 +58,18 @@ export function AddAgencyForm({
     if (!values.phone.trim()) nextErrors.phone = "Enter a phone number.";
     if (!values.city.trim()) nextErrors.city = "Enter the city.";
     if (!values.planId) nextErrors.planId = "Select a plan.";
+    if (requirePassword) {
+      if (!values.password.trim()) {
+        nextErrors.password = "Set an initial login password.";
+      } else if (values.password.trim().length < 8) {
+        nextErrors.password = "Password must be at least 8 characters.";
+      }
+    } else if (
+      values.password.trim() &&
+      values.password.trim().length < 8
+    ) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -62,6 +87,7 @@ export function AddAgencyForm({
       city: values.city.trim(),
       planId: values.planId,
       notes: values.notes.trim(),
+      password: values.password,
     });
   }
 
@@ -128,6 +154,17 @@ export function AddAgencyForm({
             required
             disabled={isSubmitting}
           />
+          <TextField
+            label={requirePassword ? "Login password" : "New password (optional)"}
+            name="password"
+            type="password"
+            value={values.password}
+            onChange={(event) => updateField("password", event.target.value)}
+            errorMessage={errors.password}
+            required={requirePassword}
+            disabled={isSubmitting}
+            autoComplete="new-password"
+          />
         </div>
 
         <TextAreaField
@@ -139,6 +176,12 @@ export function AddAgencyForm({
           disabled={isSubmitting}
         />
 
+        {formError ? (
+          <p className="add-agency-form__error" role="alert">
+            {formError}
+          </p>
+        ) : null}
+
         <div className="form-panel__actions">
           <Button
             type="button"
@@ -149,7 +192,7 @@ export function AddAgencyForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save Agency"}
+            {isSubmitting ? "Saving…" : submitLabel}
           </Button>
         </div>
       </FormPanel>

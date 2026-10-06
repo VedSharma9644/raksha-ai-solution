@@ -6,6 +6,8 @@ export interface AgencyFormValues {
   city: string;
   planId: string;
   notes: string;
+  /** Required on create; optional on edit (leave blank to keep). */
+  password: string;
 }
 
 export const EMPTY_AGENCY_FORM: AgencyFormValues = {
@@ -16,6 +18,7 @@ export const EMPTY_AGENCY_FORM: AgencyFormValues = {
   city: "",
   planId: "",
   notes: "",
+  password: "",
 };
 
 export type AgencyStatus = "active" | "trial" | "suspended";
@@ -27,6 +30,8 @@ export interface AgencyListItem {
   email: string;
   city: string;
   planName: string;
+  plan?: string;
+  phone?: string;
   status: AgencyStatus;
   enabledFeatureCount: number;
 }

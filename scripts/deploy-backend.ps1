@@ -4,7 +4,7 @@
 #   .\scripts\deploy-backend.ps1 hr
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet("admin", "hr")]
+  [ValidateSet("admin", "hr", "super-admin")]
   [string]$Panel,
 
   [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "app-raksha" }),
@@ -25,6 +25,10 @@ switch ($Panel) {
     $Service = "raskha-hr-api"
     $Dockerfile = "Panels/HR Panel/backend/Dockerfile"
   }
+  "super-admin" {
+    $Service = "raskha-super-admin-api"
+    $Dockerfile = "Panels/Super Admin Panel/backend/Dockerfile"
+  }
 }
 
 if (-not (Test-Path ".env")) {
@@ -38,7 +42,7 @@ Get-Content ".env" | ForEach-Object {
   if ($parts.Length -ne 2) { return }
   $key = $parts[0].Trim()
   $val = $parts[1].Trim().Trim('"').Trim("'")
-  if ($key -match '^(FIREBASE_|CORS_ALLOWED_ORIGINS$)') {
+  if ($key -match '^(FIREBASE_|CORS_ALLOWED_ORIGINS$|SUPER_ADMIN_)') {
     Set-Item -Path "Env:$key" -Value $val
   }
 }
@@ -54,6 +58,15 @@ foreach ($required in @(
   $val = [Environment]::GetEnvironmentVariable($required)
   if ([string]::IsNullOrWhiteSpace($val)) {
     throw "Missing $required in .env"
+  }
+}
+
+if ($Panel -eq "super-admin") {
+  foreach ($required in @("FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY", "SUPER_ADMIN_API_KEY")) {
+    $val = [Environment]::GetEnvironmentVariable($required)
+    if ([string]::IsNullOrWhiteSpace($val)) {
+      throw "Missing $required in .env (required for Super Admin API)"
+    }
   }
 }
 
@@ -97,7 +110,20 @@ $envVars = @(
   "FIREBASE_STORAGE_BUCKET=$($env:FIREBASE_STORAGE_BUCKET)",
   "FIREBASE_MESSAGING_SENDER_ID=$($env:FIREBASE_MESSAGING_SENDER_ID)",
   "FIREBASE_APP_ID=$($env:FIREBASE_APP_ID)"
-) -join ","
+)
+
+if ($Panel -eq "super-admin") {
+  $envVars += @(
+    "FIREBASE_CLIENT_EMAIL=$($env:FIREBASE_CLIENT_EMAIL)",
+    "FIREBASE_PRIVATE_KEY=$($env:FIREBASE_PRIVATE_KEY)",
+    "SUPER_ADMIN_API_KEY=$($env:SUPER_ADMIN_API_KEY)",
+    "SUPER_ADMIN_EMAILS=$($env:SUPER_ADMIN_EMAILS)",
+    "SUPER_ADMIN_NOTIFY_EMAIL=$($env:SUPER_ADMIN_NOTIFY_EMAIL)",
+    "SUPER_ADMIN_OTP_DEBUG=$($env:SUPER_ADMIN_OTP_DEBUG)"
+  )
+}
+
+$envVarsCsv = $envVars -join ","
 
 Write-Host "Deploying Cloud Run service $Service ..."
 gcloud run deploy $Service `
@@ -111,7 +137,7 @@ gcloud run deploy $Service `
   --cpu=1 `
   --min-instances=0 `
   --max-instances=5 `
-  --set-env-vars=$envVars
+  --set-env-vars=$envVarsCsv
 if ($LASTEXITCODE -ne 0) { throw "Cloud Run deploy failed" }
 
 $url = gcloud run services describe $Service `
