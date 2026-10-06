@@ -22,6 +22,8 @@ export default defineConfig({
       "@raskha/hr-management": path.resolve(projectRoot, "../../../modules/HR Management/index.ts"),
       // Resolve @raskha/site-management from TypeScript source
       "@raskha/site-management": path.resolve(projectRoot, "../../../modules/Site Management/index.ts"),
+      // Resolve @raskha/form-builder from TypeScript source
+      "@raskha/form-builder": path.resolve(projectRoot, "../../../modules/Form Builder/index.ts"),
     },
   },
 });

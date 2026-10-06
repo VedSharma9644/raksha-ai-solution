@@ -19,6 +19,14 @@ export default defineConfig({
         projectRoot,
         "../../../modules/HR Management/index.ts"
       ),
+      "@raskha/guard-management": path.resolve(
+        projectRoot,
+        "../../../modules/Guard Management/index.ts"
+      ),
+      "@raskha/form-builder": path.resolve(
+        projectRoot,
+        "../../../modules/Form Builder/index.ts"
+      ),
     },
   },
 });

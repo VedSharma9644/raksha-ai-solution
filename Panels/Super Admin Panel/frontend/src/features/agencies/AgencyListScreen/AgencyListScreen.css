@@ -97,6 +97,24 @@
   color: #b91c1c;
 }
 
+/* Form Builder toggle column — compact, non-clickable cell */
+.agency-list-table__toggle-cell {
+  width: 5rem;
+  cursor: default;
+}
+
+.agency-list-table__toggle-cell .toggle-switch {
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: transparent;
+  min-width: unset;
+}
+
+.agency-list-table__toggle-cell .toggle-switch:hover {
+  background: transparent;
+  border: none;
+}
+
 @keyframes sa-enter {
   from {
     opacity: 0;

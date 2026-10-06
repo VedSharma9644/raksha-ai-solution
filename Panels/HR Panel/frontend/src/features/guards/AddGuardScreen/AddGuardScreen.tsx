@@ -22,7 +22,7 @@ export function AddGuardScreen({
       <div className="app-screen-layout__content add-guard-screen">
         <PageHeader
           title="Add Guard"
-          subtitle="Create a guard profile for HR operations. Site placement stays with Agency."
+          subtitle="Create a guard profile. Site assignment is managed by the Agency Panel."
           onBack={onBack}
           backLabel="Back to dashboard"
         />

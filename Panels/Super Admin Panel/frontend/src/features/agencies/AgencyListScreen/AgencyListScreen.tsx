@@ -3,6 +3,7 @@ import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
+import { ToggleSwitch } from "../../../components/ToggleSwitch";
 import type { AgencyListItem } from "../agencyTypes";
 import "./AgencyListScreen.css";
 
@@ -16,12 +17,20 @@ export interface AgencyListScreenProps {
   agencies: AgencyListItem[];
   onBack: () => void;
   onSelectAgency?: (agencyId: string) => void;
+  /** Whether Form Builder is enabled for each agencyId */
+  formBuilderStatus: (agencyId: string) => boolean;
+  /** Called when the Super Admin toggles Form Builder for an agency */
+  onToggleFormBuilder: (agencyId: string, enabled: boolean) => void;
+  isFormBuilderLoading?: boolean;
 }
 
 export function AgencyListScreen({
   agencies,
   onBack,
   onSelectAgency,
+  formBuilderStatus,
+  onToggleFormBuilder,
+  isFormBuilderLoading = false,
 }: AgencyListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -84,13 +93,14 @@ export function AgencyListScreen({
                 <th scope="col">City</th>
                 <th scope="col">Plan</th>
                 <th scope="col">Features</th>
+                <th scope="col">Form Builder</th>
                 <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>
               {filteredAgencies.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="agency-list-table__empty">
+                  <td colSpan={7} className="agency-list-table__empty">
                     No agencies match your filters.
                   </td>
                 </tr>
@@ -121,6 +131,19 @@ export function AgencyListScreen({
                     <td>{agency.city}</td>
                     <td>{agency.planName}</td>
                     <td>{agency.enabledFeatureCount}</td>
+                    <td
+                      className="agency-list-table__toggle-cell"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ToggleSwitch
+                        label=""
+                        checked={formBuilderStatus(agency.id)}
+                        disabled={isFormBuilderLoading}
+                        onChange={(enabled) =>
+                          onToggleFormBuilder(agency.id, enabled)
+                        }
+                      />
+                    </td>
                     <td>
                       <span
                         className={`agency-list-table__status agency-list-table__status--${agency.status}`}
