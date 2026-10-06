@@ -13,6 +13,9 @@ import { AddHrStaffPage } from "../pages/AddHrStaffPage";
 import { EditHrStaffPage } from "../pages/EditHrStaffPage";
 import { HrStaffListPage } from "../pages/HrStaffListPage";
 import { FormBuilderPage } from "../pages/FormBuilderPage";
+import { InventoryListPage } from "../pages/InventoryListPage";
+import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
+import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
 import { APP_ROUTES } from "./routePaths";
 
 // Redirects to login if not authenticated
@@ -150,6 +153,32 @@ export function AppRouter() {
       />
 
       <Route path="*" element={<Navigate to={APP_ROUTES.login} replace />} />
+
+      {/* Inventory routes */}
+      <Route
+        path={APP_ROUTES.inventoryList}
+        element={
+          <ProtectedRoute>
+            <InventoryListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.addInventoryItem}
+        element={
+          <ProtectedRoute>
+            <AddInventoryItemPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.editInventoryItem}
+        element={
+          <ProtectedRoute>
+            <EditInventoryItemPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

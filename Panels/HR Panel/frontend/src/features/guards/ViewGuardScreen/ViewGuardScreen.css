@@ -1,0 +1,42 @@
+.view-guard-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Info grid ── */
+.view-guard-screen__info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-bg-secondary, #f9fafb);
+}
+
+.view-guard-screen__info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.view-guard-screen__info-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+.view-guard-screen__info-value {
+  font-size: 0.9rem;
+  color: var(--color-text-primary, #111827);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* ── Inventory section ── */
+.view-guard-screen__inventory-section {
+  max-width: 480px;
+}

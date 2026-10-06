@@ -3,3 +3,8 @@ export { EMPTY_GUARD_FORM, SAMPLE_GUARDS } from "./guardTypes";
 export { AddGuardScreen } from "./AddGuardScreen";
 export { GuardListScreen } from "./GuardListScreen";
 export { useAddGuard } from "./useAddGuard";
+export { useGuardInventory } from "./useGuardInventory";
+export { GuardInventoryPanel } from "./GuardInventoryPanel";
+export type { GuardInventoryPanelProps } from "./GuardInventoryPanel";
+export { ViewGuardScreen } from "./ViewGuardScreen";
+export type { ViewGuardScreenProps } from "./ViewGuardScreen";

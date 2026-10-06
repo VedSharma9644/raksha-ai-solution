@@ -95,3 +95,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+.inventory-table__name {
+  font-weight: 600;
+}
+
+.inventory-table__stock {
+  font-weight: 700;
+}
+
+.inventory-table__assigned {
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.inventory-table__available {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.inventory-table__available--zero {
+  color: #dc2626;
+}

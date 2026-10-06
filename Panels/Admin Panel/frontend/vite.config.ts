@@ -24,6 +24,8 @@ export default defineConfig({
       "@raskha/site-management": path.resolve(projectRoot, "../../../modules/Site Management/index.ts"),
       // Resolve @raskha/form-builder from TypeScript source
       "@raskha/form-builder": path.resolve(projectRoot, "../../../modules/Form Builder/index.ts"),
+      // Resolve @raskha/inventory-management from TypeScript source
+      "@raskha/inventory-management": path.resolve(projectRoot, "../../../modules/Inventory Management/index.ts"),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },

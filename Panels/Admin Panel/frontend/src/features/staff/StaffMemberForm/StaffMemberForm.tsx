@@ -9,29 +9,13 @@ import { TextField } from "../../../components/TextField";
 import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
 import {
   EMPTY_STAFF_MEMBER_FORM,
-  SAMPLE_SITE_OPTIONS,
 } from "../staffFormTypes";
 import "./StaffMemberForm.css";
 
-const ROLE_COPY: Record<
-  StaffRole,
-  { submitLabel: string; siteLabel: string; siteRequired: boolean }
-> = {
-  guard: {
-    submitLabel: "Save Guard",
-    siteLabel: "Assigned site",
-    siteRequired: true,
-  },
-  supervisor: {
-    submitLabel: "Save Supervisor",
-    siteLabel: "Primary site",
-    siteRequired: true,
-  },
-  hr: {
-    submitLabel: "Save HR User",
-    siteLabel: "Office / region (optional)",
-    siteRequired: false,
-  },
+const ROLE_COPY: Record<StaffRole, { submitLabel: string }> = {
+  guard:      { submitLabel: "Save Guard" },
+  supervisor: { submitLabel: "Save Supervisor" },
+  hr:         { submitLabel: "Save HR User" },
 };
 
 export interface StaffMemberFormProps {
@@ -86,12 +70,8 @@ export function StaffMemberForm({
     } else if (!/^\d{12}$/.test(values.aadhaarNumber.replace(/\s/g, ""))) {
       nextErrors.aadhaarNumber = "Aadhaar number must be 12 digits.";
     }
-    if (roleCopy.siteRequired && !values.assignedSiteId) {
-      nextErrors.assignedSiteId = "Select a site.";
-    }
 
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    setErrors(nextErrors);    return Object.keys(nextErrors).length === 0;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -278,17 +258,6 @@ export function StaffMemberForm({
             disabled={isSubmitting}
           />
         </div>
-
-        <SelectField
-          label={roleCopy.siteLabel}
-          name="assignedSiteId"
-          options={SAMPLE_SITE_OPTIONS}
-          value={values.assignedSiteId}
-          onChange={(e) => updateField("assignedSiteId", e.target.value)}
-          errorMessage={errors.assignedSiteId}
-          required={roleCopy.siteRequired}
-          disabled={isSubmitting}
-        />
 
         {/* ── Section: Preferences ── */}
         <p className="staff-member-form__section-label">Preferences</p>

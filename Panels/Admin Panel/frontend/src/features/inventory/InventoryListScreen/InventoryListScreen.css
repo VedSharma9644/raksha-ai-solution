@@ -1,0 +1,146 @@
+.inventory-list-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inventory-list-screen__filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 700px) {
+  .inventory-list-screen__filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Empty state ── */
+.inventory-list-screen__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  border-radius: 12px;
+  background: var(--color-bg-secondary, #f9fafb);
+  text-align: center;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.inventory-list-screen__empty-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #9ca3af);
+  margin: 0;
+}
+
+/* ── Table ── */
+.inventory-list-screen__table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
+.inventory-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.inventory-list-table thead {
+  background: var(--color-bg-secondary, #f9fafb);
+}
+
+.inventory-list-table th,
+.inventory-list-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.inventory-list-table th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.inventory-list-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.inventory-list-table tbody tr:hover {
+  background: var(--color-bg-hover, #f3f4f6);
+}
+
+.inventory-list-table__empty {
+  text-align: center;
+  color: var(--color-text-secondary, #9ca3af);
+  padding: 2rem 1rem !important;
+}
+
+.inventory-list-table__name {
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+
+.inventory-list-table__stock {
+  font-weight: 700;
+}
+
+.inventory-list-table__assigned {
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.inventory-list-table__available {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.inventory-list-table__available--zero {
+  color: #dc2626;
+}
+
+/* ── Status chips ── */
+.inventory-list-table__status {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.inventory-list-table__status--in_stock {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.inventory-list-table__status--low_stock {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.inventory-list-table__status--out_of_stock {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── Edit button ── */
+.inventory-list-table__edit-btn {
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: transparent;
+  color: var(--color-text-primary, #111827);
+  transition: background 0.15s;
+}
+
+.inventory-list-table__edit-btn:hover {
+  background: var(--color-bg-secondary, #f3f4f6);
+}

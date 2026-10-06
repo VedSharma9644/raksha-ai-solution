@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
-import { useDeleteGuard, useEditGuard } from "../features/guards";
+import { useDeleteGuard, useEditGuard, useGuardInventory, GuardInventoryPanel } from "../features/guards";
+import { useInventoryList } from "../features/inventory";
 import { EditStaffMemberScreen } from "../features/staff";
 import type { StaffMemberFormValues } from "../features/staff";
 import { useAuthContext } from "../features/authentication";
@@ -35,13 +36,14 @@ export function EditGuardPage() {
   const { initialValues, isLoading, isSubmitting, loadError, saveError, saveGuard } =
     useEditGuard(guardId);
   const { removeGuard, isDeleting, error: deleteError } = useDeleteGuard(guardId);
-  const { isEnabled, isLoading: isStatusLoading } = useFormBuilderStatus(
-    agency?.id
-  );
+  const { isEnabled, isLoading: isStatusLoading } = useFormBuilderStatus(agency?.id);
   const { fields, isLoading: isSchemaLoading } = useFormSchema(
     isEnabled ? agency?.id : undefined,
-    "guard"
+    "guard",
   );
+  const { assignments, isLoading: isAssignmentsLoading, isSaving, error: assignError,
+    assign, updateQty, remove } = useGuardInventory(guardId);
+  const { items: inventoryItems } = useInventoryList();
 
   function goBack() {
     navigate(APP_ROUTES.employeeList);
@@ -61,6 +63,19 @@ export function EditGuardPage() {
 
   const formError = saveError || deleteError;
 
+  const inventoryPanel = (
+    <GuardInventoryPanel
+      assignments={assignments}
+      inventoryItems={inventoryItems}
+      isLoading={isAssignmentsLoading}
+      isSaving={isSaving}
+      error={assignError}
+      onAssign={assign}
+      onUpdateQty={updateQty}
+      onRemove={remove}
+    />
+  );
+
   if (!isEnabled) {
     return (
       <>
@@ -74,6 +89,7 @@ export function EditGuardPage() {
           initialValues={initialValues}
           isSubmitting={isSubmitting}
           isDeleting={isDeleting}
+          guardInventoryPanel={inventoryPanel}
           onBack={goBack}
           onCancel={goBack}
           onSubmit={saveGuard}

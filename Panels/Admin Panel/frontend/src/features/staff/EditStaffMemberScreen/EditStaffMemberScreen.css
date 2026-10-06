@@ -13,3 +13,30 @@
     transform: translateY(0);
   }
 }
+
+/* ── Two-column layout: form (left) + inventory panel (right) ── */
+.edit-staff-member-screen__two-col {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.edit-staff-member-screen__form-col {
+  min-width: 0;
+}
+
+.edit-staff-member-screen__inventory-col {
+  position: sticky;
+  top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .edit-staff-member-screen__two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-staff-member-screen__inventory-col {
+    position: static;
+  }
+}

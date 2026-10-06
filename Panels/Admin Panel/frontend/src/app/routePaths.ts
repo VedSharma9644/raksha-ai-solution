@@ -14,6 +14,10 @@ export const APP_ROUTES = {
   hrList: "/hr",
   addHrStaff: "/hr/add",
   editHrStaff: "/hr/:id/edit",
+  // Inventory
+  inventoryList: "/inventory",
+  addInventoryItem: "/inventory/add",
+  editInventoryItem: "/inventory/:id/edit",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -31,4 +35,9 @@ export function editHrStaffPath(hrStaffId: string): string {
 /** Build the concrete edit-site URL for a specific site ID */
 export function editSitePath(siteId: string): string {
   return `/sites/${siteId}/edit`;
+}
+
+/** Build the concrete edit-inventory-item URL for a specific item ID */
+export function editInventoryItemPath(itemId: string): string {
+  return `/inventory/${itemId}/edit`;
 }

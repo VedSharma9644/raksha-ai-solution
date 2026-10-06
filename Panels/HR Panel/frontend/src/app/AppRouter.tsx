@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { GuardListPage } from "../pages/GuardListPage";
+import { ViewGuardPage } from "../pages/ViewGuardPage";
 import { HrDashboardPage } from "../pages/HrDashboardPage";
 import { InventoryPage } from "../pages/InventoryPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
@@ -74,6 +75,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <GuardListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.viewGuard}
+        element={
+          <ProtectedRoute>
+            <ViewGuardPage />
           </ProtectedRoute>
         }
       />

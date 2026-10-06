@@ -1,17 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
-import {
-  InventoryScreen,
-  SAMPLE_INVENTORY_ITEMS,
-} from "../features/inventory";
+import { InventoryScreen, useInventoryList } from "../features/inventory";
 
 export function InventoryPage() {
   const navigate = useNavigate();
+  const { items, isLoading, error } = useInventoryList();
 
   return (
-    <InventoryScreen
-      items={SAMPLE_INVENTORY_ITEMS}
-      onBack={() => navigate(APP_ROUTES.dashboard)}
-    />
+    <>
+      {error && (
+        <p style={{ color: "red", padding: "1rem" }}>{error}</p>
+      )}
+      <InventoryScreen
+        items={items}
+        isLoading={isLoading}
+        onBack={() => navigate(APP_ROUTES.dashboard)}
+      />
+    </>
   );
 }

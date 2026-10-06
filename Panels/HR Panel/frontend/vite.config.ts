@@ -27,6 +27,10 @@ export default defineConfig({
         projectRoot,
         "../../../modules/Form Builder/index.ts"
       ),
+      "@raskha/inventory-management": path.resolve(
+        projectRoot,
+        "../../../modules/Inventory Management/index.ts"
+      ),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },
