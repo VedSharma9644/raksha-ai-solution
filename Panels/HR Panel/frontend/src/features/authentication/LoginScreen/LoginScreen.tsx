@@ -4,16 +4,20 @@ import "./LoginScreen.css";
 
 export interface LoginScreenProps {
   onSubmit: (credentials: LoginCredentials) => void | Promise<void>;
-  onForgotPassword: () => void;
+  onForgotPassword: (email: string) => void | Promise<void>;
   isSubmitting?: boolean;
+  isSendingReset?: boolean;
   formError?: string;
+  resetMessage?: string;
 }
 
 export function LoginScreen({
   onSubmit,
   onForgotPassword,
   isSubmitting,
+  isSendingReset,
   formError,
+  resetMessage,
 }: LoginScreenProps) {
   return (
     <main className="login-screen">
@@ -39,7 +43,9 @@ export function LoginScreen({
           onSubmit={onSubmit}
           onForgotPassword={onForgotPassword}
           isSubmitting={isSubmitting}
+          isSendingReset={isSendingReset}
           formError={formError}
+          resetMessage={resetMessage}
         />
       </section>
     </main>

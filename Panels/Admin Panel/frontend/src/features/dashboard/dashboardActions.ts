@@ -1,6 +1,7 @@
 export type DashboardActionId =
   | "add-guard"
   | "add-site"
+  | "site-list"
   | "manage-inventory"
   | "employee-guard-list"
   | "add-hr"
@@ -25,6 +26,12 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "Add Site",
     description: "Register a new client site for patrol and attendance.",
     iconLabel: "S",
+  },
+  {
+    id: "site-list",
+    title: "Site List",
+    description: "View, edit, and manage all registered client sites.",
+    iconLabel: "SL",
   },
   {
     id: "manage-inventory",

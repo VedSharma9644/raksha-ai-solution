@@ -4,6 +4,8 @@ import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { EditGuardPage } from "../pages/EditGuardPage";
 import { AddSitePage } from "../pages/AddSitePage";
+import { SiteListPage } from "../pages/SiteListPage";
+import { EditSitePage } from "../pages/EditSitePage";
 import { AgencyDashboardPage } from "../pages/AgencyDashboardPage";
 import { EmployeeListPage } from "../pages/EmployeeListPage";
 import { LoginPage } from "../pages/LoginPage";
@@ -85,6 +87,22 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <AddSitePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.siteList}
+        element={
+          <ProtectedRoute>
+            <SiteListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.editSite}
+        element={
+          <ProtectedRoute>
+            <EditSitePage />
           </ProtectedRoute>
         }
       />

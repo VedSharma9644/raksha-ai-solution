@@ -1,6 +1,7 @@
 import {
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import type { Auth, UserCredential } from "firebase/auth";
 import type { Firestore } from "firebase/firestore";
@@ -8,6 +9,8 @@ import {
   getHrStaffById,
   type HrStaff,
 } from "@raskha/hr-management";
+
+// ── Login ────────────────────────────────────────────────────────────────────
 
 export interface LoginHrStaffParams {
   email: string;
@@ -31,11 +34,9 @@ export async function loginHrStaff(
 ): Promise<LoginHrStaffResult> {
   const { email, password } = params;
 
-  // Step 1: Firebase Auth sign-in
   const credential = await signInWithEmailAndPassword(auth, email, password);
   const uid = credential.user.uid;
 
-  // Step 2: Verify HR staff record exists in Firestore
   const hrStaff = await getHrStaffById(db, uid);
 
   if (!hrStaff) {
@@ -43,11 +44,56 @@ export async function loginHrStaff(
     throw new Error("Account not found");
   }
 
-  // Step 3: Verify the account is active
   if (hrStaff.status !== "active") {
     await signOut(auth);
     throw new Error("Account is inactive");
   }
 
   return { credential, hrStaff };
+}
+
+// ── Password update (via Admin backend) ──────────────────────────────────────
+
+/**
+ * Updates an HR staff member's Firebase Auth password by calling the Admin
+ * backend endpoint (PUT /api/hr-staff/:id/password).
+ * The Admin SDK (server-side only) performs the actual update.
+ *
+ * @param hrStaffId  - Firebase Auth UID of the HR user
+ * @param newPassword - The new plain-text password (min 8 chars)
+ * @param backendBaseUrl - Base URL of the Admin backend, e.g. "http://localhost:3001"
+ */
+export async function updateHrStaffPassword(
+  hrStaffId: string,
+  newPassword: string,
+  backendBaseUrl: string
+): Promise<void> {
+  const response = await fetch(
+    `${backendBaseUrl}/api/hr-staff/${hrStaffId}/password`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: newPassword }),
+    }
+  );
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    throw new Error(data.error ?? "Failed to update password.");
+  }
+}
+
+// ── Forgot password (HR Panel self-service) ──────────────────────────────────
+
+/**
+ * Sends a Firebase password reset email to the given address.
+ * Used by the HR Panel login page's "Forgot password?" button.
+ */
+export async function sendHrForgotPasswordEmail(
+  auth: Auth,
+  email: string
+): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
 }

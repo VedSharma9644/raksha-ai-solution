@@ -12,16 +12,22 @@ export interface LoginCredentials {
 
 export interface LoginFormProps {
   onSubmit: (credentials: LoginCredentials) => void | Promise<void>;
-  onForgotPassword: () => void;
+  /** Called with the email currently in the field when user clicks "Forgot password?" */
+  onForgotPassword: (email: string) => void | Promise<void>;
   isSubmitting?: boolean;
+  isSendingReset?: boolean;
   formError?: string;
+  /** Shown below the forgot password button after a reset email is sent */
+  resetMessage?: string;
 }
 
 export function LoginForm({
   onSubmit,
   onForgotPassword,
   isSubmitting = false,
+  isSendingReset = false,
   formError,
+  resetMessage,
 }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +73,10 @@ export function LoginForm({
     });
   }
 
+  async function handleForgotPassword() {
+    await onForgotPassword(email.trim());
+  }
+
   return (
     <form className="login-form" onSubmit={handleSubmit} noValidate>
       <div className="login-form__fields">
@@ -80,7 +90,7 @@ export function LoginForm({
           onChange={(event) => setEmail(event.target.value)}
           errorMessage={emailError}
           required
-          disabled={isSubmitting}
+          disabled={isSubmitting || isSendingReset}
         />
         <PasswordField
           label="Password"
@@ -90,7 +100,7 @@ export function LoginForm({
           onChange={(event) => setPassword(event.target.value)}
           errorMessage={passwordError}
           required
-          disabled={isSubmitting}
+          disabled={isSubmitting || isSendingReset}
         />
       </div>
 
@@ -98,12 +108,18 @@ export function LoginForm({
         <Button
           type="button"
           variant="link"
-          onClick={onForgotPassword}
-          disabled={isSubmitting}
+          onClick={handleForgotPassword}
+          disabled={isSubmitting || isSendingReset}
         >
-          Forgot password?
+          {isSendingReset ? "Sending…" : "Forgot password?"}
         </Button>
       </div>
+
+      {resetMessage ? (
+        <p className="login-form__reset-message" role="status">
+          {resetMessage}
+        </p>
+      ) : null}
 
       {formError ? (
         <p className="login-form__error" role="alert">
@@ -111,7 +127,7 @@ export function LoginForm({
         </p>
       ) : null}
 
-      <Button type="submit" fullWidth disabled={isSubmitting}>
+      <Button type="submit" fullWidth disabled={isSubmitting || isSendingReset}>
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
     </form>

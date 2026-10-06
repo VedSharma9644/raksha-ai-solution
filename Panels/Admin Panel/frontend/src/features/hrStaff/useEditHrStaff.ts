@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import {
   getHrStaffById,
   updateHrStaff,
-  sendHrPasswordResetEmail,
 } from "@raskha/hr-management";
 import type { HrStaff } from "@raskha/hr-management";
-import { panelActionCodeSettings } from "@raskha/core";
-import { db, clientFirebaseConfig } from "../../lib/firebase";
+import { updateHrStaffPassword } from "@raskha/core";
+import { db } from "../../lib/firebase";
 import type { HrStaffFormValues } from "./HrStaffForm";
+
+// Admin backend base URL — update for production
+const ADMIN_BACKEND_URL = "http://localhost:3001";
 
 export function useEditHrStaff(hrStaffId: string) {
   const navigate = useNavigate();
@@ -17,7 +19,6 @@ export function useEditHrStaff(hrStaffId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [passwordResetSent, setPasswordResetSent] = useState(false);
 
   useEffect(() => {
     if (!hrStaffId) return;
@@ -42,10 +43,10 @@ export function useEditHrStaff(hrStaffId: string) {
 
   async function saveHrStaff(values: HrStaffFormValues) {
     setSaveError("");
-    setPasswordResetSent(false);
     setIsSubmitting(true);
 
     try {
+      // Update Firestore profile fields
       await updateHrStaff(db, hrStaffId, {
         fullName: values.fullName,
         employeeCode: values.employeeCode,
@@ -53,15 +54,9 @@ export function useEditHrStaff(hrStaffId: string) {
         notes: values.notes,
       });
 
-      if (values.password && hrStaff) {
-        await sendHrPasswordResetEmail(
-          clientFirebaseConfig,
-          hrStaff.email,
-          panelActionCodeSettings("hr").url
-        );
-        setPasswordResetSent(true);
-        setIsSubmitting(false);
-        return;
+      // If a new password was entered, update it directly in Firebase Auth
+      if (values.password) {
+        await updateHrStaffPassword(hrStaffId, values.password, ADMIN_BACKEND_URL);
       }
 
       navigate("/hr", { replace: true });
@@ -91,7 +86,6 @@ export function useEditHrStaff(hrStaffId: string) {
     isSubmitting,
     loadError,
     saveError,
-    passwordResetSent,
     saveHrStaff,
   };
 }

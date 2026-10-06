@@ -1,0 +1,8 @@
+.edit-site-screen {
+  animation: edit-site-enter 360ms ease both;
+}
+
+@keyframes edit-site-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

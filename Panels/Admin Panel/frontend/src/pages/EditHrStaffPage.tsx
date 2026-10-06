@@ -17,7 +17,6 @@ export function EditHrStaffPage() {
     isSubmitting,
     loadError,
     saveError,
-    passwordResetSent,
     saveHrStaff,
   } = useEditHrStaff(hrStaffId);
 
@@ -42,11 +41,6 @@ export function EditHrStaffPage() {
       {formError ? (
         <p role="alert" style={{ color: "red", padding: "1rem" }}>
           {formError}
-        </p>
-      ) : null}
-      {passwordResetSent ? (
-        <p role="status" style={{ color: "green", padding: "1rem" }}>
-          ✅ Profile updated. A password reset email was sent to the HR user.
         </p>
       ) : null}
       <EditHrStaffScreen

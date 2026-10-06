@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { config } from "dotenv";
+import { initializeApp as initializeAdminApp, cert } from "firebase-admin/app";
 import express from "express";
 import {
   initializeFirebase,
   isAllowedCorsOrigin,
 } from "@raskha/core";
 import { createGuardRoutes } from "./routes/guardRoutes";
+import { createHrStaffRoutes } from "./routes/hrStaffRoutes";
 
 // Local monorepo .env; Cloud Run injects env vars instead
 const rootEnv = resolve(process.cwd(), "../../../.env");
@@ -31,6 +33,18 @@ for (const key of required) {
   }
 }
 
+// ── Firebase Admin SDK (for privileged operations like password update) ──────
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+initializeAdminApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey,
+  }),
+});
+
+// ── Firebase Client SDK (for Firestore / regular reads & writes) ─────────────
 const firebase = initializeFirebase({
   apiKey: process.env.FIREBASE_API_KEY!,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN!,
@@ -43,6 +57,7 @@ const firebase = initializeFirebase({
 const db = firebase.database.instance;
 const corsExtra = process.env.CORS_ALLOWED_ORIGINS;
 
+// ── Express app ──────────────────────────────────────────────────────────────
 const app = express();
 
 app.use((req, res, next) => {
@@ -79,8 +94,10 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/guards", createGuardRoutes(db));
+app.use("/api/hr-staff", createHrStaffRoutes());
 
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {
   console.log(`Raskha Admin Backend listening on :${PORT}`);
+  console.log("Firebase Admin SDK initialised ✓");
 });

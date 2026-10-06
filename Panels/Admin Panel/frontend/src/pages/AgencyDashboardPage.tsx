@@ -11,6 +11,7 @@ const DASHBOARD_ACTION_ROUTES: Partial<
 > = {
   "add-guard": APP_ROUTES.addGuard,
   "add-site": APP_ROUTES.addSite,
+  "site-list": APP_ROUTES.siteList,
   "employee-guard-list": APP_ROUTES.employeeList,
   "add-hr": APP_ROUTES.addHrStaff,
   "hr-list": APP_ROUTES.hrList,

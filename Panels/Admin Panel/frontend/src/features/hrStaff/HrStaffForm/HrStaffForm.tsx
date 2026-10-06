@@ -149,7 +149,7 @@ export function HrStaffForm({
           label={
             mode === "add"
               ? "Password"
-              : "New Password (optional — sends a reset email to HR user)"
+              : "New Password (optional)"
           }
           name="password"
           placeholder={

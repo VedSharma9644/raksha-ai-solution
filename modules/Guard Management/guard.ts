@@ -5,11 +5,42 @@ export type GuardStatus = "active" | "inactive" | "on_leave";
 export interface Guard {
   id: string;
   agencyId: string;
+
+  // Personal details
   fullName: string;
-  employeeCode: string;
+  fatherName: string;
   phone: string;
   email: string;
+  address: string;
+  caste: string;
+  height: string;        // e.g. "5'8\""
+  aadhaarNumber: string;
+  panNumber: string;
+
+  // Employment details
+  employeeCode: string;
+  post: string;          // e.g. "Senior Guard", "Supervisor"
+  joiningDate: string;   // ISO date string e.g. "2024-01-15"
+  salary: string;        // stored as string to avoid float precision issues
+  experience: string;    // e.g. "3 years"
+  education: string;     // e.g. "10th Pass", "Graduate"
   assignedSiteId: string;
+
+  // Preferences
+  guardType: "ex-serviceman" | "civilian";
+  interestedCity: string;
+  shiftFrom: string;   // HH:MM e.g. "08:00"
+  shiftTo: string;     // HH:MM e.g. "20:00"
+
+  // Documents (Firebase Storage URLs)
+  characterCertificateUrl: string;
+  policeVerificationUrl: string;
+
+  // Financial / compliance
+  bankAccount: string;
+  esiNumber: string;
+  pfNumber: string;
+
   notes: string;
   status: GuardStatus;
   createdAt: Timestamp;
