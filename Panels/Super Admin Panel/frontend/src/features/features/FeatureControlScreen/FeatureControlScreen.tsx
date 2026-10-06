@@ -12,17 +12,17 @@ export interface FeatureControlScreenProps {
   features: PlatformFeature[];
   onBack: () => void;
   onSave: (agencyId: string, enabledFeatureIds: string[]) => void;
-  /** Pre-select an agency when opened from the Agencies list. */
+  onAgencyChange?: (agencyId: string) => void;
   initialAgencyId?: string;
-  /** Hide agency picker when managing one agency. */
   lockAgency?: boolean;
   title?: string;
   subtitle?: string;
   backLabel?: string;
-  /** Live Form Builder toggle (persisted separately). */
-  formBuilderEnabled?: boolean;
-  formBuilderLoading?: boolean;
-  onToggleFormBuilder?: (enabled: boolean) => void;
+  isSaving?: boolean;
+}
+
+function idsKey(ids: string[] | undefined): string {
+  return [...(ids ?? [])].sort().join("|");
 }
 
 export function FeatureControlScreen({
@@ -30,14 +30,13 @@ export function FeatureControlScreen({
   features,
   onBack,
   onSave,
+  onAgencyChange,
   initialAgencyId = "",
   lockAgency = false,
   title = "Modules",
   subtitle = "Turn modules on or off for this agency. Dependencies stay enforced.",
   backLabel = "Back to agencies",
-  formBuilderEnabled = false,
-  formBuilderLoading = false,
-  onToggleFormBuilder,
+  isSaving = false,
 }: FeatureControlScreenProps) {
   const [selectedAgencyId, setSelectedAgencyId] = useState(
     initialAgencyId || agencies[0]?.agencyId || ""
@@ -50,33 +49,38 @@ export function FeatureControlScreen({
   useEffect(() => {
     if (!initialAgencyId) return;
     setSelectedAgencyId(initialAgencyId);
-    const agency = agencies.find((item) => item.agencyId === initialAgencyId);
-    setDraftEnabledIds(agency?.enabledFeatureIds ?? []);
-  }, [initialAgencyId, agencies]);
+  }, [initialAgencyId]);
 
   const selectedAgency = useMemo(
     () => agencies.find((agency) => agency.agencyId === selectedAgencyId),
     [agencies, selectedAgencyId]
   );
 
-  const catalogFeatures = useMemo(
-    () => features.filter((feature) => feature.id !== "form_builder"),
-    [features]
-  );
+  const savedIdsKey = idsKey(selectedAgency?.enabledFeatureIds);
+  useEffect(() => {
+    if (!selectedAgency) return;
+    setDraftEnabledIds(selectedAgency.enabledFeatureIds);
+  }, [selectedAgencyId, savedIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleAgencyChange(agencyId: string) {
     const agency = agencies.find((item) => item.agencyId === agencyId);
     setSelectedAgencyId(agencyId);
     setDraftEnabledIds(agency?.enabledFeatureIds ?? []);
+    onAgencyChange?.(agencyId);
   }
 
   function handleToggle(featureId: string, enabled: boolean) {
-    setDraftEnabledIds((current) => {
-      if (enabled) {
-        return current.includes(featureId) ? current : [...current, featureId];
-      }
-      return current.filter((id) => id !== featureId);
-    });
+    const next = enabled
+      ? draftEnabledIds.includes(featureId)
+        ? draftEnabledIds
+        : [...draftEnabledIds, featureId]
+      : draftEnabledIds.filter((id) => id !== featureId);
+
+    setDraftEnabledIds(next);
+
+    if (selectedAgencyId) {
+      onSave(selectedAgencyId, next);
+    }
   }
 
   function isDependencyBlocked(feature: PlatformFeature): boolean {
@@ -118,26 +122,16 @@ export function FeatureControlScreen({
             <Button
               type="button"
               onClick={() => onSave(selectedAgencyId, draftEnabledIds)}
-              disabled={!selectedAgencyId}
+              disabled={!selectedAgencyId || isSaving}
             >
-              Save Module Access
+              {isSaving ? "Saving…" : "Save Module Access"}
             </Button>
           </div>
         </div>
 
         {selectedAgency ? (
           <div className="feature-control-screen__list">
-            {onToggleFormBuilder ? (
-              <ToggleSwitch
-                label="Form Builder"
-                description="Custom intake and onboarding forms for guards and sites."
-                checked={formBuilderEnabled}
-                disabled={formBuilderLoading}
-                onChange={onToggleFormBuilder}
-              />
-            ) : null}
-
-            {catalogFeatures.map((feature) => {
+            {features.map((feature) => {
               const dependencyBlocked = isDependencyBlocked(feature);
               const checked = draftEnabledIds.includes(feature.id);
 
@@ -151,7 +145,7 @@ export function FeatureControlScreen({
                       : feature.description
                   }
                   checked={checked}
-                  disabled={dependencyBlocked && !checked}
+                  disabled={(dependencyBlocked && !checked) || isSaving}
                   onChange={(nextChecked) =>
                     handleToggle(feature.id, nextChecked)
                   }

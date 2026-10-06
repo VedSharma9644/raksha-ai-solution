@@ -9,6 +9,7 @@ import {
 } from "@raskha/core";
 import { createGuardRoutes } from "./routes/guardRoutes";
 import { createHrStaffRoutes } from "./routes/hrStaffRoutes";
+import { createFormSchemaRoutes } from "./routes/formSchemaRoutes";
 
 // Local monorepo .env; Cloud Run injects env vars instead
 const rootEnv = resolve(process.cwd(), "../../../.env");
@@ -95,6 +96,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/guards", createGuardRoutes(db));
 app.use("/api/hr-staff", createHrStaffRoutes());
+app.use("/api/form-schemas", createFormSchemaRoutes());
 
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {

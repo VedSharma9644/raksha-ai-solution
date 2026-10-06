@@ -9,6 +9,7 @@ import { SAMPLE_AGENCY_NOTIFICATIONS } from "../features/notifications";
 const DASHBOARD_ACTION_ROUTES: Partial<
   Record<DashboardActionId, string>
 > = {
+  "form-builder": APP_ROUTES.formBuilder,
   "add-guard": APP_ROUTES.addGuard,
   "add-site": APP_ROUTES.addSite,
   "site-list": APP_ROUTES.siteList,

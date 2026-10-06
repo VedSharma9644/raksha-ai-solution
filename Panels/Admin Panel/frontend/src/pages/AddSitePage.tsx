@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
-import { AddSiteScreen } from "../features/sites";
-import { useAddSite } from "../features/sites";
+import { AddSiteScreen, useAddSite } from "../features/sites";
 import type { SiteFormValues } from "../features/sites";
 import { useAuthContext } from "../features/authentication";
 import {
@@ -17,59 +16,68 @@ export function AddSitePage() {
   const { agency } = useAuthContext();
   const { saveSite, isSubmitting, error } = useAddSite();
   const { isEnabled, isLoading: isStatusLoading } = useFormBuilderStatus(
-    agency?.id,
+    agency?.id
   );
-  const { fields, isLoading: isSchemaLoading, isSaving, saveFields } =
-    useFormSchema(agency?.id, "site");
+  const { fields, isLoading: isSchemaLoading } = useFormSchema(
+    isEnabled ? agency?.id : undefined,
+    "site"
+  );
 
   function goBack() {
     navigate(APP_ROUTES.dashboard);
   }
 
-  if (isStatusLoading || isSchemaLoading) {
+  if (isStatusLoading) {
     return null;
   }
 
-  // ── Form Builder mode ─────────────────────────────────────────────────────
-  if (isEnabled) {
+  if (!isEnabled) {
     return (
-      <AppScreenLayout>
-        <div className="app-screen-layout__content">
-          <PageHeader
-            title="Add Site"
-            subtitle="Custom form — edit fields above, then fill in site details below."
-            onBack={goBack}
-            backLabel="Back to dashboard"
-          />
-          {error && (
-            <p role="alert" style={{ color: "red", padding: "1rem" }}>
-              {error}
-            </p>
-          )}
-          <FormBuilderForm
-            formType="site"
-            fields={fields}
-            isSaving={isSaving}
-            isSubmitting={isSubmitting}
-            onSaveLayout={saveFields}
-            onCancel={goBack}
-            onSubmit={async (data) => {
-              const values = data as unknown as SiteFormValues;
-              await saveSite(values);
-            }}
-          />
-        </div>
-      </AppScreenLayout>
+      <>
+        {error ? (
+          <p role="alert" style={{ color: "red", padding: "1rem" }}>
+            {error}
+          </p>
+        ) : null}
+        <AddSiteScreen
+          isSubmitting={isSubmitting}
+          onBack={goBack}
+          onCancel={goBack}
+          onSubmit={saveSite}
+        />
+      </>
     );
   }
 
-  // ── Default form mode ─────────────────────────────────────────────────────
+  if (isSchemaLoading) {
+    return null;
+  }
+
   return (
-    <AddSiteScreen
-      isSubmitting={isSubmitting}
-      onBack={goBack}
-      onCancel={goBack}
-      onSubmit={saveSite}
-    />
+    <AppScreenLayout>
+      <div className="app-screen-layout__content">
+        <PageHeader
+          title="Add Site"
+          subtitle="Fill in the custom form for this agency."
+          onBack={goBack}
+          backLabel="Back to dashboard"
+        />
+        {error ? (
+          <p role="alert" style={{ color: "red", padding: "1rem" }}>
+            {error}
+          </p>
+        ) : null}
+        <FormBuilderForm
+          formType="site"
+          fields={fields}
+          isSubmitting={isSubmitting}
+          onCancel={goBack}
+          onSubmit={async (data) => {
+            const values = data as unknown as SiteFormValues;
+            await saveSite(values);
+          }}
+        />
+      </div>
+    </AppScreenLayout>
   );
 }

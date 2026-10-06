@@ -5,7 +5,8 @@ export type DashboardActionId =
   | "manage-inventory"
   | "employee-guard-list"
   | "add-hr"
-  | "hr-list";
+  | "hr-list"
+  | "form-builder";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -15,6 +16,12 @@ export interface DashboardAction {
 }
 
 export const DASHBOARD_ACTIONS: DashboardAction[] = [
+  {
+    id: "form-builder",
+    title: "Form Builder",
+    description: "Customize Guard, HR, and Site intake forms for your agency.",
+    iconLabel: "FB",
+  },
   {
     id: "add-guard",
     title: "Add Guard",

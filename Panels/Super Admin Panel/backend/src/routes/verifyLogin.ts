@@ -3,11 +3,13 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 const AGENCIES_COLLECTION = "agencies";
+const MODULE_ACCESS_COLLECTION = "agencyModuleAccess";
+const DEFAULT_ENABLED_MODULES = ["employee_management", "site_management"];
 
 /**
  * Agency panel calls this after Firebase email/password succeeds.
  * Auth: Authorization Bearer <agency Firebase ID token>
- * On Active: stamps lastRakshaVerifiedAt (grace window resets).
+ * On Active: stamps lastRakshaVerifiedAt, caches enabledModules on the agency doc.
  * On Paused/Inactive/missing: hard fail (no grace — grace is client-side for downtime only).
  */
 export async function verifyAgencyLogin(
@@ -51,9 +53,25 @@ export async function verifyAgencyLogin(
       return;
     }
 
+    const moduleSnap = await db
+      .collection(MODULE_ACCESS_COLLECTION)
+      .doc(agencyId)
+      .get();
+
+    let enabledModules = [...DEFAULT_ENABLED_MODULES];
+    if (moduleSnap.exists) {
+      const data = moduleSnap.data() as { enabledFeatureIds?: unknown };
+      if (Array.isArray(data.enabledFeatureIds)) {
+        enabledModules = data.enabledFeatureIds.filter(
+          (id): id is string => typeof id === "string" && id.length > 0
+        );
+      }
+    }
+
     const verifiedAt = new Date().toISOString();
     await snap.ref.update({
       lastRakshaVerifiedAt: FieldValue.serverTimestamp(),
+      enabledModules,
       updatedAt: FieldValue.serverTimestamp(),
     });
 
@@ -64,6 +82,7 @@ export async function verifyAgencyLogin(
       agencyId,
       agencyName: agency.name ?? "",
       verifiedAt,
+      enabledModules,
     });
   } catch (error: unknown) {
     const err = error as { message?: string; code?: string };

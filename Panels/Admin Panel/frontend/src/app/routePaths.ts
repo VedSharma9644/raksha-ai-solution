@@ -1,6 +1,7 @@
 export const APP_ROUTES = {
   login: "/",
   dashboard: "/dashboard",
+  formBuilder: "/form-builder",
   // Guards
   addGuard: "/guards/add",
   editGuard: "/guards/:id/edit",

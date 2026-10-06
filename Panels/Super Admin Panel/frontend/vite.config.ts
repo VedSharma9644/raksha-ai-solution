@@ -17,6 +17,7 @@ export default defineConfig({
       // Resolve @raskha/* packages directly from TypeScript source
       "@raskha/core": path.resolve(projectRoot, "../../../core/index.ts"),
       "@raskha/form-builder": path.resolve(projectRoot, "../../../modules/Form Builder/index.ts"),
+      "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },
 });

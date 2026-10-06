@@ -43,7 +43,7 @@ function resolveErrorMessage(error: unknown): string {
 
 export function useLogin() {
   const navigate = useNavigate();
-  const { setLoginPending } = useAuthContext();
+  const { setLoginPending, refreshAgency } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -80,11 +80,15 @@ export function useLogin() {
           await hardFailAndSignOut();
           return;
         }
+        // Grace path: use last cached enabledModules on the agency doc
+        await refreshAgency();
         setLoginPending(false);
         navigate(APP_ROUTES.dashboard, { replace: true });
         return;
       }
 
+      // Fresh verify wrote enabledModules — reload agency cache
+      await refreshAgency();
       setStatusMessage(VERIFY_PASS_MESSAGE);
       await new Promise((resolve) => setTimeout(resolve, PASS_DISPLAY_MS));
       setLoginPending(false);

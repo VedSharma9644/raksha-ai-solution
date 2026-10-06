@@ -1,39 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
-import type { AgencyFeatureConfig } from "../features/features";
 import {
   FeatureControlScreen,
   PLATFORM_FEATURES,
-  SAMPLE_AGENCY_FEATURE_CONFIGS,
+  useAgencyModuleControl,
 } from "../features/features";
 
 export function FeatureControlPage() {
   const navigate = useNavigate();
-  const [configs, setConfigs] = useState<AgencyFeatureConfig[]>(
-    SAMPLE_AGENCY_FEATURE_CONFIGS
-  );
+  const {
+    agencyConfigs,
+    isLoading,
+    error,
+    isSaving,
+    saveMessage,
+    saveModuleAccess,
+  } = useAgencyModuleControl();
+  const [selectedAgencyId, setSelectedAgencyId] = useState("");
 
-  function handleSave(agencyId: string, enabledFeatureIds: string[]) {
-    setConfigs((current) =>
-      current.map((config) =>
-        config.agencyId === agencyId
-          ? { ...config, enabledFeatureIds }
-          : config
-      )
-    );
-    console.info("Module access saved", { agencyId, enabledFeatureIds });
-  }
+  useEffect(() => {
+    if (!selectedAgencyId && agencyConfigs[0]?.agencyId) {
+      setSelectedAgencyId(agencyConfigs[0].agencyId);
+    }
+  }, [agencyConfigs, selectedAgencyId]);
+
+  const activeAgencyId = selectedAgencyId || agencyConfigs[0]?.agencyId || "";
+
+  const subtitle = (() => {
+    if (isLoading) return "Loading agencies and module access…";
+    if (error && agencyConfigs.length === 0) return error;
+    if (saveMessage) return saveMessage;
+    if (error) return error;
+    return "Turn modules on or off for each agency. Changes save when you toggle.";
+  })();
 
   return (
     <FeatureControlScreen
-      agencies={configs}
+      agencies={isLoading ? [] : agencyConfigs}
       features={PLATFORM_FEATURES}
+      initialAgencyId={activeAgencyId}
       title="Modules"
-      subtitle="Turn modules on or off for each agency. Dependencies stay enforced."
+      subtitle={subtitle}
       backLabel="Back to dashboard"
+      isSaving={isSaving}
+      onAgencyChange={setSelectedAgencyId}
       onBack={() => navigate(APP_ROUTES.dashboard)}
-      onSave={handleSave}
+      onSave={(agencyId, enabledFeatureIds) => {
+        setSelectedAgencyId(agencyId);
+        void saveModuleAccess(agencyId, enabledFeatureIds);
+      }}
     />
   );
 }

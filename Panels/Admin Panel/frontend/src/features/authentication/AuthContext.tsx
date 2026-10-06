@@ -11,6 +11,8 @@ interface AuthContextValue {
   /** True while login + Raksha verify is in progress — blocks GuestRoute redirect. */
   isLoginPending: boolean;
   setLoginPending: (pending: boolean) => void;
+  /** Re-read agency from Firestore (e.g. after verify caches enabledModules). */
+  refreshAgency: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -20,6 +22,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [agency, setAgency] = useState<Agency | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginPending, setLoginPending] = useState(false);
+
+  const refreshAgency = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setAgency(null);
+      return;
+    }
+    const agencyData = await getAgencyById(db, user.uid, { fromServer: true });
+    if (!agencyData || agencyData.status !== "active") {
+      await signOut(auth);
+      setAgency(null);
+      return;
+    }
+    setAgency(agencyData);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -57,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isLoginPending,
         setLoginPending: setLoginPendingStable,
+        refreshAgency,
         logout,
       }}
     >

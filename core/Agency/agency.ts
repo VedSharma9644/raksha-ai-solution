@@ -16,6 +16,11 @@ export interface Agency {
   status: AgencyStatus;
   /** Last successful Super Admin (Raksha) login verification. Used for downtime grace. */
   lastRakshaVerifiedAt?: Timestamp;
+  /**
+   * Module ids enabled for this agency, cached at Raksha verify-login.
+   * Panels read this locally; Super Admin is the source of truth at login.
+   */
+  enabledModules?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

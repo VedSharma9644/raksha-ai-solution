@@ -41,7 +41,8 @@ export const DEFAULT_HR_FIELDS: FormField[] = [
   { id: "phone",        label: "Mobile Number",  type: "phone", required: true,  locked: true,  order: 2 },
   { id: "email",        label: "Email",          type: "email", required: true,  locked: true,  order: 3 },
   { id: "employeeCode", label: "Employee Code",  type: "text",  required: true,  locked: true,  order: 4 },
-  { id: "notes",        label: "Notes",          type: "textarea", required: false, locked: false, order: 5 },
+  { id: "password",     label: "Login Password", type: "text",  required: false, locked: true,  order: 5, placeholder: "Min. 8 characters (required when adding)" },
+  { id: "notes",        label: "Notes",          type: "textarea", required: false, locked: false, order: 6 },
 ];
 
 /**

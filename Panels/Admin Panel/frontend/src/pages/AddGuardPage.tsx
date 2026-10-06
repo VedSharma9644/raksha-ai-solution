@@ -17,74 +17,74 @@ export function AddGuardPage() {
   const { agency } = useAuthContext();
   const { saveGuard, isSubmitting, error } = useAddGuard();
   const { isEnabled, isLoading: isStatusLoading } = useFormBuilderStatus(
-    agency?.id,
+    agency?.id
   );
-  const { fields, isLoading: isSchemaLoading, isSaving, saveFields } =
-    useFormSchema(agency?.id, "guard");
+  const { fields, isLoading: isSchemaLoading } = useFormSchema(
+    isEnabled ? agency?.id : undefined,
+    "guard"
+  );
 
   function goBack() {
     navigate(APP_ROUTES.dashboard);
   }
 
-  // Still checking feature status
-  if (isStatusLoading || isSchemaLoading) {
+  if (isStatusLoading) {
     return null;
   }
 
-  // ── Form Builder mode ─────────────────────────────────────────────────────
-  if (isEnabled) {
+  // Form Builder off → keep business running with the default form
+  if (!isEnabled) {
     return (
-      <AppScreenLayout>
-        <div className="app-screen-layout__content">
-          <PageHeader
-            title="Add Guard"
-            subtitle="Custom form — edit fields above, then fill in guard details below."
-            onBack={goBack}
-            backLabel="Back to dashboard"
-          />
-          {error && (
-            <p role="alert" style={{ color: "red", padding: "1rem" }}>
-              {error}
-            </p>
-          )}
-          <FormBuilderForm
-            formType="guard"
-            fields={fields}
-            isSaving={isSaving}
-            isSubmitting={isSubmitting}
-            onSaveLayout={saveFields}
-            onCancel={goBack}
-            onSubmit={async (data) => {
-              // Map generic form data to StaffMemberFormValues
-              const values = data as unknown as StaffMemberFormValues;
-              // Handle file fields
-              values.characterCertificateFile =
-                (data["characterCertificateFile"] as File | null) ?? null;
-              values.policeVerificationFile =
-                (data["policeVerificationFile"] as File | null) ?? null;
-              await saveGuard(values);
-            }}
-          />
-        </div>
-      </AppScreenLayout>
+      <>
+        {error ? (
+          <p role="alert" style={{ color: "red", padding: "1rem" }}>
+            {error}
+          </p>
+        ) : null}
+        <AddStaffMemberScreen
+          role="guard"
+          isSubmitting={isSubmitting}
+          onBack={goBack}
+          onCancel={goBack}
+          onSubmit={saveGuard}
+        />
+      </>
     );
   }
 
-  // ── Default form mode ─────────────────────────────────────────────────────
+  if (isSchemaLoading) {
+    return null;
+  }
+
   return (
-    <>
-      {error ? (
-        <p role="alert" style={{ color: "red", padding: "1rem" }}>
-          {error}
-        </p>
-      ) : null}
-      <AddStaffMemberScreen
-        role="guard"
-        isSubmitting={isSubmitting}
-        onBack={goBack}
-        onCancel={goBack}
-        onSubmit={saveGuard}
-      />
-    </>
+    <AppScreenLayout>
+      <div className="app-screen-layout__content">
+        <PageHeader
+          title="Add Guard"
+          subtitle="Fill in the custom form for this agency."
+          onBack={goBack}
+          backLabel="Back to dashboard"
+        />
+        {error ? (
+          <p role="alert" style={{ color: "red", padding: "1rem" }}>
+            {error}
+          </p>
+        ) : null}
+        <FormBuilderForm
+          formType="guard"
+          fields={fields}
+          isSubmitting={isSubmitting}
+          onCancel={goBack}
+          onSubmit={async (data) => {
+            const values = data as unknown as StaffMemberFormValues;
+            values.characterCertificateFile =
+              (data["characterCertificateFile"] as File | null) ?? null;
+            values.policeVerificationFile =
+              (data["policeVerificationFile"] as File | null) ?? null;
+            await saveGuard(values);
+          }}
+        />
+      </div>
+    </AppScreenLayout>
   );
 }

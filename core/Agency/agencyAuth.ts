@@ -94,7 +94,8 @@ export async function getAgencyById(
     return null;
   }
 
-  return snapshot.data() as Agency;
+  const data = snapshot.data() as Agency;
+  return { ...data, id: data.id || snapshot.id };
 }
 
 export interface LoginAgencyParams {

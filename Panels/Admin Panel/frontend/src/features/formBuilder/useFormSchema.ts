@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  getFormSchema,
-  saveFormSchema,
-  getDefaultFields,
-} from "@raskha/form-builder";
+import { getDefaultFields } from "@raskha/form-builder";
 import type { FormField, FormSchema, FormType } from "@raskha/form-builder";
-import { db } from "../../lib/firebase";
+import {
+  fetchFormSchemaApi,
+  saveFormSchemaApi,
+} from "./formSchemaApi";
 
 /**
- * Fetches and manages the custom FormSchema for a given agency + form type.
- * Falls back to the default fields if no custom schema exists yet.
+ * Loads / saves custom form schemas via Admin API (Admin SDK).
+ * Avoids client Firestore permission errors on formSchemas.
  */
 export function useFormSchema(
   agencyId: string | undefined,
-  formType: FormType,
+  formType: FormType
 ) {
   const [schema, setSchema] = useState<FormSchema | null>(null);
   const [fields, setFields] = useState<FormField[]>(getDefaultFields(formType));
@@ -23,45 +22,68 @@ export function useFormSchema(
 
   useEffect(() => {
     if (!agencyId) {
+      setSchema(null);
       setFields(getDefaultFields(formType));
       setIsLoading(false);
       return;
     }
 
+    let cancelled = false;
     setIsLoading(true);
-    getFormSchema(db, agencyId, formType)
+    setError("");
+
+    fetchFormSchemaApi(formType)
       .then((result) => {
-        if (result) {
-          setSchema(result);
-          setFields(result.fields);
+        if (cancelled) return;
+        if (result && Array.isArray(result.fields) && result.fields.length > 0) {
+          const sorted = [...(result.fields as FormField[])].sort(
+            (a, b) => a.order - b.order
+          );
+          setSchema(result as unknown as FormSchema);
+          setFields(sorted);
         } else {
-          // No custom schema yet — load defaults
+          setSchema(null);
           setFields(getDefaultFields(formType));
         }
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const e = err as { message?: string };
+        setError(e.message ?? "Failed to load form schema.");
+        setSchema(null);
         setFields(getDefaultFields(formType));
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [agencyId, formType]);
 
   const saveFields = useCallback(
     async (updatedFields: FormField[]) => {
-      if (!agencyId) return;
+      if (!agencyId) {
+        throw new Error("Agency is not loaded.");
+      }
       setIsSaving(true);
       setError("");
       try {
-        const saved = await saveFormSchema(db, agencyId, formType, updatedFields);
-        setSchema(saved);
+        const saved = await saveFormSchemaApi(formType, updatedFields);
+        setSchema(saved as unknown as FormSchema);
         setFields(updatedFields);
+        return saved as unknown as FormSchema;
       } catch (err: unknown) {
         const e = err as { message?: string };
-        setError(e.message ?? "Failed to save form schema.");
+        const message = e.message ?? "Failed to save form schema.";
+        setError(message);
+        throw err;
       } finally {
         setIsSaving(false);
       }
     },
-    [agencyId, formType],
+    [agencyId, formType]
   );
 
   return { schema, fields, isLoading, isSaving, error, saveFields };

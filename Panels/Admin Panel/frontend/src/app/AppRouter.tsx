@@ -12,6 +12,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { AddHrStaffPage } from "../pages/AddHrStaffPage";
 import { EditHrStaffPage } from "../pages/EditHrStaffPage";
 import { HrStaffListPage } from "../pages/HrStaffListPage";
+import { FormBuilderPage } from "../pages/FormBuilderPage";
 import { APP_ROUTES } from "./routePaths";
 
 // Redirects to login if not authenticated
@@ -63,6 +64,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <AgencyDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.formBuilder}
+        element={
+          <ProtectedRoute>
+            <FormBuilderPage />
           </ProtectedRoute>
         }
       />

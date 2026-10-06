@@ -7,6 +7,7 @@ export { FORM_SCHEMAS_COLLECTION } from "./formSchema";
 
 // Schema CRUD service
 export {
+  formSchemaDocId,
   getDefaultFields,
   getFormSchema,
   saveFormSchema,

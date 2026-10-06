@@ -1,37 +1,5 @@
 import type { AgencyFormValues, AgencyListItem } from "./agencyTypes";
-
-const API_BASE =
-  import.meta.env.VITE_SUPER_ADMIN_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:3003";
-
-function apiKey(): string {
-  return import.meta.env.VITE_SUPER_ADMIN_API_KEY ?? "";
-}
-
-async function saFetch<T>(
-  path: string,
-  init: RequestInit = {}
-): Promise<T> {
-  const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
-  const key = apiKey();
-  if (key) headers.set("x-api-key", key);
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-  });
-
-  const data = (await response.json().catch(() => ({}))) as T & {
-    error?: string;
-  };
-
-  if (!response.ok) {
-    throw new Error(data.error ?? `Request failed (${response.status})`);
-  }
-
-  return data;
-}
+import { saFetch } from "../../lib/saApi";
 
 export async function listAgenciesApi(): Promise<AgencyListItem[]> {
   const data = await saFetch<{ agencies: AgencyListItem[] }>("/api/agencies");

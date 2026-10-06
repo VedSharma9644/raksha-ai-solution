@@ -6,6 +6,7 @@ import express from "express";
 import { isAllowedCorsOrigin } from "./cors.js";
 import { requireSuperAdmin } from "./middleware/requireSuperAdmin.js";
 import { createAgencyRoutes } from "./routes/agencyRoutes.js";
+import { createModuleRoutes } from "./routes/moduleRoutes.js";
 import { verifyAgencyLogin } from "./routes/verifyLogin.js";
 
 const rootEnv = resolve(process.cwd(), "../../../.env");
@@ -79,6 +80,7 @@ app.get("/health", (_req, res) => {
 app.post("/api/agencies/verify-login", verifyAgencyLogin);
 
 app.use("/api/agencies", requireSuperAdmin, createAgencyRoutes());
+app.use("/api/modules", requireSuperAdmin, createModuleRoutes());
 
 const PORT = Number(process.env.PORT ?? 3003);
 app.listen(PORT, () => {

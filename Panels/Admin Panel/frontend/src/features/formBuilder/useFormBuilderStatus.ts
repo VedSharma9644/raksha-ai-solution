@@ -1,28 +1,21 @@
-import { useEffect, useState } from "react";
-import { isFormBuilderEnabledForAgency } from "@raskha/form-builder";
-import { db } from "../../lib/firebase";
+import { useMemo } from "react";
+import { isFormBuilderModuleEnabled } from "@raskha/shared";
+import { useAuthContext } from "../authentication";
 
 /**
- * Returns whether the Form Builder feature is enabled for the given agency.
- * Used by Add Guard / Add HR / Add Site pages to decide which form to render.
+ * Form Builder on/off from agency.enabledModules (cached at Raksha verify-login).
+ * Super Admin is the source of truth at login; panels read the local agency cache.
  */
-export function useFormBuilderStatus(agencyId: string | undefined) {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+export function useFormBuilderStatus(_agencyId?: string) {
+  const { agency, isLoading: isAuthLoading } = useAuthContext();
 
-  useEffect(() => {
-    if (!agencyId) {
-      setIsEnabled(false);
-      setIsLoading(false);
-      return;
-    }
+  const isEnabled = useMemo(
+    () => isFormBuilderModuleEnabled(agency?.enabledModules),
+    [agency?.enabledModules]
+  );
 
-    setIsLoading(true);
-    isFormBuilderEnabledForAgency(db, agencyId)
-      .then(setIsEnabled)
-      .catch(() => setIsEnabled(false))
-      .finally(() => setIsLoading(false));
-  }, [agencyId]);
-
-  return { isEnabled, isLoading };
+  return {
+    isEnabled,
+    isLoading: isAuthLoading,
+  };
 }

@@ -1,0 +1,61 @@
+.form-builder-page__picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.form-builder-page__card {
+  text-align: left;
+  border-radius: 1rem;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary, #0f766e) 18%, var(--color-border, #e5e7eb));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--color-primary, #0f766e) 8%, transparent),
+      transparent 50%
+    ),
+    var(--color-surface, #fff);
+  padding: 1.35rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.form-builder-page__card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-primary, #0f766e) 45%, var(--color-border, #e5e7eb));
+  box-shadow: 0 14px 28px -22px rgb(15 23 42 / 0.55);
+}
+
+.form-builder-page__card-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary, #111827);
+  margin-bottom: 0.4rem;
+}
+
+.form-builder-page__card-desc {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.form-builder-page__loading {
+  padding: 1rem 0;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.form-builder-page__error {
+  color: var(--color-error, #dc2626);
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 860px) {
+  .form-builder-page__picker {
+    grid-template-columns: 1fr;
+  }
+}

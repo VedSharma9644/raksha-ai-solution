@@ -45,3 +45,15 @@ export {
   type AppearanceColors,
   type AppearancePreset,
 } from "./appearance/pageAppearance";
+
+export {
+  AGENCY_MODULE_ACCESS_COLLECTION,
+  DEFAULT_ENABLED_FEATURE_IDS,
+  FORM_BUILDER_MODULE_ID,
+  getAgencyModuleAccess,
+  isFormBuilderModuleEnabled,
+  isModuleEnabled,
+  listAgencyModuleAccess,
+  saveAgencyModuleAccess,
+  type AgencyModuleAccess,
+} from "./modules/agencyModuleAccess";

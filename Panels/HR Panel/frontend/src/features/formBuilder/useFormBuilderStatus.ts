@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { isFormBuilderEnabledForAgency } from "@raskha/form-builder";
+import { getAgencyById } from "@raskha/core";
+import { isFormBuilderModuleEnabled } from "@raskha/shared";
 import { db } from "../../lib/firebase";
 
 /**
- * Returns whether the Form Builder feature is enabled for the given agency.
- * Used by the Add Guard page to decide which form to render.
+ * Form Builder on/off from the agency's cached enabledModules
+ * (written by Super Admin verify-login when the Agency Admin signs in).
  */
 export function useFormBuilderStatus(agencyId: string | undefined) {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -17,11 +18,24 @@ export function useFormBuilderStatus(agencyId: string | undefined) {
       return;
     }
 
+    let cancelled = false;
     setIsLoading(true);
-    isFormBuilderEnabledForAgency(db, agencyId)
-      .then(setIsEnabled)
-      .catch(() => setIsEnabled(false))
-      .finally(() => setIsLoading(false));
+
+    getAgencyById(db, agencyId)
+      .then((agency) => {
+        if (cancelled) return;
+        setIsEnabled(isFormBuilderModuleEnabled(agency?.enabledModules));
+      })
+      .catch(() => {
+        if (!cancelled) setIsEnabled(false);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [agencyId]);
 
   return { isEnabled, isLoading };
