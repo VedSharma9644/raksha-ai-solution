@@ -1,4 +1,5 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
+import { initializeApp } from "firebase/app";
+import type { FirebaseApp } from "firebase/app";
 
 export interface FirebaseConfig {
   apiKey: string;

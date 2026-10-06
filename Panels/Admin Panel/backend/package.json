@@ -2,11 +2,13 @@
   "name": "@raskha/admin-backend",
   "version": "1.0.0",
   "private": true,
-  "main": "src/index.js",
+  "type": "module",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx src/index.ts",
     "seed": "tsx src/scripts/seedAgency.ts",
-    "build": "tsc"
+    "build": "node scripts/build.mjs",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "@raskha/core": "1.0.0",
@@ -16,6 +18,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "esbuild": "^0.25.12",
     "tsx": "^4.19.2"
   }
 }

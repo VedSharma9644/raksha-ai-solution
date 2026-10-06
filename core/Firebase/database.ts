@@ -1,7 +1,11 @@
-import { Firestore } from "firebase/firestore";
+import type { Firestore } from "firebase/firestore";
 
 export class DatabaseService {
-  constructor(private readonly db: Firestore) {}
+  private readonly db: Firestore;
+
+  constructor(db: Firestore) {
+    this.db = db;
+  }
 
   get instance(): Firestore {
     return this.db;

@@ -1,5 +1,5 @@
-import { Router, Request, Response } from "express";
-import { Firestore } from "firebase/firestore";
+import type { Firestore } from "firebase/firestore";
+import { Router, type Request, type Response } from "express";
 import {
   addGuard,
   getGuardById,

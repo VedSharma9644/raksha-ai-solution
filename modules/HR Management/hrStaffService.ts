@@ -1,5 +1,4 @@
 import {
-  Firestore,
   collection,
   doc,
   getDoc,
@@ -10,7 +9,9 @@ import {
   where,
   serverTimestamp,
 } from "firebase/firestore";
-import { HrStaff, HrStaffStatus, HR_STAFF_COLLECTION } from "./hrStaff";
+import type { Firestore } from "firebase/firestore";
+import { HR_STAFF_COLLECTION } from "./hrStaff";
+import type { HrStaff, HrStaffStatus } from "./hrStaff";
 
 export interface UpdateHrStaffParams {
   fullName?: string;

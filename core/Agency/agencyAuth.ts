@@ -2,17 +2,17 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  UserCredential,
-  Auth,
 } from "firebase/auth";
+import type { Auth, UserCredential } from "firebase/auth";
 import {
-  Firestore,
   doc,
   setDoc,
   getDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { Agency, AgencyPlan, AgencyStatus, AGENCIES_COLLECTION } from "./agency";
+import type { Firestore } from "firebase/firestore";
+import { AGENCIES_COLLECTION } from "./agency";
+import type { Agency, AgencyPlan, AgencyStatus } from "./agency";
 
 export interface CreateAgencyParams {
   name: string;

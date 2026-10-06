@@ -4,13 +4,15 @@ import {
   getAuth,
 } from "firebase/auth";
 import {
-  Firestore,
   doc,
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { initializeApp, deleteApp, FirebaseApp } from "firebase/app";
-import { HrStaff, HrStaffStatus, HR_STAFF_COLLECTION } from "./hrStaff";
+import type { Firestore } from "firebase/firestore";
+import { initializeApp, deleteApp } from "firebase/app";
+import type { FirebaseApp } from "firebase/app";
+import { HR_STAFF_COLLECTION } from "./hrStaff";
+import type { HrStaff, HrStaffStatus } from "./hrStaff";
 
 export interface CreateHrStaffParams {
   agencyId: string;
@@ -78,17 +80,27 @@ export async function createHrStaffAccount(
  * does not allow changing another user's password directly; a reset email is
  * the secure client-side alternative. The HR user follows the link to set
  * their new password.
+ *
+ * Pass `continueUrl` (e.g. the HR Hosting site) so the reset lands on the
+ * correct panel after completion.
  */
 export async function sendHrPasswordResetEmail(
   firebaseConfig: object,
-  email: string
+  email: string,
+  continueUrl?: string
 ): Promise<void> {
   const appName = `hr-pw-reset-${Date.now()}`;
   const secondaryApp = initializeApp(firebaseConfig, appName);
   const secondaryAuth = getAuth(secondaryApp);
 
   try {
-    await sendPasswordResetEmail(secondaryAuth, email);
+    await sendPasswordResetEmail(
+      secondaryAuth,
+      email,
+      continueUrl
+        ? { url: continueUrl, handleCodeInApp: false }
+        : undefined
+    );
   } finally {
     await deleteApp(secondaryApp);
   }

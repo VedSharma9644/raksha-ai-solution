@@ -1,9 +1,7 @@
-import {
-    getAuth,
-    Auth
-  } from "firebase/auth";
-  import { FirebaseApp } from "firebase/app";
-  
-  export function createFirebaseAuth(app: FirebaseApp): Auth {
-    return getAuth(app);
-  }
+import { getAuth } from "firebase/auth";
+import type { Auth } from "firebase/auth";
+import type { FirebaseApp } from "firebase/app";
+
+export function createFirebaseAuth(app: FirebaseApp): Auth {
+  return getAuth(app);
+}

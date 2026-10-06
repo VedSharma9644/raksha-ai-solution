@@ -1,7 +1,6 @@
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
-import type { StaffMemberFormProps } from "../StaffMemberForm";
 import { StaffMemberForm } from "../StaffMemberForm";
 import "./AddStaffMemberScreen.css";
 

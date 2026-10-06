@@ -1,5 +1,4 @@
 import {
-  Firestore,
   collection,
   doc,
   addDoc,
@@ -11,7 +10,9 @@ import {
   where,
   serverTimestamp,
 } from "firebase/firestore";
-import { Guard, GuardStatus, GUARDS_COLLECTION } from "./guard";
+import type { Firestore } from "firebase/firestore";
+import { GUARDS_COLLECTION } from "./guard";
+import type { Guard, GuardStatus } from "./guard";
 
 export interface AddGuardParams {
   agencyId: string;

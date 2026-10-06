@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.firebase
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.md
+**/.tmp
+**/tsconfig.*.tsbuildinfo
+Panels/*/frontend
+Panels/Employee Panel
+Panels/Guard Web
+Panels/Super Admin Panel
+package-lock.json

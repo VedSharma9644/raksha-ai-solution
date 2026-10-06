@@ -10,7 +10,10 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@raskha/core": ["../../../core/index.ts"],
+      "@raskha/guard-management": ["../../../modules/Guard Management/index.ts"],
+      "@raskha/hr-management": ["../../../modules/HR Management/index.ts"]
     },
 
     /* Bundler mode */

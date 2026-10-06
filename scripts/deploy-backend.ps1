@@ -1,0 +1,124 @@
+# Deploy a panel backend to Cloud Run from the monorepo root.
+# Usage (from repo root):
+#   .\scripts\deploy-backend.ps1 admin
+#   .\scripts\deploy-backend.ps1 hr
+param(
+  [Parameter(Mandatory = $true)]
+  [ValidateSet("admin", "hr")]
+  [string]$Panel,
+
+  [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "app-raksha" }),
+  [string]$Region = $(if ($env:GCP_REGION) { $env:GCP_REGION } else { "asia-south1" }),
+  [string]$Repo = $(if ($env:ARTIFACT_REPO) { $env:ARTIFACT_REPO } else { "raskha-backends" })
+)
+
+$ErrorActionPreference = "Continue"
+$Root = Split-Path -Parent $PSScriptRoot
+Set-Location $Root
+
+switch ($Panel) {
+  "admin" {
+    $Service = "raskha-admin-api"
+    $Dockerfile = "Panels/Admin Panel/backend/Dockerfile"
+  }
+  "hr" {
+    $Service = "raskha-hr-api"
+    $Dockerfile = "Panels/HR Panel/backend/Dockerfile"
+  }
+}
+
+if (-not (Test-Path ".env")) {
+  throw "Missing .env at repo root (needed for Firebase env vars)."
+}
+
+# Load selected env keys into this process (values not echoed)
+Get-Content ".env" | ForEach-Object {
+  if ($_ -match '^\s*#' -or $_ -match '^\s*$') { return }
+  $parts = $_.Split("=", 2)
+  if ($parts.Length -ne 2) { return }
+  $key = $parts[0].Trim()
+  $val = $parts[1].Trim().Trim('"').Trim("'")
+  if ($key -match '^(FIREBASE_|CORS_ALLOWED_ORIGINS$)') {
+    Set-Item -Path "Env:$key" -Value $val
+  }
+}
+
+foreach ($required in @(
+  "FIREBASE_API_KEY",
+  "FIREBASE_AUTH_DOMAIN",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_STORAGE_BUCKET",
+  "FIREBASE_MESSAGING_SENDER_ID",
+  "FIREBASE_APP_ID"
+)) {
+  $val = [Environment]::GetEnvironmentVariable($required)
+  if ([string]::IsNullOrWhiteSpace($val)) {
+    throw "Missing $required in .env"
+  }
+}
+
+$Image = "$Region-docker.pkg.dev/$ProjectId/$Repo/${Service}:latest"
+
+Write-Host "Ensuring Artifact Registry repo '$Repo' in $Region..."
+gcloud artifacts repositories describe $Repo --location=$Region --project=$ProjectId 1>$null 2>$null
+if ($LASTEXITCODE -ne 0) {
+  gcloud artifacts repositories create $Repo `
+    --repository-format=docker `
+    --location=$Region `
+    --project=$ProjectId `
+    --description="Raskha panel backends"
+  if ($LASTEXITCODE -ne 0) { throw "Failed to create Artifact Registry repo" }
+}
+
+$cloudbuild = @"
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', '$Dockerfile', '-t', '$Image', '.']
+images:
+  - $Image
+options:
+  logging: CLOUD_LOGGING_ONLY
+timeout: 1200s
+"@
+
+$tmp = Join-Path $env:TEMP "raskha-cloudbuild-$Panel.yaml"
+# UTF-8 without BOM (Cloud Build rejects BOM)
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($tmp, $cloudbuild, $utf8NoBom)
+
+Write-Host "Building and pushing $Image ..."
+gcloud builds submit --project=$ProjectId --config=$tmp --timeout=1200
+if ($LASTEXITCODE -ne 0) { throw "Cloud Build failed" }
+
+$envVars = @(
+  "FIREBASE_API_KEY=$($env:FIREBASE_API_KEY)",
+  "FIREBASE_AUTH_DOMAIN=$($env:FIREBASE_AUTH_DOMAIN)",
+  "FIREBASE_PROJECT_ID=$($env:FIREBASE_PROJECT_ID)",
+  "FIREBASE_STORAGE_BUCKET=$($env:FIREBASE_STORAGE_BUCKET)",
+  "FIREBASE_MESSAGING_SENDER_ID=$($env:FIREBASE_MESSAGING_SENDER_ID)",
+  "FIREBASE_APP_ID=$($env:FIREBASE_APP_ID)"
+) -join ","
+
+Write-Host "Deploying Cloud Run service $Service ..."
+gcloud run deploy $Service `
+  --project=$ProjectId `
+  --image=$Image `
+  --region=$Region `
+  --platform=managed `
+  --allow-unauthenticated `
+  --port=8080 `
+  --memory=512Mi `
+  --cpu=1 `
+  --min-instances=0 `
+  --max-instances=5 `
+  --set-env-vars=$envVars
+if ($LASTEXITCODE -ne 0) { throw "Cloud Run deploy failed" }
+
+$url = gcloud run services describe $Service `
+  --project=$ProjectId `
+  --region=$Region `
+  --format="value(status.url)"
+
+Write-Host ""
+Write-Host "Deployed $Service -> $url"
+Write-Host "Health: $url/health"

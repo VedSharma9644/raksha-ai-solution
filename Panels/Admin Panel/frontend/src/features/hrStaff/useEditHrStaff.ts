@@ -6,17 +6,9 @@ import {
   sendHrPasswordResetEmail,
 } from "@raskha/hr-management";
 import type { HrStaff } from "@raskha/hr-management";
-import { db } from "../../lib/firebase";
+import { panelActionCodeSettings } from "@raskha/core";
+import { db, clientFirebaseConfig } from "../../lib/firebase";
 import type { HrStaffFormValues } from "./HrStaffForm";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.FIREBASE_API_KEY,
-  authDomain: import.meta.env.FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.FIREBASE_APP_ID,
-};
 
 export function useEditHrStaff(hrStaffId: string) {
   const navigate = useNavigate();
@@ -54,7 +46,6 @@ export function useEditHrStaff(hrStaffId: string) {
     setIsSubmitting(true);
 
     try {
-      // Update Firestore fields
       await updateHrStaff(db, hrStaffId, {
         fullName: values.fullName,
         employeeCode: values.employeeCode,
@@ -62,11 +53,13 @@ export function useEditHrStaff(hrStaffId: string) {
         notes: values.notes,
       });
 
-      // If a new password was entered, send a password reset email
       if (values.password && hrStaff) {
-        await sendHrPasswordResetEmail(firebaseConfig, hrStaff.email);
+        await sendHrPasswordResetEmail(
+          clientFirebaseConfig,
+          hrStaff.email,
+          panelActionCodeSettings("hr").url
+        );
         setPasswordResetSent(true);
-        // Stay on page to show the reset email confirmation
         setIsSubmitting(false);
         return;
       }

@@ -1,10 +1,35 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { config } from "dotenv";
-import { resolve } from "path";
-config({ path: resolve(process.cwd(), "../../../.env") });
-
 import express from "express";
-import { initializeFirebase } from "@raskha/core";
+import {
+  initializeFirebase,
+  isAllowedCorsOrigin,
+} from "@raskha/core";
 import { createGuardRoutes } from "./routes/guardRoutes";
+
+// Local monorepo .env; Cloud Run injects env vars instead
+const rootEnv = resolve(process.cwd(), "../../../.env");
+if (existsSync(rootEnv)) {
+  config({ path: rootEnv });
+} else {
+  config();
+}
+
+const required = [
+  "FIREBASE_API_KEY",
+  "FIREBASE_AUTH_DOMAIN",
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_STORAGE_BUCKET",
+  "FIREBASE_MESSAGING_SENDER_ID",
+  "FIREBASE_APP_ID",
+] as const;
+
+for (const key of required) {
+  if (!process.env[key]) {
+    throw new Error(`Missing required env var: ${key}`);
+  }
+}
 
 const firebase = initializeFirebase({
   apiKey: process.env.FIREBASE_API_KEY!,
@@ -16,15 +41,46 @@ const firebase = initializeFirebase({
 });
 
 const db = firebase.database.instance;
+const corsExtra = process.env.CORS_ALLOWED_ORIGINS;
 
 const app = express();
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (isAllowedCorsOrigin(origin, corsExtra)) {
+    res.setHeader("Access-Control-Allow-Origin", origin!);
+    res.setHeader("Vary", "Origin");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
+  }
+
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+
+  next();
+});
+
 app.use(express.json());
 
-// Mount routes
+app.get("/health", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "raskha-admin-api",
+    firebase: typeof firebase.app === "object",
+  });
+});
+
 app.use("/api/guards", createGuardRoutes(db));
 
-const PORT = process.env.PORT ?? 3001;
+const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {
-  console.log(`Raskha Admin Backend running on http://localhost:${PORT}`);
-  console.log("Firebase Core loaded:", typeof firebase.app === "object");
+  console.log(`Raskha Admin Backend listening on :${PORT}`);
 });

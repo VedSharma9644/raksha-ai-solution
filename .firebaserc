@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "app-raksha"
+  },
+  "targets": {
+    "app-raksha": {
+      "hosting": {
+        "super-admin": [
+          "app-raksha-super-admin"
+        ],
+        "agency-admin": [
+          "app-raksha-agency-admin"
+        ],
+        "hr": [
+          "app-raksha-hr"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
