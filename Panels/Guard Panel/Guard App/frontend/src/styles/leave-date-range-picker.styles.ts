@@ -1,0 +1,165 @@
+import { StyleSheet } from 'react-native';
+
+import { appColors, appRadii, appSpacing, appTypography } from '../theme';
+
+export const leaveDateRangePickerStyles = StyleSheet.create({
+  section: {
+    gap: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: appColors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBadgeText: {
+    fontSize: 12,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+  },
+  stepTitle: {
+    ...appTypography.labelXl,
+    color: appColors.onSurface,
+  },
+  hint: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onSurfaceVariant,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  dateGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  dateCard: {
+    flex: 1,
+    backgroundColor: appColors.surfaceContainerLowest,
+    borderRadius: appRadii.xl,
+    padding: appSpacing.md,
+    minHeight: 96,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  dateCardPressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  dateCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dateCardLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.secondary,
+    letterSpacing: 0.6,
+  },
+  dateValue: {
+    ...appTypography.headlineSm,
+    fontFamily: 'PublicSans_800ExtraBold',
+    color: appColors.onSurface,
+    marginTop: 4,
+  },
+  dateMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'PublicSans_600SemiBold',
+    color: appColors.secondary,
+    marginTop: 2,
+  },
+  dateUnderline: {
+    marginTop: 8,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: appColors.primary,
+  },
+  durationBanner: {
+    backgroundColor: appColors.surfaceContainerHigh,
+    borderRadius: appRadii.xl,
+    paddingHorizontal: appSpacing.md,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: appSpacing.xs,
+  },
+  durationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+  },
+  durationLabel: {
+    ...appTypography.labelLg,
+    color: appColors.onSurface,
+    flexShrink: 1,
+  },
+  durationRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  durationValue: {
+    ...appTypography.titleLg,
+    color: appColors.primary,
+    fontFamily: 'PublicSans_700Bold',
+  },
+  durationMeta: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_500Medium',
+    color: appColors.secondary,
+  },
+  presetsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.surfaceContainerLowest,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  presetChipSelected: {
+    backgroundColor: appColors.primaryContainer,
+  },
+  presetLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onSurface,
+  },
+  presetLabelSelected: {
+    color: appColors.onPrimary,
+  },
+});

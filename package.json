@@ -9,7 +9,8 @@
         "Panels/*/backend",
         "Panels/Employee Panel/Employee Web/frontend",
         "Panels/Employee Panel/Employee Web/backend",
-        "Panels/Employee Panel/Employee App/frontend"
+        "Panels/Employee Panel/Employee App/frontend",
+        "Panels/Guard Panel/Guard App/frontend"
     ],
     "devDependencies": {
         "@types/express": "^5.0.6",

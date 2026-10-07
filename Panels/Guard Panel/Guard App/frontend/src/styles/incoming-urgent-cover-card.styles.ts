@@ -1,0 +1,205 @@
+import { StyleSheet } from 'react-native';
+
+import { appColors, appRadii, appSpacing, appTypography } from '../theme';
+
+export const incomingUrgentCoverCardStyles = StyleSheet.create({
+  card: {
+    backgroundColor: appColors.surfaceContainerLowest,
+    borderRadius: appRadii.xl,
+    padding: appSpacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardDismissed: {
+    opacity: 0.4,
+  },
+  spine: {
+    position: 'absolute',
+    left: 0,
+    top: 12,
+    bottom: 12,
+    width: 6,
+    borderTopRightRadius: appRadii.full,
+    borderBottomRightRadius: appRadii.full,
+    backgroundColor: appColors.tertiary,
+  },
+  body: {
+    paddingLeft: 8,
+    gap: appSpacing.sm,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  urgencyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: appRadii.full,
+    backgroundColor: appColors.errorContainer,
+  },
+  urgencyText: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onErrorContainer,
+  },
+  expiresRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  expiresText: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.tertiary,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: appSpacing.sm,
+    paddingTop: 4,
+  },
+  profileLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: appSpacing.sm,
+    flex: 1,
+    minWidth: 0,
+  },
+  photo: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  profileCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  name: {
+    ...appTypography.titleLg,
+    color: appColors.onSurface,
+  },
+  meta: {
+    ...appTypography.bodyLg,
+    color: appColors.onSurfaceVariant,
+  },
+  callButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: appColors.surfaceContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shiftBox: {
+    backgroundColor: appColors.surfaceContainerLow,
+    borderRadius: appRadii.lg,
+    padding: 12,
+    gap: 8,
+  },
+  shiftRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  shiftCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  shiftTitle: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onSurface,
+  },
+  shiftSub: {
+    ...appTypography.bodyLg,
+    color: appColors.onSurfaceVariant,
+  },
+  overtimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 4,
+  },
+  overtimeText: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.primary,
+  },
+  reasonBox: {
+    backgroundColor: appColors.surfaceContainer,
+    borderRadius: appRadii.lg,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  reasonText: {
+    ...appTypography.bodyLg,
+    color: appColors.onSurface,
+    flex: 1,
+  },
+  reasonBold: {
+    fontFamily: 'PublicSans_700Bold',
+  },
+  actions: {
+    gap: 8,
+    paddingTop: 4,
+  },
+  acceptButton: {
+    minHeight: 58,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.primaryContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  acceptLabel: {
+    ...appTypography.labelXl,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+  },
+  secondaryRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  secondaryButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: appRadii.lg,
+    backgroundColor: appColors.surfaceContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  secondaryLabel: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onSurface,
+  },
+  callLabel: {
+    ...appTypography.labelLg,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.primary,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
+});

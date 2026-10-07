@@ -1,0 +1,91 @@
+import { StyleSheet } from 'react-native';
+
+import { appColors, appRadii, appSpacing, appTypography } from '../theme';
+
+export const homeMarkAttendanceHeroStyles = StyleSheet.create({
+  card: {
+    backgroundColor: appColors.primaryContainer,
+    borderRadius: appRadii.xl,
+    padding: appSpacing.lg,
+    alignItems: 'center',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  blob: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 70, 74, 0.2)',
+  },
+  blobTopRight: {
+    width: 128,
+    height: 128,
+    right: -32,
+    top: -32,
+  },
+  blobBottomLeft: {
+    width: 112,
+    height: 112,
+    left: -24,
+    bottom: -24,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: appRadii.full,
+    marginBottom: appSpacing.sm,
+  },
+  pillText: {
+    ...appTypography.labelLg,
+    color: appColors.onPrimary,
+    fontFamily: 'PublicSans_700Bold',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  cameraCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: appColors.surfaceContainerLowest,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: appSpacing.xs,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  title: {
+    ...appTypography.displayLg,
+    color: appColors.onPrimary,
+    letterSpacing: -0.4,
+    marginTop: appSpacing.xs,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...appTypography.bodyXl,
+    color: appColors.onPrimaryContainer,
+    textAlign: 'center',
+    maxWidth: 320,
+    marginTop: 4,
+  },
+  lockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: appSpacing.xs,
+    marginBottom: appSpacing.md,
+  },
+  lockText: {
+    ...appTypography.labelLg,
+    color: appColors.onPrimaryContainer,
+  },
+});

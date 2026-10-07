@@ -1,0 +1,142 @@
+import { StyleSheet } from 'react-native';
+
+import { appColors, appRadii, appSpacing, appTypography } from '../theme';
+
+export const leaveReasonAndNoteStyles = StyleSheet.create({
+  section: {
+    gap: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: appColors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBadgeText: {
+    fontSize: 12,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+  },
+  stepTitle: {
+    ...appTypography.labelXl,
+    color: appColors.onSurface,
+  },
+  hint: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'PublicSans_600SemiBold',
+    color: appColors.secondary,
+  },
+  reasonsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  reasonPill: {
+    width: '48%',
+    flexGrow: 1,
+    minWidth: '46%',
+    padding: 12,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.surfaceContainerLowest,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  reasonPillSelected: {
+    backgroundColor: appColors.primary,
+  },
+  reasonText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onSurface,
+    flex: 1,
+  },
+  reasonTextSelected: {
+    color: appColors.onPrimary,
+  },
+  noteCard: {
+    backgroundColor: appColors.surfaceContainerLowest,
+    borderRadius: appRadii.xl,
+    padding: appSpacing.sm,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  noteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: appSpacing.xs,
+  },
+  noteLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.secondary,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  voiceHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  voiceHintText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: 'PublicSans_600SemiBold',
+    color: appColors.primary,
+  },
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  noteInput: {
+    flex: 1,
+    minHeight: 64,
+    backgroundColor: appColors.surfaceContainerLow,
+    borderRadius: appRadii.lg,
+    padding: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: 'PublicSans_400Regular',
+    color: appColors.onSurface,
+    textAlignVertical: 'top',
+  },
+  micButton: {
+    width: 48,
+    height: 48,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micButtonListening: {
+    backgroundColor: appColors.error,
+  },
+});
