@@ -1,10 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Image, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Image, View } from 'react-native';
 
+import { DEMO_SELFIE_BASE64, punchInAttendance } from '../../api/guard-api';
 import { brandAssets } from '../../constants/brand-assets';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { patrolCameraViewportStyles as styles } from '../../styles/patrol-camera-viewport.styles';
+import { appColors } from '../../theme';
 import { PatrolCameraShutterButton } from './PatrolCameraShutterButton';
 import { PatrolCameraTopControls } from './PatrolCameraTopControls';
 import { PatrolCaptureSuccessToast } from './PatrolCaptureSuccessToast';
@@ -13,11 +15,26 @@ import { PatrolLiveStatusBadges } from './PatrolLiveStatusBadges';
 import { PatrolOfficialPunchWatermark } from './PatrolOfficialPunchWatermark';
 
 export function PatrolCameraViewport() {
-  const { goBack, openAttendanceMarked } = useGuardAppNavigation();
+  const {
+    goBack,
+    openAttendanceMarked,
+    authToken,
+    cameraUnlocked,
+    lastKnownLocation,
+  } = useGuardAppNavigation();
   const [flashEnabled, setFlashEnabled] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const navigateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!cameraUnlocked) {
+      Alert.alert('Camera locked', 'Complete the site geofence check on Home first.', [
+        { text: 'OK', onPress: goBack },
+      ]);
+    }
+  }, [cameraUnlocked, goBack]);
 
   useEffect(() => {
     return () => {
@@ -28,6 +45,10 @@ export function PatrolCameraViewport() {
   }, []);
 
   const handleCapture = useCallback(() => {
+    if (!cameraUnlocked || !authToken || submitting) {
+      return;
+    }
+
     Animated.sequence([
       Animated.timing(flashOpacity, {
         toValue: 0.9,
@@ -41,17 +62,53 @@ export function PatrolCameraViewport() {
       }),
     ]).start();
 
+    setSubmitting(true);
     setShowSuccessToast(true);
 
-    if (navigateTimeoutRef.current) {
-      clearTimeout(navigateTimeoutRef.current);
+    if (!lastKnownLocation) {
+      setSubmitting(false);
+      setShowSuccessToast(false);
+      Alert.alert(
+        'Location required',
+        'Verify your site location on Home before capturing a selfie.',
+        [{ text: 'OK', onPress: goBack }],
+      );
+      return;
     }
 
-    navigateTimeoutRef.current = setTimeout(() => {
-      setShowSuccessToast(false);
-      openAttendanceMarked();
-    }, 900);
-  }, [flashOpacity, openAttendanceMarked]);
+    const { lat, lng, accuracyMeters } = lastKnownLocation;
+
+    void punchInAttendance(authToken, {
+      lat,
+      lng,
+      accuracyMeters,
+      selfieBase64: DEMO_SELFIE_BASE64,
+    })
+      .then((result) => {
+        if (navigateTimeoutRef.current) {
+          clearTimeout(navigateTimeoutRef.current);
+        }
+        navigateTimeoutRef.current = setTimeout(() => {
+          setShowSuccessToast(false);
+          setSubmitting(false);
+          openAttendanceMarked(result);
+        }, 700);
+      })
+      .catch((error: unknown) => {
+        setShowSuccessToast(false);
+        setSubmitting(false);
+        const message = error instanceof Error ? error.message : 'Punch-in failed.';
+        Alert.alert('Attendance', message);
+      });
+  }, [
+    authToken,
+    cameraUnlocked,
+    flashOpacity,
+    goBack,
+    lastKnownLocation,
+    openAttendanceMarked,
+    submitting,
+  ]);
 
   return (
     <View style={styles.viewport}>
@@ -84,7 +141,15 @@ export function PatrolCameraViewport() {
 
         <View>
           <PatrolOfficialPunchWatermark />
-          <PatrolCameraShutterButton onCapturePress={handleCapture} />
+          {submitting ? (
+            <ActivityIndicator
+              size="large"
+              color={appColors.onPrimary}
+              style={{ marginVertical: 16 }}
+            />
+          ) : (
+            <PatrolCameraShutterButton onCapturePress={handleCapture} />
+          )}
           <PatrolCaptureSuccessToast visible={showSuccessToast} />
         </View>
       </View>

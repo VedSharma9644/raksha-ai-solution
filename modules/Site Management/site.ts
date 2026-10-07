@@ -37,9 +37,14 @@ export interface Site {
   // Supervisor
   siteSupervisor: string;
 
-  // Legacy / general contact
+  // Legacy / optional contact
   contactPerson: string;
   contactPhone: string;
+
+  // Geofence (set by Admin/HR on the site)
+  latitude?: number | null;
+  longitude?: number | null;
+  geofenceRadiusMeters?: number | null;
 
   notes: string;
   status: SiteStatus;

@@ -1,12 +1,15 @@
 import { View } from 'react-native';
 
 import { attendanceMarkedDefaults } from '../../constants/attendance-marked-defaults';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { attendanceMarkedDetailsCardStyles as styles } from '../../styles/attendance-marked-details-card.styles';
 import { DetailInfoRow } from '../shared/DetailInfoRow';
 import { AttendanceGeofenceComplianceRow } from './AttendanceGeofenceComplianceRow';
 import { AttendanceGuardProfileSummary } from './AttendanceGuardProfileSummary';
 
 export function AttendanceMarkedDetailsCard() {
+  const { lastPunchResult } = useGuardAppNavigation();
+
   return (
     <View style={styles.card}>
       <AttendanceGuardProfileSummary />
@@ -15,24 +18,24 @@ export function AttendanceMarkedDetailsCard() {
         <DetailInfoRow
           icon="schedule"
           label={attendanceMarkedDefaults.punchInLabel}
-          title={attendanceMarkedDefaults.punchInTime}
+          title={lastPunchResult?.punchInTime ?? attendanceMarkedDefaults.punchInTime}
           titleVariant="headline"
-          statusBadge={attendanceMarkedDefaults.punchInStatus}
-          subtitle={attendanceMarkedDefaults.punchInDate}
+          statusBadge={lastPunchResult?.punchInStatus ?? attendanceMarkedDefaults.punchInStatus}
+          subtitle={lastPunchResult?.punchInDate ?? attendanceMarkedDefaults.punchInDate}
         />
 
         <DetailInfoRow
           icon="domain"
           label={attendanceMarkedDefaults.dutySiteLabel}
-          title={attendanceMarkedDefaults.dutySiteName}
-          subtitle={attendanceMarkedDefaults.dutyPostName}
+          title={lastPunchResult?.dutySiteName ?? attendanceMarkedDefaults.dutySiteName}
+          subtitle={lastPunchResult?.dutyPostName ?? attendanceMarkedDefaults.dutyPostName}
         />
 
         <DetailInfoRow
           icon="badge"
           label={attendanceMarkedDefaults.rosterLabel}
-          title={attendanceMarkedDefaults.rosterTitle}
-          subtitle={attendanceMarkedDefaults.rosterHours}
+          title={lastPunchResult?.rosterTitle ?? attendanceMarkedDefaults.rosterTitle}
+          subtitle={lastPunchResult?.rosterHours ?? attendanceMarkedDefaults.rosterHours}
         />
 
         <AttendanceGeofenceComplianceRow />

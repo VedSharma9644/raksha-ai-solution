@@ -1,22 +1,34 @@
 import { createContext, useCallback, useMemo, useState, type ReactNode } from 'react';
 
+import type { GuardSessionUser, PunchInResult } from '../api/guard-api';
 import type { BottomTabKey } from '../constants/bottom-tab-menu-items';
 import type { GuardMainTab, GuardStackRoute } from './guard-app-routes';
 
 type GuardAppNavigationContextValue = {
   isAuthenticated: boolean;
+  authToken: string | null;
+  guardUser: GuardSessionUser | null;
+  cameraUnlocked: boolean;
+  lastKnownLocation: { lat: number; lng: number; accuracyMeters: number } | null;
+  lastPunchResult: PunchInResult | null;
   mainTab: GuardMainTab;
   stackRoute: GuardStackRoute | null;
   setMainTab: (tab: BottomTabKey) => void;
   openPatrolSession: () => void;
-  openAttendanceMarked: () => void;
+  openAttendanceMarked: (result?: PunchInResult) => void;
   openShiftDetails: () => void;
   openApplyForLeave: () => void;
   openLeaveTimeOff: () => void;
   openRelieveAGuard: () => void;
   openIncomingReliefRequests: () => void;
   openGuardProfile: () => void;
-  signIn: () => void;
+  setCameraUnlocked: (unlocked: boolean) => void;
+  setLastKnownLocation: (location: {
+    lat: number;
+    lng: number;
+    accuracyMeters: number;
+  } | null) => void;
+  signIn: (token: string, guard: GuardSessionUser) => void;
   signOut: () => void;
   goHome: () => void;
   goBack: () => void;
@@ -32,6 +44,15 @@ type GuardAppNavigationProviderProps = {
 
 export function GuardAppNavigationProvider({ children }: GuardAppNavigationProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [guardUser, setGuardUser] = useState<GuardSessionUser | null>(null);
+  const [cameraUnlocked, setCameraUnlockedState] = useState(false);
+  const [lastKnownLocation, setLastKnownLocationState] = useState<{
+    lat: number;
+    lng: number;
+    accuracyMeters: number;
+  } | null>(null);
+  const [lastPunchResult, setLastPunchResult] = useState<PunchInResult | null>(null);
   const [mainTab, setMainTabState] = useState<GuardMainTab>('home');
   const [stackRoute, setStackRoute] = useState<GuardStackRoute | null>(null);
 
@@ -44,7 +65,10 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
     setStackRoute('patrolSession');
   }, []);
 
-  const openAttendanceMarked = useCallback(() => {
+  const openAttendanceMarked = useCallback((result?: PunchInResult) => {
+    if (result) {
+      setLastPunchResult(result);
+    }
     setStackRoute('attendanceMarked');
   }, []);
 
@@ -72,14 +96,34 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
     setStackRoute('guardProfile');
   }, []);
 
-  const signIn = useCallback(() => {
+  const setCameraUnlocked = useCallback((unlocked: boolean) => {
+    setCameraUnlockedState(unlocked);
+  }, []);
+
+  const setLastKnownLocation = useCallback(
+    (location: { lat: number; lng: number; accuracyMeters: number } | null) => {
+      setLastKnownLocationState(location);
+    },
+    [],
+  );
+
+  const signIn = useCallback((token: string, guard: GuardSessionUser) => {
+    setAuthToken(token);
+    setGuardUser(guard);
     setIsAuthenticated(true);
+    setCameraUnlockedState(false);
+    setLastPunchResult(null);
     setStackRoute(null);
     setMainTabState('home');
   }, []);
 
   const signOut = useCallback(() => {
     setIsAuthenticated(false);
+    setAuthToken(null);
+    setGuardUser(null);
+    setCameraUnlockedState(false);
+    setLastKnownLocationState(null);
+    setLastPunchResult(null);
     setStackRoute(null);
     setMainTabState('home');
   }, []);
@@ -96,6 +140,11 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
   const value = useMemo(
     () => ({
       isAuthenticated,
+      authToken,
+      guardUser,
+      cameraUnlocked,
+      lastKnownLocation,
+      lastPunchResult,
       mainTab,
       stackRoute,
       setMainTab,
@@ -107,6 +156,8 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       openRelieveAGuard,
       openIncomingReliefRequests,
       openGuardProfile,
+      setCameraUnlocked,
+      setLastKnownLocation,
       signIn,
       signOut,
       goHome,
@@ -114,6 +165,11 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
     }),
     [
       isAuthenticated,
+      authToken,
+      guardUser,
+      cameraUnlocked,
+      lastKnownLocation,
+      lastPunchResult,
       mainTab,
       stackRoute,
       setMainTab,
@@ -125,6 +181,8 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       openRelieveAGuard,
       openIncomingReliefRequests,
       openGuardProfile,
+      setCameraUnlocked,
+      setLastKnownLocation,
       signIn,
       signOut,
       goHome,

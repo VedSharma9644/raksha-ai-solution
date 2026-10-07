@@ -1,0 +1,26 @@
+{
+  "name": "@raskha/guard-app-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "node scripts/build.mjs",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@raskha/attendance": "1.0.0",
+    "@raskha/core": "1.0.0",
+    "@raskha/guard-management": "1.0.0",
+    "@raskha/site-management": "1.0.0",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "firebase": "^12.19.0",
+    "firebase-admin": "^14.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "tsx": "^4.19.2"
+  }
+}
