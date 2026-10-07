@@ -41,8 +41,8 @@ export function useAddGuard() {
       const timestamp = Date.now();
       const basePath = `agencies/${agency.id}/guards/${timestamp}`;
 
-      // Upload documents to Firebase Storage (parallel)
-      const [characterCertificateUrl, policeVerificationUrl] =
+      // Upload documents + profile picture to Firebase Storage (parallel)
+      const [characterCertificateUrl, policeVerificationUrl, profilePictureUrl] =
         await Promise.all([
           uploadDocumentIfPresent(
             values.characterCertificateFile,
@@ -51,6 +51,10 @@ export function useAddGuard() {
           uploadDocumentIfPresent(
             values.policeVerificationFile,
             `${basePath}/police-verification`
+          ),
+          uploadDocumentIfPresent(
+            values.profilePictureFile,
+            `${basePath}/profile-picture`
           ),
         ]);
 
@@ -78,6 +82,7 @@ export function useAddGuard() {
         shiftTo: values.shiftTo,
         characterCertificateUrl,
         policeVerificationUrl,
+        profilePictureUrl,
         bankAccount: values.bankAccount,
         esiNumber: values.esiNumber,
         pfNumber: values.pfNumber,

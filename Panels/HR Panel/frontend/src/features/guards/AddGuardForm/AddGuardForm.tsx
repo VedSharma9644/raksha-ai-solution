@@ -1,5 +1,5 @@
-import type { FormEvent } from "react";
-import { useState } from "react";
+import type { FormEvent, ChangeEvent } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../../components/Button";
 import { FileField } from "../../../components/FileField";
 import { FormPanel } from "../../../components/FormPanel";
@@ -101,6 +101,18 @@ export function AddGuardForm({
           Site assignment is handled by the Agency Panel. HR can create the
           guard profile only.
         </p>
+
+        {/* ── Profile Picture ── */}
+        <ProfilePictureUpload
+          name={values.fullName}
+          previewUrl={
+            values.profilePictureFile
+              ? URL.createObjectURL(values.profilePictureFile)
+              : values.profilePictureUrl
+          }
+          disabled={isSubmitting}
+          onChange={(file) => updateField("profilePictureFile", file)}
+        />
 
         {/* ── Section: Personal Details ── */}
         <p className="add-guard-form__section-label">Personal Details</p>
@@ -387,5 +399,55 @@ export function AddGuardForm({
         </div>
       </FormPanel>
     </form>
+  );
+}
+
+// ── Profile Picture Upload ──────────────────────────────────────────────────
+interface ProfilePictureUploadProps {
+  name: string;
+  previewUrl: string;
+  disabled?: boolean;
+  onChange: (file: File) => void;
+}
+
+function ProfilePictureUpload({ name, previewUrl, disabled, onChange }: ProfilePictureUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function getInitials(fullName: string): string {
+    return fullName.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
+  }
+
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) onChange(file);
+  }
+
+  return (
+    <div className="add-guard-form__photo-section">
+      <button
+        type="button"
+        className="add-guard-form__photo-circle"
+        onClick={() => inputRef.current?.click()}
+        disabled={disabled}
+        aria-label="Upload profile picture"
+      >
+        {previewUrl ? (
+          <img src={previewUrl} alt="Profile" className="add-guard-form__photo-img" />
+        ) : (
+          <span className="add-guard-form__photo-initials">{getInitials(name) || "👤"}</span>
+        )}
+        <span className="add-guard-form__photo-overlay">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </span>
+      </button>
+      <div className="add-guard-form__photo-label">
+        <p className="add-guard-form__photo-title">Profile Photo</p>
+        <p className="add-guard-form__photo-hint">Click to upload (JPG, PNG)</p>
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} disabled={disabled} />
+    </div>
   );
 }

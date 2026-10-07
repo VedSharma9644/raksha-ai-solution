@@ -56,6 +56,58 @@
   background: var(--color-hover-tint);
 }
 
+/* ── Avatar ── */
+.guard-avatar {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.guard-avatar--img {
+  object-fit: cover;
+  border: 1.5px solid var(--color-border-strong, #d1d5db);
+}
+.guard-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* ── Action buttons ── */
+.guard-list-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.guard-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  color: var(--color-text-secondary, #6b7280);
+}
+.guard-action-btn:hover { background: #f1f5f9; }
+.guard-action-btn--view:hover { color: #2563eb; background: #eff6ff; }
+.guard-action-btn--delete:hover { color: #dc2626; background: #fef2f2; }
+
+.guard-list-table__name {
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+}
+
 .guard-list-table__empty {
   text-align: center !important;
   color: var(--color-on-surface-variant);

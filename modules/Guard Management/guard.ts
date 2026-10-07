@@ -32,6 +32,9 @@ export interface Guard {
   shiftFrom: string;   // HH:MM e.g. "08:00"
   shiftTo: string;     // HH:MM e.g. "20:00"
 
+  // Profile picture (Firebase Storage URL)
+  profilePictureUrl: string;
+
   // Documents (Firebase Storage URLs)
   characterCertificateUrl: string;
   policeVerificationUrl: string;

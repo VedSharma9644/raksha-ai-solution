@@ -3,6 +3,7 @@ export { EMPTY_GUARD_FORM, SAMPLE_GUARDS } from "./guardTypes";
 export { AddGuardScreen } from "./AddGuardScreen";
 export { GuardListScreen } from "./GuardListScreen";
 export { useAddGuard } from "./useAddGuard";
+export { useDeleteGuard } from "./useDeleteGuard";
 export { useGuardInventory } from "./useGuardInventory";
 export { GuardInventoryPanel } from "./GuardInventoryPanel";
 export type { GuardInventoryPanelProps } from "./GuardInventoryPanel";

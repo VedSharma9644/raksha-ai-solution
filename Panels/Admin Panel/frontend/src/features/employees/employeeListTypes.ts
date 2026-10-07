@@ -8,6 +8,7 @@ export interface EmployeeListItem {
   phone: string;
   assignedSite: string;
   status: "active" | "on_leave" | "inactive";
+  profilePictureUrl?: string;
 }
 
 export const SAMPLE_EMPLOYEES: EmployeeListItem[] = [

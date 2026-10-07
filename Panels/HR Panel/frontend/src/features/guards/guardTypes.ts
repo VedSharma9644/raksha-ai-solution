@@ -27,6 +27,11 @@ export interface GuardFormValues {
   shiftFrom: string;
   shiftTo: string;
 
+  // Profile picture
+  profilePictureFile: File | null;
+  /** Existing URL shown when editing */
+  profilePictureUrl: string;
+
   // Document uploads (File objects — converted to URLs on save)
   characterCertificateFile: File | null;
   policeVerificationFile: File | null;
@@ -67,6 +72,8 @@ export const EMPTY_GUARD_FORM: GuardFormValues = {
   policeVerificationFile: null,
   characterCertificateUrl: "",
   policeVerificationUrl: "",
+  profilePictureFile: null,
+  profilePictureUrl: "",
   bankAccount: "",
   esiNumber: "",
   pfNumber: "",
@@ -79,6 +86,7 @@ export interface GuardListItem {
   employeeCode: string;
   phone: string;
   status: "active" | "on_leave" | "inactive";
+  profilePictureUrl?: string;
 }
 
 export const SAMPLE_GUARDS: GuardListItem[] = [

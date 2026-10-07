@@ -38,8 +38,8 @@ export interface AddGuardParams {
   shiftTo: string;
   characterCertificateUrl: string;
   policeVerificationUrl: string;
+  profilePictureUrl: string;
   bankAccount: string;
-  esiNumber: string;
   pfNumber: string;
   notes: string;
 }
@@ -67,6 +67,7 @@ export interface UpdateGuardParams {
   shiftTo?: string;
   characterCertificateUrl?: string;
   policeVerificationUrl?: string;
+  profilePictureUrl?: string;
   bankAccount?: string;
   esiNumber?: string;
   pfNumber?: string;

@@ -59,7 +59,7 @@ export function useEditGuard(guardId: string) {
       const basePath = `agencies/${guard?.agencyId ?? "unknown"}/guards/${guardId}`;
 
       // Upload only if a new file was chosen — otherwise keep existing URL
-      const [characterCertificateUrl, policeVerificationUrl] =
+      const [characterCertificateUrl, policeVerificationUrl, profilePictureUrl] =
         await Promise.all([
           values.characterCertificateFile
             ? uploadDocumentIfPresent(
@@ -73,6 +73,12 @@ export function useEditGuard(guardId: string) {
                 `${basePath}/police-verification`
               )
             : Promise.resolve(values.policeVerificationUrl),
+          values.profilePictureFile
+            ? uploadDocumentIfPresent(
+                values.profilePictureFile,
+                `${basePath}/profile-picture`
+              )
+            : Promise.resolve(values.profilePictureUrl),
         ]);
 
       await updateGuard(db, guardId, {
@@ -98,6 +104,7 @@ export function useEditGuard(guardId: string) {
         shiftTo: values.shiftTo,
         characterCertificateUrl,
         policeVerificationUrl,
+        profilePictureUrl,
         bankAccount: values.bankAccount,
         esiNumber: values.esiNumber,
         pfNumber: values.pfNumber,
@@ -139,6 +146,8 @@ export function useEditGuard(guardId: string) {
         policeVerificationFile: null,
         characterCertificateUrl: guard.characterCertificateUrl ?? "",
         policeVerificationUrl: guard.policeVerificationUrl ?? "",
+        profilePictureFile: null,
+        profilePictureUrl: guard.profilePictureUrl ?? "",
         bankAccount: guard.bankAccount ?? "",
         esiNumber: guard.esiNumber ?? "",
         pfNumber: guard.pfNumber ?? "",

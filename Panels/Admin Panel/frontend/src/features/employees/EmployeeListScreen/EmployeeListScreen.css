@@ -57,6 +57,77 @@
   background: var(--color-hover-tint);
 }
 
+/* ── Avatar ── */
+.emp-avatar {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.emp-avatar--img {
+  object-fit: cover;
+  border: 1.5px solid var(--color-border-strong, #d1d5db);
+}
+
+.emp-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-light, #dbeafe);
+  color: var(--color-primary, #2563eb);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* ── Action buttons ── */
+.employee-list-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.emp-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.emp-action-btn:hover {
+  background: var(--color-hover-tint, #f1f5f9);
+}
+
+.emp-action-btn--view:hover {
+  color: var(--color-primary, #2563eb);
+  background: #eff6ff;
+}
+
+.emp-action-btn--edit:hover {
+  color: #0284c7;
+  background: #f0f9ff;
+}
+
+.emp-action-btn--delete:hover {
+  color: var(--color-error, #dc2626);
+  background: #fef2f2;
+}
+
+.employee-list-table__name {
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+}
+
 .employee-list-table__empty {
   text-align: center !important;
   color: var(--color-on-surface-variant);

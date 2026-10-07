@@ -2,6 +2,93 @@
   width: 100%;
 }
 
+/* ── Profile picture ── */
+.staff-member-form__photo-section {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 0 1rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  margin-bottom: 0.5rem;
+}
+
+.staff-member-form__photo-circle {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px dashed var(--color-border-strong, #d1d5db);
+  background: var(--color-bg-secondary, #f3f4f6);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.staff-member-form__photo-circle:hover:not(:disabled) {
+  border-color: var(--color-primary, #2563eb);
+}
+
+.staff-member-form__photo-circle:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.staff-member-form__photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.staff-member-form__photo-initials {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text-secondary, #6b7280);
+  user-select: none;
+}
+
+.staff-member-form__photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.staff-member-form__photo-circle:hover:not(:disabled) .staff-member-form__photo-overlay {
+  opacity: 1;
+}
+
+.staff-member-form__photo-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.staff-member-form__photo-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+  margin: 0;
+}
+
+.staff-member-form__photo-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin: 0;
+}
+
+
+
 .staff-member-form__shift-row {
   display: flex;
   align-items: flex-end;

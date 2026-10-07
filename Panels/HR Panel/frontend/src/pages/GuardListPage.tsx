@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
 import { APP_ROUTES, viewGuardPath } from "../app/routePaths";
-import { GuardListScreen } from "../features/guards";
+import { GuardListScreen, useDeleteGuard } from "../features/guards";
+import type { GuardListItem } from "../features/guards";
 import { useAuthContext } from "../features/authentication";
 import { db } from "../lib/firebase";
-import type { GuardListItem } from "../features/guards";
 
 export function GuardListPage() {
   const navigate = useNavigate();
@@ -14,19 +14,22 @@ export function GuardListPage() {
   const [guards, setGuards] = useState<GuardListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [tick, setTick] = useState(0);
+
+  const { removeGuard } = useDeleteGuard();
 
   const load = useCallback(async () => {
     if (!hrStaff?.agencyId) return;
     setIsLoading(true);
     try {
       const data = await listGuardsByAgency(db, hrStaff.agencyId);
-      // Map Guard → GuardListItem
       const mapped: GuardListItem[] = data.map((g: Guard) => ({
         id: g.id,
         fullName: g.fullName,
         employeeCode: g.employeeCode,
         phone: g.phone,
         status: g.status,
+        profilePictureUrl: g.profilePictureUrl || undefined,
       }));
       setGuards(mapped);
     } catch (err: unknown) {
@@ -35,7 +38,7 @@ export function GuardListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [hrStaff?.agencyId]);
+  }, [hrStaff?.agencyId, tick]);
 
   useEffect(() => {
     void load();
@@ -51,7 +54,13 @@ export function GuardListPage() {
       <GuardListScreen
         guards={guards}
         onBack={() => navigate(APP_ROUTES.dashboard)}
-        onSelectGuard={(guardId) => navigate(viewGuardPath(guardId))}
+        onViewGuard={(guardId) => navigate(viewGuardPath(guardId))}
+        onDeleteGuard={(guardId) => {
+          const guard = guards.find((g) => g.id === guardId);
+          void removeGuard(guardId, guard?.fullName ?? "this guard", () =>
+            setTick((t) => t + 1),
+          );
+        }}
       />
     </>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
 import { useAuthContext } from "../authentication";
@@ -9,6 +9,7 @@ export function useGuardList() {
   const [guards, setGuards] = useState<Guard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     if (!agency) {
@@ -26,7 +27,9 @@ export function useGuardList() {
         setError(e.message ?? "Failed to load guards.");
       })
       .finally(() => setIsLoading(false));
-  }, [agency]);
+  }, [agency, tick]);
 
-  return { guards, isLoading, error };
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  return { guards, isLoading, error, reload };
 }

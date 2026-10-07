@@ -27,6 +27,11 @@ export interface StaffMemberFormValues {
   shiftFrom: string;
   shiftTo: string;
 
+  // Profile picture upload
+  profilePictureFile: File | null;
+  /** Existing URL shown when editing */
+  profilePictureUrl: string;
+
   // Document uploads (File objects — converted to URLs on save)
   characterCertificateFile: File | null;
   policeVerificationFile: File | null;
@@ -67,6 +72,8 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   policeVerificationFile: null,
   characterCertificateUrl: "",
   policeVerificationUrl: "",
+  profilePictureFile: null,
+  profilePictureUrl: "",
   bankAccount: "",
   esiNumber: "",
   pfNumber: "",

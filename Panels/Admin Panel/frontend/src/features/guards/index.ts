@@ -5,3 +5,5 @@ export { useDeleteGuard } from "./useDeleteGuard";
 export { useGuardInventory } from "./useGuardInventory";
 export { GuardInventoryPanel } from "./GuardInventoryPanel";
 export type { GuardInventoryPanelProps } from "./GuardInventoryPanel";
+export { GuardProfileModal } from "./GuardProfileModal/GuardProfileModal";
+export type { GuardProfileModalProps } from "./GuardProfileModal/GuardProfileModal";
