@@ -108,14 +108,16 @@ export async function removeGuardAssignment(
   await adjustAssignedStock(db, assignment.itemId, -assignment.quantity);
 }
 
-/** Fetch all assignments for a specific guard. */
+/** Fetch all assignments for a specific guard, scoped to the agency. */
 export async function listAssignmentsByGuard(
   db: Firestore,
   guardId: string,
+  agencyId: string,
 ): Promise<GuardInventoryAssignment[]> {
   const q = query(
     collection(db, GUARD_INVENTORY_ASSIGNMENT_COLLECTION),
     where("guardId", "==", guardId),
+    where("agencyId", "==", agencyId),
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map(

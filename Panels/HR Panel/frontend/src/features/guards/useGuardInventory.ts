@@ -17,10 +17,10 @@ export function useGuardInventory(guardId: string) {
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
-    if (!guardId) return;
+    if (!guardId || !hrStaff?.agencyId) return;
     setIsLoading(true);
     try {
-      const data = await listAssignmentsByGuard(db, guardId);
+      const data = await listAssignmentsByGuard(db, guardId, hrStaff.agencyId);
       setAssignments(data);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -28,7 +28,7 @@ export function useGuardInventory(guardId: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [guardId]);
+  }, [guardId, hrStaff?.agencyId]);
 
   useEffect(() => {
     void load();
