@@ -13,6 +13,7 @@
     "@raskha/attendance": "1.0.0",
     "@raskha/core": "1.0.0",
     "@raskha/guard-management": "1.0.0",
+    "@raskha/leave": "1.0.0",
     "@raskha/site-management": "1.0.0",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",

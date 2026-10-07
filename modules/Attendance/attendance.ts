@@ -19,6 +19,7 @@ export interface AttendanceRecord {
   lng: number;
   accuracyMeters: number;
   selfieUrl: string;
+  selfieStoragePath?: string;
   geofenceStatus: GeofenceStatus;
   shiftStatus: ShiftStatus;
   guardName: string;
@@ -31,7 +32,7 @@ export interface AttendanceRecord {
 
 export const ATTENDANCE_COLLECTION = "attendanceRecords";
 
-/** Demo credentials until Admin/HR persist passwords on `guards`. */
+/** Demo fallback only — real guards authenticate via Firebase Auth. */
 export const DEMO_GUARD_ID = "RKS-8842";
 export const DEMO_GUARD_PASSWORD = "demo1234";
 
@@ -71,4 +72,10 @@ export interface PunchInResult {
   geofenceResult: string;
   selfieUrl: string;
   shiftStatus: ShiftStatus;
+  /** Present when this DTO represents a completed punch-out. */
+  mode?: "punch_in" | "punch_out";
+  punchOutTime?: string;
+  durationLabel?: string;
 }
+
+export type PunchOutResult = PunchInResult;

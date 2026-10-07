@@ -5,7 +5,18 @@ import { applyForLeaveDefaults } from '../../constants/apply-for-leave-defaults'
 import { appColors } from '../../theme';
 import { leaveDutyCoverNoticeStyles as styles } from '../../styles/leave-duty-cover-notice.styles';
 
-export function LeaveDutyCoverNotice() {
+type LeaveDutyCoverNoticeProps = {
+  siteName?: string;
+  supervisorName?: string;
+};
+
+export function LeaveDutyCoverNotice({
+  siteName,
+  supervisorName,
+}: LeaveDutyCoverNoticeProps) {
+  const site = siteName?.trim() || applyForLeaveDefaults.coverSite;
+  const supervisor = supervisorName?.trim() || applyForLeaveDefaults.coverSupervisor;
+
   return (
     <View style={styles.card}>
       <View style={styles.iconWrap}>
@@ -15,9 +26,9 @@ export function LeaveDutyCoverNotice() {
         <Text style={styles.title}>{applyForLeaveDefaults.coverTitle}</Text>
         <Text style={styles.message}>
           {applyForLeaveDefaults.coverMessagePrefix}{' '}
-          <Text style={styles.emphasis}>{applyForLeaveDefaults.coverSite}</Text>{' '}
+          <Text style={styles.emphasis}>{site}</Text>{' '}
           {applyForLeaveDefaults.coverMessageMid}{' '}
-          <Text style={styles.emphasis}>{applyForLeaveDefaults.coverSupervisor}</Text>.
+          <Text style={styles.emphasis}>{supervisor}</Text>.
         </Text>
       </View>
     </View>

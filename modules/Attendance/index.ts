@@ -8,6 +8,7 @@ export {
   type GeofenceCheckResult,
   type GeofenceStatus,
   type PunchInResult,
+  type PunchOutResult,
   type ShiftStatus,
 } from "./attendance";
 
@@ -26,6 +27,12 @@ export {
   getGuardContextById,
   type AuthenticateGuardParams,
 } from "./guardAuth";
+
+export {
+  verifyFirebaseEmailPassword,
+  type FirebasePasswordAuthResult,
+} from "./firebasePasswordAuth";
+
 
 export {
   requestGuardLoginOtp,
@@ -49,5 +56,12 @@ export {
 export {
   getTodayOpenPunchIn,
   markPunchIn,
+  markPunchOut,
+  listAttendanceHistory,
   type MarkPunchInParams,
+  type MarkPunchOutParams,
+  type OpenPunchInRecord,
+  type AttendanceHistoryResponse,
+  type AttendanceHistoryLogDto,
+  type AttendanceHistoryDayStatus,
 } from "./attendanceService";

@@ -19,7 +19,12 @@ export function PatrolSessionScreen() {
         onBackPress={goBack}
       />
 
-      <View style={[styles.content, { paddingBottom: insets.bottom + appSpacing.xl }]}>
+      <View
+        style={[
+          styles.content,
+          { paddingBottom: Math.max(insets.bottom, appSpacing.md) },
+        ]}
+      >
         <PatrolSessionContent />
       </View>
     </View>

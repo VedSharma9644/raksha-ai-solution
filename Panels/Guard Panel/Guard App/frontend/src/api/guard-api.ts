@@ -27,6 +27,17 @@ export type PunchInResult = {
   geofenceResult: string;
   selfieUrl: string;
   shiftStatus: string;
+  mode?: 'punch_in' | 'punch_out';
+  punchOutTime?: string;
+  durationLabel?: string;
+};
+
+export type TodayShiftStatus = {
+  shiftActive: boolean;
+  openPunchInId: string | null;
+  punchedAt: string | null;
+  siteName?: string;
+  postName?: string;
 };
 
 export type GeofenceCheckResult = {
@@ -36,6 +47,56 @@ export type GeofenceCheckResult = {
   accuracyMeters: number;
   distanceMeters: number | null;
   message: string;
+};
+
+export type AttendanceHistoryDayStatus =
+  | 'present'
+  | 'today'
+  | 'off'
+  | 'leave'
+  | 'empty';
+
+export type AttendanceHistoryLogDto = {
+  id: string;
+  kind: 'onDuty' | 'present' | 'weeklyOff' | 'leave';
+  statusLabel: string;
+  dateLabel: string;
+  postLabel: string;
+  postIcon: 'shield' | 'door-front' | 'weekend' | 'domain';
+  detailPrimaryLabel?: string;
+  detailPrimaryValue?: string;
+  detailSecondaryLabel?: string;
+  detailSecondaryValue?: string;
+  detailTertiaryLabel?: string;
+  detailTertiaryValue?: string;
+  footerTags: string[];
+  punchedAtIso: string;
+  dayOfMonth: number;
+  selfieUrl?: string;
+};
+
+export type AttendanceHistoryResponse = {
+  year: number;
+  month: number;
+  monthLabel: string;
+  cycleLabel: string;
+  cycleNote: string;
+  punctualityTitle: string;
+  punctualitySubtitle: string;
+  stats: {
+    presentDays: number;
+    totalHours: number;
+    leaveDays: number;
+    weeklyOffDays: number;
+  };
+  calendarDays: Array<{ day: number; status: AttendanceHistoryDayStatus }>;
+  leadingEmpty: number;
+  logs: AttendanceHistoryLogDto[];
+  filterCounts: {
+    all: number;
+    present: number;
+    weeklyOff: number;
+  };
 };
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -118,6 +179,184 @@ export async function punchInAttendance(
   return parseJson(response);
 }
 
-/** Tiny 1x1 JPEG used as demo selfie payload until live camera capture is wired. */
-export const DEMO_SELFIE_BASE64 =
-  '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAGcP//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEABj8Cf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8hf//Z';
+export async function punchOutAttendance(
+  token: string,
+  params: {
+    lat: number;
+    lng: number;
+    accuracyMeters?: number;
+    selfieBase64: string;
+  },
+): Promise<PunchInResult> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/attendance/punch-out`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  return parseJson(response);
+}
+
+export async function fetchTodayShift(token: string): Promise<TodayShiftStatus> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/attendance/today`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return parseJson(response);
+}
+
+export async function fetchAttendanceHistory(
+  token: string,
+  year: number,
+  month: number,
+): Promise<AttendanceHistoryResponse> {
+  const query = new URLSearchParams({
+    year: String(year),
+    month: String(month),
+  });
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/attendance/history?${query.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return parseJson(response);
+}
+
+export type LeaveTypeKey = 'CL' | 'SL' | 'EL';
+
+export type LeaveBalanceTypeDto = {
+  key: LeaveTypeKey;
+  title: string;
+  quota: number | null;
+  remaining: number | null;
+  usedApproved: number;
+  usedPending: number;
+  valueLabel: string;
+  valueSuffix?: string;
+  subtitle?: string;
+  badge: string;
+  badgeTone: 'paid' | 'slip' | 'urgent';
+  highlighted?: boolean;
+};
+
+export type LeaveBalanceSummaryDto = {
+  year: number;
+  updatedLabel: string;
+  daysLeft: number;
+  daysTaken: number;
+  daysPending: number;
+  payrollNote: string;
+  types: LeaveBalanceTypeDto[];
+  coverSite: string;
+  coverSupervisor: string;
+};
+
+export type LeaveRequestCardDto = {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  statusLabel: string;
+  durationLabel: string;
+  dateRange: string;
+  leaveTypeLabel: string;
+  reasonText: string;
+  appliedMeta?: string;
+  supervisorMeta?: string;
+  approvalNote?: string;
+  approvalDetail?: string;
+  rejectionLabel?: string;
+  compensationNote?: string;
+  showPendingActions?: boolean;
+};
+
+export type LeaveRequestsResponse = {
+  year: number;
+  balance: LeaveBalanceSummaryDto;
+  filterCounts: {
+    all: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  requests: LeaveRequestCardDto[];
+};
+
+export type SubmitLeaveResult = {
+  id: string;
+  status: 'pending';
+  dayCount: number;
+  message: string;
+};
+
+export async function fetchLeaveBalances(
+  token: string,
+  year?: number,
+): Promise<LeaveBalanceSummaryDto> {
+  const query = new URLSearchParams();
+  if (year) {
+    query.set('year', String(year));
+  }
+  const suffix = query.toString() ? `?${query.toString()}` : '';
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/leave/balances${suffix}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson(response);
+}
+
+export async function fetchLeaveRequests(
+  token: string,
+  status: 'all' | 'pending' | 'approved' | 'rejected' = 'all',
+  year?: number,
+): Promise<LeaveRequestsResponse> {
+  const query = new URLSearchParams({ status });
+  if (year) {
+    query.set('year', String(year));
+  }
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/leave/requests?${query.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return parseJson(response);
+}
+
+export async function submitLeaveRequest(
+  token: string,
+  params: {
+    leaveType: LeaveTypeKey;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    note?: string;
+  },
+): Promise<SubmitLeaveResult> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/leave/requests`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  return parseJson(response);
+}
+
+export async function withdrawLeaveRequest(
+  token: string,
+  requestId: string,
+): Promise<{ ok: true; message: string }> {
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/leave/requests/${encodeURIComponent(requestId)}/withdraw`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return parseJson(response);
+}

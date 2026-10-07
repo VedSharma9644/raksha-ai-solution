@@ -9,7 +9,8 @@ export const patrolSessionScreenStyles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minHeight: 0,
     paddingHorizontal: appSpacing.gutter,
-    paddingBottom: appSpacing.xl,
+    paddingBottom: appSpacing.md,
   },
 });

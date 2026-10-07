@@ -11,6 +11,8 @@ import { appColors } from '../../theme';
 
 type LeaveRequestCardProps = {
   item: LeaveRequestCardData;
+  onWithdraw?: (id: string) => void;
+  withdrawing?: boolean;
 };
 
 function statusVisuals(status: LeaveRequestCardData['status']) {
@@ -41,10 +43,25 @@ function statusVisuals(status: LeaveRequestCardData['status']) {
   };
 }
 
-export function LeaveRequestCard({ item }: LeaveRequestCardProps) {
+export function LeaveRequestCard({ item, onWithdraw, withdrawing }: LeaveRequestCardProps) {
   const visuals = statusVisuals(item.status);
   const isRejected = item.status === 'rejected';
   const hasRichApproval = Boolean(item.approvalNote && item.approvalDetail);
+
+  const confirmWithdraw = () => {
+    Alert.alert(
+      'Withdraw request',
+      'Cancel this pending leave request? Your supervisor will no longer see it.',
+      [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Withdraw',
+          style: 'destructive',
+          onPress: () => onWithdraw?.(item.id),
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.card}>
@@ -122,13 +139,13 @@ export function LeaveRequestCard({ item }: LeaveRequestCardProps) {
               styles.actionButton,
               styles.withdrawButton,
               pressed && styles.actionPressed,
+              withdrawing && { opacity: 0.6 },
             ]}
-            onPress={() =>
-              Alert.alert('Withdraw request', 'Leave withdrawal will be available soon.')
-            }
+            onPress={confirmWithdraw}
+            disabled={withdrawing}
           >
             <MaterialIcons name="cancel" size={18} color={appColors.tertiary} />
-            <Text style={styles.withdrawLabel}>Withdraw</Text>
+            <Text style={styles.withdrawLabel}>{withdrawing ? 'Withdrawing…' : 'Withdraw'}</Text>
           </Pressable>
 
           <Pressable
@@ -140,7 +157,7 @@ export function LeaveRequestCard({ item }: LeaveRequestCardProps) {
             onPress={() => Linking.openURL(`tel:${leaveTimeOffDefaults.supervisorTel}`)}
           >
             <MaterialIcons name="call" size={18} color={appColors.onPrimary} />
-            <Text style={styles.callLabel}>Call Amit Ji</Text>
+            <Text style={styles.callLabel}>Call Supervisor</Text>
           </Pressable>
         </View>
       ) : null}
