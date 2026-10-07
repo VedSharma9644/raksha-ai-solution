@@ -8,6 +8,8 @@ export const APP_ROUTES = {
   manageLeave: "/leave",
   siteList: "/sites",
   assignGuards: "/sites/:id/assign-guards",
+  // Attendance
+  attendance: "/attendance",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];

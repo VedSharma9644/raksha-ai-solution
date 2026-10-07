@@ -17,6 +17,7 @@ import { FormBuilderPage } from "../pages/FormBuilderPage";
 import { InventoryListPage } from "../pages/InventoryListPage";
 import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
 import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
+import { AttendancePage } from "../pages/AttendancePage";
 import { APP_ROUTES } from "./routePaths";
 
 // Redirects to login if not authenticated
@@ -185,6 +186,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <EditInventoryItemPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.attendance}
+        element={
+          <ProtectedRoute>
+            <AttendancePage />
           </ProtectedRoute>
         }
       />

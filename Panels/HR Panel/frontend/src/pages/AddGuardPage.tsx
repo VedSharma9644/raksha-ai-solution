@@ -91,6 +91,10 @@ export function AddGuardPage() {
           onCancel={goBack}
           onSubmit={async (data) => {
             const values = data as unknown as GuardFormValues;
+            values.password = (data["password"] as string) ?? "";
+            values.confirmPassword = (data["confirmPassword"] as string) ?? "";
+            values.profilePictureFile =
+              (data["profilePictureFile"] as File | null) ?? null;
             values.characterCertificateFile =
               (data["characterCertificateFile"] as File | null) ?? null;
             values.policeVerificationFile =

@@ -17,6 +17,7 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   "add-hr": APP_ROUTES.addHrStaff,
   "hr-list": APP_ROUTES.hrList,
   "manage-inventory": APP_ROUTES.inventoryList,
+  "attendance": APP_ROUTES.attendance,
 };
 
 export function AgencyDashboardPage() {

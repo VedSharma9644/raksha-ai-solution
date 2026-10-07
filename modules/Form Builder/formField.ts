@@ -8,7 +8,13 @@ export type FormFieldType =
   | "select"
   | "file"
   | "phone"
-  | "email";
+  | "email"
+  /** Renders PasswordField + Confirm PasswordField with show/hide toggle */
+  | "password"
+  /** Renders SiteLocationPicker (Google Maps + lat/lng) */
+  | "location"
+  /** Renders circular profile photo upload with initials fallback */
+  | "profilePicture";
 
 export interface SelectOption {
   value: string;

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { FormField, FormType } from "@raskha/form-builder";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
+import { PasswordField } from "../../../components/PasswordField";
+import { ProfilePictureField } from "../../../components/ProfilePictureField";
 import { TextField } from "../../../components/TextField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { SelectField } from "../../../components/SelectField";
@@ -57,6 +59,56 @@ function PreviewField({ field }: { field: FormField }) {
           required={field.required}
           disabled
         />
+      );
+
+    case "profilePicture":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <ProfilePictureField
+            name=""
+            disabled
+            onChange={() => undefined}
+          />
+        </div>
+      );
+
+    case "password":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-text-secondary, #6b7280)", margin: "1rem 0 0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid var(--color-border, #e5e7eb)" }}>
+            {field.label}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <PasswordField
+              label="Password"
+              name={`preview_${field.id}`}
+              value=""
+              onChange={() => undefined}
+              placeholder="Min. 8 characters"
+              disabled
+            />
+            <PasswordField
+              label="Confirm password"
+              name={`preview_confirm_${field.id}`}
+              value=""
+              onChange={() => undefined}
+              placeholder="Re-enter password"
+              disabled
+            />
+          </div>
+        </div>
+      );
+
+    case "location":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1", background: "var(--color-surface-secondary, #f9fafb)", border: "1px dashed var(--color-border, #d1d5db)", borderRadius: "0.5rem", padding: "1.5rem", textAlign: "center" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "var(--color-text-secondary, #6b7280)", fontSize: "0.875rem" }}>
+            📍 {field.label}
+          </p>
+          <p style={{ margin: "0.35rem 0 0", fontSize: "0.78rem", color: "var(--color-text-secondary, #9ca3af)" }}>
+            Google Maps location picker with address search and lat / lng — visible in the live form
+          </p>
+        </div>
       );
     default:
       return (

@@ -3,11 +3,90 @@ import { useEffect, useState } from "react";
 import type { FormField, FormType } from "@raskha/form-builder";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
+import { PasswordField } from "../../../components/PasswordField";
+import { ProfilePictureField } from "../../../components/ProfilePictureField";
 import { TextField } from "../../../components/TextField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { SelectField } from "../../../components/SelectField";
 import { FileField } from "../../../components/FileField";
+import { SiteLocationPicker } from "../../sites/SiteLocationPicker/SiteLocationPicker";
 import "./FormBuilderForm.css";
+
+/** ── Profile picture field renderer ────────────────────────────────────── */
+function renderProfilePictureField(
+  formData: Record<string, string | File | null>,
+  disabled: boolean,
+  handleFieldValue: (id: string, val: string | File | null) => void
+) {
+  return (
+    <ProfilePictureField
+      key="profilePicture"
+      name={(formData["fullName"] as string) ?? ""}
+      currentUrl={(formData["profilePictureUrl"] as string) ?? ""}
+      disabled={disabled}
+      onChange={(file) => handleFieldValue("profilePictureFile", file)}
+    />
+  );
+}
+
+/** ── Password field renderer (Password + Confirm Password) ─────────────── */
+function renderPasswordField(
+  field: FormField,
+  formData: Record<string, string | File | null>,
+  errors: Record<string, string>,
+  disabled: boolean,
+  handleFieldValue: (id: string, val: string | File | null) => void
+) {
+  return (
+    <div key={field.id} className="fb-fill__password-group">
+      <p className="fb-fill__section-label">{field.label}</p>
+      <p className="fb-fill__section-hint">Set a password the guard will use to log into the Guard App.</p>
+      <div className="form-panel__grid">
+        <PasswordField
+          label="Password"
+          name="password"
+          value={(formData["password"] as string) ?? ""}
+          onChange={(e) => handleFieldValue("password", e.target.value)}
+          errorMessage={errors["password"]}
+          placeholder="Min. 8 characters"
+          required={field.required}
+          disabled={disabled}
+          autoComplete="new-password"
+        />
+        <PasswordField
+          label="Confirm password"
+          name="confirmPassword"
+          value={(formData["confirmPassword"] as string) ?? ""}
+          onChange={(e) => handleFieldValue("confirmPassword", e.target.value)}
+          errorMessage={errors["confirmPassword"]}
+          placeholder="Re-enter password"
+          required={field.required}
+          disabled={disabled || !(formData["password"] as string)}
+          autoComplete="new-password"
+        />
+      </div>
+    </div>
+  );
+}
+
+/** ── Location field renderer (SiteLocationPicker) ──────────────────────── */
+function renderLocationField(
+  formData: Record<string, string | File | null>,
+  disabled: boolean,
+  handleFieldValue: (id: string, val: string | File | null) => void
+) {
+  return (
+    <div key="location" className="fb-fill__location-group">
+      <SiteLocationPicker
+        latitude={(formData["latitude"] as string) ?? ""}
+        longitude={(formData["longitude"] as string) ?? ""}
+        onLatChange={(val) => handleFieldValue("latitude", val)}
+        onLngChange={(val) => handleFieldValue("longitude", val)}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
 
 function renderField(
   field: FormField,
@@ -130,6 +209,25 @@ export function FormBuilderForm({
   function validate(): boolean {
     const nextErrors: Record<string, string> = {};
     for (const field of fields) {
+      if (field.type === "password") {
+        const pw = (formData["password"] as string) ?? "";
+        const confirm = (formData["confirmPassword"] as string) ?? "";
+        if (field.required && !pw) {
+          nextErrors["password"] = "Enter a password for the guard's login.";
+        } else if (pw && pw.length < 8) {
+          nextErrors["password"] = "Password must be at least 8 characters.";
+        }
+        if (pw && pw !== confirm) {
+          nextErrors["confirmPassword"] = "Passwords do not match.";
+        }
+        continue;
+      }
+      if (field.type === "location") {
+        if (field.required && !(formData["latitude"] as string)) {
+          nextErrors["location"] = "Please select a location on the map.";
+        }
+        continue;
+      }
       if (field.required) {
         const val = formData[field.id];
         if (!val || (typeof val === "string" && !val.trim())) {
@@ -165,15 +263,24 @@ export function FormBuilderForm({
 
       <FormPanel>
         <div className="form-panel__grid">
-          {fields.map((field) =>
-            renderField(
+          {fields.map((field) => {
+            if (field.type === "profilePicture") {
+              return renderProfilePictureField(formData, isSubmitting || isDeleting, handleFieldValue);
+            }
+            if (field.type === "password") {
+              return renderPasswordField(field, formData, errors, isSubmitting || isDeleting, handleFieldValue);
+            }
+            if (field.type === "location") {
+              return renderLocationField(formData, isSubmitting || isDeleting, handleFieldValue);
+            }
+            return renderField(
               field,
               formData[field.id] ?? (field.type === "file" ? null : ""),
               errors[field.id],
               isSubmitting || isDeleting,
               (val) => handleFieldValue(field.id, val)
-            )
-          )}
+            );
+          })}
         </div>
 
         <div className="form-panel__actions fb-fill__actions">

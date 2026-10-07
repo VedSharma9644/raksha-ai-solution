@@ -9,6 +9,7 @@ import { InventoryPage } from "../pages/InventoryPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { SiteListPage } from "../pages/SiteListPage";
 import { AssignGuardsPage } from "../pages/AssignGuardsPage";
+import { AttendancePage } from "../pages/AttendancePage";
 import { LoginPage } from "../pages/LoginPage";
 import { APP_ROUTES } from "./routePaths";
 
@@ -117,6 +118,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <AssignGuardsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.attendance}
+        element={
+          <ProtectedRoute>
+            <AttendancePage />
           </ProtectedRoute>
         }
       />

@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-export type AttendancePunchType = "punch_in" | "punch_out";
+export type AttendancePunchType = "punch_in" | "punch_out" | "interval_checkin";
 
 export type GeofenceStatus = "passed" | "failed" | "demo_passed";
 
@@ -12,6 +12,8 @@ export interface AttendanceRecord {
   agencyId: string;
   siteId: string;
   type: AttendancePunchType;
+  /** For interval_checkin — links back to the opening punch_in document */
+  shiftPunchInId?: string;
   punchedAt: Timestamp;
   lat: number;
   lng: number;

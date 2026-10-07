@@ -15,6 +15,7 @@ const ACTION_ROUTES: Record<
   "manage-inventory": APP_ROUTES.manageInventory,
   "manage-leave": APP_ROUTES.manageLeave,
   "site-list": APP_ROUTES.siteList,
+  "attendance": APP_ROUTES.attendance,
 };
 
 export function HrDashboardPage() {

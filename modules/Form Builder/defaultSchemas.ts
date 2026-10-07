@@ -5,6 +5,8 @@ import type { FormField } from "./formField";
  * These are always present and can never be removed.
  */
 export const DEFAULT_GUARD_FIELDS: FormField[] = [
+  // Profile picture — shown at the top, always present
+  { id: "profilePicture",  label: "Profile Photo",       type: "profilePicture", required: false, locked: true,  order: 0 },
   { id: "fullName",       label: "Full Name",          type: "text",     required: true,  locked: true,  order: 1 },
   { id: "fatherName",     label: "Father's Name",       type: "text",     required: false, locked: false, order: 2 },
   { id: "phone",          label: "Mobile Number",       type: "phone",    required: true,  locked: true,  order: 3 },
@@ -31,6 +33,8 @@ export const DEFAULT_GUARD_FIELDS: FormField[] = [
   { id: "esiNumber",      label: "ESI Number",          type: "text",     required: false, locked: false, order: 23 },
   { id: "pfNumber",       label: "PF Number",           type: "text",     required: false, locked: false, order: 24 },
   { id: "notes",          label: "Notes",               type: "textarea", required: false, locked: false, order: 25 },
+  // Login credentials — always required, cannot be removed
+  { id: "password",       label: "Login Password",      type: "password", required: true,  locked: true,  order: 26 },
 ];
 
 /**
@@ -41,7 +45,7 @@ export const DEFAULT_HR_FIELDS: FormField[] = [
   { id: "phone",        label: "Mobile Number",  type: "phone", required: true,  locked: true,  order: 2 },
   { id: "email",        label: "Email",          type: "email", required: true,  locked: true,  order: 3 },
   { id: "employeeCode", label: "Employee Code",  type: "text",  required: true,  locked: true,  order: 4 },
-  { id: "password",     label: "Login Password", type: "text",  required: false, locked: true,  order: 5, placeholder: "Min. 8 characters (required when adding)" },
+  { id: "password",     label: "Login Password", type: "password",  required: false, locked: true,  order: 5, placeholder: "Min. 8 characters (required when adding)" },
   { id: "notes",        label: "Notes",          type: "textarea", required: false, locked: false, order: 6 },
 ];
 
@@ -75,4 +79,6 @@ export const DEFAULT_SITE_FIELDS: FormField[] = [
   { id: "contactPerson",   label: "Contact Person",   type: "text",   required: false, locked: false, order: 11 },
   { id: "contactPhone",    label: "Contact Phone",    type: "phone",  required: false, locked: false, order: 12 },
   { id: "notes",           label: "Notes",            type: "textarea", required: false, locked: false, order: 13 },
+  // Site location (Google Maps + lat/lng) — always present, cannot be removed
+  { id: "location",        label: "Site Location",    type: "location", required: false, locked: true,  order: 14 },
 ];

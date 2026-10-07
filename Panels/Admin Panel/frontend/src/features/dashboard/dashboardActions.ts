@@ -6,7 +6,8 @@ export type DashboardActionId =
   | "employee-guard-list"
   | "add-hr"
   | "hr-list"
-  | "form-builder";
+  | "form-builder"
+  | "attendance";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -63,5 +64,11 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "HR List",
     description: "View and manage all HR users in your agency.",
     iconLabel: "R",
+  },
+  {
+    id: "attendance",
+    title: "Attendance",
+    description: "View daily punch-in and punch-out records for all guards.",
+    iconLabel: "📋",
   },
 ];

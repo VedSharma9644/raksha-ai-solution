@@ -19,6 +19,8 @@ export const APP_ROUTES = {
   inventoryList: "/inventory",
   addInventoryItem: "/inventory/add",
   editInventoryItem: "/inventory/:id/edit",
+  // Attendance
+  attendance: "/attendance",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
