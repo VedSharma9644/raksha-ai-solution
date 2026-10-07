@@ -1,9 +1,7 @@
 import { Text, View } from 'react-native';
 
-import {
-  attendanceCalendarDays,
-  attendanceHistoryDefaults,
-} from '../../constants/attendance-history-defaults';
+import type { AttendanceHistoryDayStatus } from '../../api/guard-api';
+import { attendanceHistoryDefaults } from '../../constants/attendance-history-defaults';
 import { appColors } from '../../theme';
 import { attendanceMonthCalendarOverviewStyles as styles } from '../../styles/attendance-month-calendar-overview.styles';
 
@@ -16,6 +14,11 @@ const LEGEND = [
   { key: 'leave', label: 'Leave', color: appColors.outlineVariant },
 ] as const;
 
+type AttendanceMonthCalendarOverviewProps = {
+  calendarDays: Array<{ day: number; status: AttendanceHistoryDayStatus }>;
+  leadingEmpty: number;
+};
+
 function dayCircleStyle(status: string) {
   switch (status) {
     case 'today':
@@ -24,15 +27,17 @@ function dayCircleStyle(status: string) {
       return styles.dayOff;
     case 'leave':
       return styles.dayLeave;
+    case 'empty':
+      return styles.dayOff;
     default:
       return styles.dayPresent;
   }
 }
 
-export function AttendanceMonthCalendarOverview() {
-  /** October 2024 starts on Tuesday → offset Monday column by 1 empty cell. */
-  const leadingEmpty = 1;
-
+export function AttendanceMonthCalendarOverview({
+  calendarDays,
+  leadingEmpty,
+}: AttendanceMonthCalendarOverviewProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{attendanceHistoryDefaults.calendarTitle}</Text>
@@ -49,7 +54,7 @@ export function AttendanceMonthCalendarOverview() {
         {Array.from({ length: leadingEmpty }).map((_, index) => (
           <View key={`empty-${index}`} style={styles.dayCell} />
         ))}
-        {attendanceCalendarDays.map((item) => (
+        {calendarDays.map((item) => (
           <View key={item.day} style={styles.dayCell}>
             <View style={[styles.dayCircle, dayCircleStyle(item.status)]}>
               <Text style={[styles.dayText, item.status === 'today' && styles.dayTextToday]}>

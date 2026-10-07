@@ -1,20 +1,22 @@
 import { Pressable, Text, View } from 'react-native';
 
-import {
-  attendanceFilterTabs,
-  type AttendanceFilterKey,
-} from '../../constants/attendance-history-defaults';
+import type { AttendanceFilterKey } from '../../constants/attendance-history-defaults';
 import { attendanceLogFilterTabsStyles as styles } from '../../styles/attendance-log-filter-tabs.styles';
 
 type AttendanceLogFilterTabsProps = {
+  tabs: { key: AttendanceFilterKey; label: string }[];
   activeFilter: AttendanceFilterKey;
   onChange: (key: AttendanceFilterKey) => void;
 };
 
-export function AttendanceLogFilterTabs({ activeFilter, onChange }: AttendanceLogFilterTabsProps) {
+export function AttendanceLogFilterTabs({
+  tabs,
+  activeFilter,
+  onChange,
+}: AttendanceLogFilterTabsProps) {
   return (
     <View style={styles.row}>
-      {attendanceFilterTabs.map((tab) => {
+      {tabs.map((tab) => {
         const active = tab.key === activeFilter;
         return (
           <Pressable

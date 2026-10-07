@@ -42,6 +42,7 @@ await esbuild.build({
       monorepoRoot,
       "modules/Guard Management/index.ts"
     ),
+    "@raskha/leave": path.join(monorepoRoot, "modules/Leave Management/index.ts"),
     "@raskha/site-management": path.join(
       monorepoRoot,
       "modules/Site Management/index.ts"

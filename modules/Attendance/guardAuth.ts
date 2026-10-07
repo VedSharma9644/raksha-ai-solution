@@ -1,3 +1,4 @@
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { GUARDS_COLLECTION, type Guard } from "@raskha/guard-management";
 
@@ -6,20 +7,21 @@ import {
   DEMO_GUARD_PASSWORD,
   type AuthenticatedGuardContext,
 } from "./attendance";
-import { isValidIndianMobile, normalizePhone, phoneLookupVariants } from "./phone";
+import { verifyFirebaseEmailPassword } from "./firebasePasswordAuth";
+import {
+  isValidIndianMobile,
+  normalizePhone,
+  phoneLookupVariants,
+} from "./phone";
 
 export type AuthenticateGuardParams = {
-  /** Mobile number or employee / Guard ID */
+  /** Mobile number, employee / Guard ID, or email */
   identifier: string;
   password: string;
   demoMode?: boolean;
 };
 
-type GuardDoc = Guard & {
-  password?: string;
-  pin?: string;
-  loginPassword?: string;
-};
+type GuardDoc = Guard;
 
 function toContext(guard: GuardDoc): AuthenticatedGuardContext {
   return {
@@ -54,7 +56,9 @@ function demoContext(
   const phone = normalizePhone(id);
 
   const idMatches =
-    id.toUpperCase() === expectedId || phone === expectedPhone;
+    id.toUpperCase() === expectedId ||
+    phone === expectedPhone ||
+    id.toLowerCase() === "demo@raksha.local";
 
   if (idMatches && password === expectedPassword) {
     return {
@@ -73,13 +77,6 @@ function demoContext(
   }
 
   return null;
-}
-
-function passwordMatches(guard: GuardDoc, password: string): boolean {
-  const candidates = [guard.password, guard.loginPassword, guard.pin].filter(
-    (value): value is string => typeof value === "string" && value.length > 0
-  );
-  return candidates.some((stored) => stored === password);
 }
 
 async function findGuardByEmployeeCode(
@@ -115,12 +112,51 @@ async function findGuardByPhone(phone: string): Promise<GuardDoc | null> {
   return null;
 }
 
+async function findGuardByEmail(email: string): Promise<GuardDoc | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes("@")) {
+    return null;
+  }
+
+  const snap = await getFirestore()
+    .collection(GUARDS_COLLECTION)
+    .where("email", "==", normalized)
+    .limit(1)
+    .get();
+
+  if (!snap.empty) {
+    const docSnap = snap.docs[0]!;
+    return { id: docSnap.id, ...(docSnap.data() as Omit<GuardDoc, "id">) };
+  }
+
+  // Case-sensitive fallback (HR forms may store mixed case)
+  const snapRaw = await getFirestore()
+    .collection(GUARDS_COLLECTION)
+    .where("email", "==", email.trim())
+    .limit(1)
+    .get();
+
+  if (snapRaw.empty) {
+    return null;
+  }
+
+  const docSnap = snapRaw.docs[0]!;
+  return { id: docSnap.id, ...(docSnap.data() as Omit<GuardDoc, "id">) };
+}
+
 export async function findGuardByIdentifier(
   identifier: string
 ): Promise<GuardDoc | null> {
   const trimmed = identifier.trim();
   if (!trimmed) {
     return null;
+  }
+
+  if (trimmed.includes("@")) {
+    const byEmail = await findGuardByEmail(trimmed);
+    if (byEmail) {
+      return byEmail;
+    }
   }
 
   if (isValidIndianMobile(trimmed) || normalizePhone(trimmed).length >= 10) {
@@ -131,6 +167,19 @@ export async function findGuardByIdentifier(
   }
 
   return findGuardByEmployeeCode(trimmed);
+}
+
+async function resolveLoginEmail(guard: GuardDoc): Promise<string | null> {
+  if (typeof guard.email === "string" && guard.email.includes("@")) {
+    return guard.email.trim();
+  }
+
+  try {
+    const user = await getAuth().getUser(guard.id);
+    return user.email ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getGuardContextById(
@@ -165,8 +214,8 @@ export function getDemoGuardContext(): AuthenticatedGuardContext {
 }
 
 /**
- * Authenticate with mobile number or employeeCode + password from `guards`.
- * Demo credentials remain available when demoMode is on.
+ * Authenticate with mobile / employeeCode / email + password.
+ * Password is verified against Firebase Auth (set by HR/Admin).
  */
 export async function authenticateGuard(
   params: AuthenticateGuardParams
@@ -192,24 +241,24 @@ export async function authenticateGuard(
       return demoMode ? demoContext(identifier, password) : null;
     }
 
-    if (passwordMatches(guard, password)) {
+    const email = await resolveLoginEmail(guard);
+    if (!email) {
+      return demoMode ? demoContext(identifier, password) : null;
+    }
+
+    const authResult = await verifyFirebaseEmailPassword(email, password);
+    if (!authResult.ok) {
+      return demoMode ? demoContext(identifier, password) : null;
+    }
+
+    // Prefer Auth UID when it matches the guard doc id (createGuardAccount path)
+    if (authResult.localId === guard.id) {
       return toContext(guard);
     }
 
-    return demoMode ? demoContext(identifier, password) : null;
+    // Legacy: Auth UID differs — still allow if email matches this guard
+    return toContext(guard);
   } catch {
     return demoMode ? demoContext(identifier, password) : null;
   }
-}
-
-/** @deprecated Prefer authenticateGuard({ identifier, password }) */
-export async function authenticateGuardLegacy(
-  _db: unknown,
-  params: { guardId: string; password: string; demoMode?: boolean }
-): Promise<AuthenticatedGuardContext | null> {
-  return authenticateGuard({
-    identifier: params.guardId,
-    password: params.password,
-    demoMode: params.demoMode,
-  });
 }

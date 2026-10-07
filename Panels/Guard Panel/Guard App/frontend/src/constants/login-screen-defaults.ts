@@ -25,7 +25,7 @@ export const loginScreenDefaults = {
   idPlaceholder: 'e.g. RKS-8842',
   idDefault: '',
   passwordLabel: 'Password / पासवर्ड',
-  passwordHint: 'Shared by HR / Admin',
+  passwordHint: 'Set by HR / Admin (Firebase Auth)',
   passwordPlaceholder: 'Enter password',
   passwordDefault: '',
   otpLabel: 'Enter 6-Digit Code / ओटीपी',

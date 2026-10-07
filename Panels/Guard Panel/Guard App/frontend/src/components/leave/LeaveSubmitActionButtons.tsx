@@ -1,40 +1,44 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
 
 import { applyForLeaveDefaults } from '../../constants/apply-for-leave-defaults';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { leaveSubmitActionButtonsStyles as styles } from '../../styles/leave-submit-action-buttons.styles';
 
-export function LeaveSubmitActionButtons() {
+type LeaveSubmitActionButtonsProps = {
+  onSubmit: () => Promise<void>;
+  disabled?: boolean;
+};
+
+export function LeaveSubmitActionButtons({
+  onSubmit,
+  disabled,
+}: LeaveSubmitActionButtonsProps) {
   const { openLeaveTimeOff } = useGuardAppNavigation();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const submit = () => {
-    if (submitting || submitted) {
+  const submit = async () => {
+    if (submitting || submitted || disabled) {
       return;
     }
     setSubmitting(true);
-    timeoutRef.current = setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await onSubmit();
       setSubmitted(true);
-    }, 1200);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      Alert.alert('Could not submit', err.message ?? 'Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const primaryLabel = submitting
-    ? 'Submitting to Amit Singh...'
+    ? 'Submitting request...'
     : submitted
       ? 'Request Sent Successfully!'
       : applyForLeaveDefaults.submitLabel;
@@ -48,8 +52,12 @@ export function LeaveSubmitActionButtons() {
           styles.primaryButton,
           submitted && styles.primaryButtonSuccess,
           pressed && styles.primaryButtonPressed,
+          (submitting || disabled) && { opacity: 0.75 },
         ]}
-        onPress={submit}
+        onPress={() => {
+          void submit();
+        }}
+        disabled={submitting || submitted || disabled}
       >
         <MaterialIcons name={primaryIcon} size={24} color={appColors.onPrimary} />
         <Text style={styles.primaryLabel}>{primaryLabel}</Text>

@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
+import type { LeaveBalanceTypeDto } from '../../api/guard-api';
 import {
   applyForLeaveDefaults,
   leaveTypeOptions,
@@ -12,6 +13,7 @@ import { leaveTypeOptionListStyles as styles } from '../../styles/leave-type-opt
 type LeaveTypeOptionListProps = {
   selectedType: LeaveTypeKey;
   onSelect: (key: LeaveTypeKey) => void;
+  balances?: LeaveBalanceTypeDto[];
 };
 
 function iconWrapStyle(tone: 'paid' | 'neutral' | 'urgent') {
@@ -26,7 +28,29 @@ function iconColor(tone: 'paid' | 'neutral' | 'urgent') {
   return appColors.secondary;
 }
 
-export function LeaveTypeOptionList({ selectedType, onSelect }: LeaveTypeOptionListProps) {
+function subtitleFor(optionKey: LeaveTypeKey, balances?: LeaveBalanceTypeDto[]): string {
+  const fallback = leaveTypeOptions.find((o) => o.key === optionKey)?.subtitle ?? '';
+  const balance = balances?.find((b) => b.key === optionKey);
+  if (!balance) {
+    return fallback;
+  }
+  if (optionKey === 'CL' && balance.remaining !== null) {
+    return `Personal & family work (${balance.remaining} days left)`;
+  }
+  if (optionKey === 'SL' && balance.remaining !== null) {
+    return `Health issue, rest, or hospital visit (${balance.remaining} days left)`;
+  }
+  if (optionKey === 'EL') {
+    return 'Urgent village travel or unforeseen emergency';
+  }
+  return fallback;
+}
+
+export function LeaveTypeOptionList({
+  selectedType,
+  onSelect,
+  balances,
+}: LeaveTypeOptionListProps) {
   return (
     <View style={styles.section}>
       <View style={styles.stepRow}>
@@ -62,7 +86,7 @@ export function LeaveTypeOptionList({ selectedType, onSelect }: LeaveTypeOptionL
                       </View>
                     ) : null}
                   </View>
-                  <Text style={styles.subtitle}>{option.subtitle}</Text>
+                  <Text style={styles.subtitle}>{subtitleFor(option.key, balances)}</Text>
                 </View>
               </View>
               <View style={[styles.radio, selected && styles.radioSelected]}>

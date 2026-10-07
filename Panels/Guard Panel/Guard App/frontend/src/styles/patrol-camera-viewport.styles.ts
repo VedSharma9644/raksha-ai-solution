@@ -1,34 +1,135 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appRadii } from '../theme';
+import { appColors, appRadii, appSpacing } from '../theme';
 
 export const patrolCameraViewportStyles = StyleSheet.create({
   viewport: {
     flex: 1,
+    minHeight: 0,
+    backgroundColor: appColors.surface,
+    gap: appSpacing.sm,
+  },
+  previewShell: {
+    flex: 1,
+    minHeight: 220,
     borderRadius: appRadii.xl,
     overflow: 'hidden',
-    backgroundColor: appColors.inverseSurface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    backgroundColor: '#0f1720',
   },
-  previewImage: {
-    ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
-  },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFill,
-  },
-  captureFlash: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: appColors.surfaceContainerLowest,
-    zIndex: 30,
-  },
-  layeredContent: {
+  camera: {
     flex: 1,
+    width: '100%',
+  },
+  previewOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     justifyContent: 'space-between',
+    padding: appSpacing.md,
+  },
+  previewTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: appSpacing.xs,
+  },
+  roundIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(33, 49, 69, 0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guideBlock: {
+    alignItems: 'center',
+    gap: appSpacing.sm,
+  },
+  footer: {
+    backgroundColor: appColors.surfaceContainerLowest,
+    borderRadius: appRadii.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(191, 200, 201, 0.35)',
+    paddingTop: appSpacing.md,
+    paddingBottom: appSpacing.md,
+    paddingHorizontal: appSpacing.md,
+    alignItems: 'center',
+    gap: appSpacing.sm,
+  },
+  captureButton: {
+    width: '100%',
+    minHeight: 56,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  captureButtonPressed: {
+    opacity: 0.9,
+  },
+  captureButtonDisabled: {
+    opacity: 0.55,
+  },
+  captureLabel: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+  },
+  captureHint: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'PublicSans_500Medium',
+    color: appColors.secondary,
+    textAlign: 'center',
+  },
+  permissionPane: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    gap: 12,
+    backgroundColor: '#0f1720',
+    borderRadius: appRadii.xl,
+  },
+  permissionTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.inverseOnSurface,
+    textAlign: 'center',
+  },
+  permissionBody: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: 'PublicSans_400Regular',
+    color: 'rgba(255, 255, 255, 0.78)',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  permissionButton: {
+    marginTop: 8,
+    minHeight: 48,
+    paddingHorizontal: 24,
+    borderRadius: appRadii.xl,
+    backgroundColor: appColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  permissionButtonLabel: {
+    fontSize: 15,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+  },
+  permissionCancel: {
+    paddingVertical: 8,
+  },
+  permissionCancelLabel: {
+    fontSize: 13,
+    fontFamily: 'PublicSans_600SemiBold',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
 });

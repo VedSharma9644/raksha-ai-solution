@@ -9,20 +9,47 @@ import { AttendanceGuardProfileSummary } from './AttendanceGuardProfileSummary';
 
 export function AttendanceMarkedDetailsCard() {
   const { lastPunchResult } = useGuardAppNavigation();
+  const isPunchOut =
+    lastPunchResult?.mode === 'punch_out' || lastPunchResult?.shiftStatus === 'ended';
 
   return (
     <View style={styles.card}>
       <AttendanceGuardProfileSummary />
 
       <View style={styles.rows}>
-        <DetailInfoRow
-          icon="schedule"
-          label={attendanceMarkedDefaults.punchInLabel}
-          title={lastPunchResult?.punchInTime ?? attendanceMarkedDefaults.punchInTime}
-          titleVariant="headline"
-          statusBadge={lastPunchResult?.punchInStatus ?? attendanceMarkedDefaults.punchInStatus}
-          subtitle={lastPunchResult?.punchInDate ?? attendanceMarkedDefaults.punchInDate}
-        />
+        {isPunchOut ? (
+          <>
+            <DetailInfoRow
+              icon="login"
+              label="Punch-in Time"
+              title={lastPunchResult?.punchInTime ?? attendanceMarkedDefaults.punchInTime}
+              titleVariant="headline"
+              statusBadge="Started"
+              subtitle={lastPunchResult?.punchInDate ?? attendanceMarkedDefaults.punchInDate}
+            />
+            <DetailInfoRow
+              icon="logout"
+              label="Punch-out Time"
+              title={
+                lastPunchResult?.punchOutTime ??
+                lastPunchResult?.punchInTime ??
+                attendanceMarkedDefaults.punchInTime
+              }
+              titleVariant="headline"
+              statusBadge={lastPunchResult?.punchInStatus ?? 'Shift Ended'}
+              subtitle={lastPunchResult?.durationLabel ?? lastPunchResult?.rosterHours}
+            />
+          </>
+        ) : (
+          <DetailInfoRow
+            icon="schedule"
+            label={attendanceMarkedDefaults.punchInLabel}
+            title={lastPunchResult?.punchInTime ?? attendanceMarkedDefaults.punchInTime}
+            titleVariant="headline"
+            statusBadge={lastPunchResult?.punchInStatus ?? attendanceMarkedDefaults.punchInStatus}
+            subtitle={lastPunchResult?.punchInDate ?? attendanceMarkedDefaults.punchInDate}
+          />
+        )}
 
         <DetailInfoRow
           icon="domain"
@@ -33,7 +60,7 @@ export function AttendanceMarkedDetailsCard() {
 
         <DetailInfoRow
           icon="badge"
-          label={attendanceMarkedDefaults.rosterLabel}
+          label={isPunchOut ? 'Shift Duration' : attendanceMarkedDefaults.rosterLabel}
           title={lastPunchResult?.rosterTitle ?? attendanceMarkedDefaults.rosterTitle}
           subtitle={lastPunchResult?.rosterHours ?? attendanceMarkedDefaults.rosterHours}
         />

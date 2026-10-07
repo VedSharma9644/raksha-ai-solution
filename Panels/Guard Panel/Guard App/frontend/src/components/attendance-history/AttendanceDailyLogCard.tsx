@@ -1,15 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 
-import type { AttendanceLogItem } from '../../constants/attendance-history-defaults';
+import type { AttendanceHistoryLogDto } from '../../api/guard-api';
 import { appColors } from '../../theme';
 import { attendanceDailyLogCardStyles as styles } from '../../styles/attendance-daily-log-card.styles';
 
 type AttendanceDailyLogCardProps = {
-  item: AttendanceLogItem;
+  item: AttendanceHistoryLogDto;
 };
 
-function statusStyles(kind: AttendanceLogItem['kind']) {
+function statusStyles(kind: AttendanceHistoryLogDto['kind']) {
   if (kind === 'onDuty') {
     return {
       badge: styles.statusOnDuty,

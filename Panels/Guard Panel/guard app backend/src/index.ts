@@ -10,6 +10,7 @@ import {
 
 import { createAttendanceRoutes } from "./routes/attendanceRoutes";
 import { createAuthRoutes } from "./routes/authRoutes";
+import { createLeaveRoutes } from "./routes/leaveRoutes";
 
 const rootEnv = resolve(process.cwd(), "../../../.env");
 if (existsSync(rootEnv)) {
@@ -105,8 +106,13 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", createAuthRoutes());
 app.use("/api/attendance", createAttendanceRoutes());
+app.use("/api/leave", createLeaveRoutes());
 
 const PORT = Number(process.env.GUARD_APP_API_PORT ?? process.env.PORT ?? 3005);
-app.listen(PORT, () => {
-  console.log(`Raskha Guard App Backend listening on :${PORT}`);
+const HOST = process.env.GUARD_APP_API_HOST ?? "0.0.0.0";
+app.listen(PORT, HOST, () => {
+  console.log(`Raskha Guard App Backend listening on http://${HOST}:${PORT}`);
+  console.log(
+    "Expo Go devices should call EXPO_PUBLIC_GUARD_API_URL=http://<your-lan-ip>:3005"
+  );
 });

@@ -1,18 +1,21 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions, type CameraType } from 'expo-camera';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 
-import { DEMO_SELFIE_BASE64, punchInAttendance } from '../../api/guard-api';
-import { brandAssets } from '../../constants/brand-assets';
+import { punchInAttendance, punchOutAttendance } from '../../api/guard-api';
+import { patrolSessionDefaults } from '../../constants/patrol-session-defaults';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { patrolCameraViewportStyles as styles } from '../../styles/patrol-camera-viewport.styles';
 import { appColors } from '../../theme';
-import { PatrolCameraShutterButton } from './PatrolCameraShutterButton';
-import { PatrolCameraTopControls } from './PatrolCameraTopControls';
-import { PatrolCaptureSuccessToast } from './PatrolCaptureSuccessToast';
 import { PatrolFaceAlignmentGuide } from './PatrolFaceAlignmentGuide';
 import { PatrolLiveStatusBadges } from './PatrolLiveStatusBadges';
-import { PatrolOfficialPunchWatermark } from './PatrolOfficialPunchWatermark';
 
 export function PatrolCameraViewport() {
   const {
@@ -21,12 +24,15 @@ export function PatrolCameraViewport() {
     authToken,
     cameraUnlocked,
     lastKnownLocation,
+    patrolMode,
   } = useGuardAppNavigation();
+  const isPunchOut = patrolMode === 'punch_out';
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState<CameraType>('front');
   const [flashEnabled, setFlashEnabled] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const flashOpacity = useRef(new Animated.Value(0)).current;
-  const navigateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
 
   useEffect(() => {
     if (!cameraUnlocked) {
@@ -37,37 +43,17 @@ export function PatrolCameraViewport() {
   }, [cameraUnlocked, goBack]);
 
   useEffect(() => {
-    return () => {
-      if (navigateTimeoutRef.current) {
-        clearTimeout(navigateTimeoutRef.current);
-      }
-    };
-  }, []);
+    if (permission && !permission.granted && permission.canAskAgain) {
+      void requestPermission();
+    }
+  }, [permission, requestPermission]);
 
-  const handleCapture = useCallback(() => {
+  const handleCapture = useCallback(async () => {
     if (!cameraUnlocked || !authToken || submitting) {
       return;
     }
 
-    Animated.sequence([
-      Animated.timing(flashOpacity, {
-        toValue: 0.9,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-      Animated.timing(flashOpacity, {
-        toValue: 0,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setSubmitting(true);
-    setShowSuccessToast(true);
-
     if (!lastKnownLocation) {
-      setSubmitting(false);
-      setShowSuccessToast(false);
       Alert.alert(
         'Location required',
         'Verify your site location on Home before capturing a selfie.',
@@ -76,82 +62,195 @@ export function PatrolCameraViewport() {
       return;
     }
 
-    const { lat, lng, accuracyMeters } = lastKnownLocation;
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert(
+          'Camera permission',
+          'Allow camera access to capture your attendance selfie.',
+        );
+        return;
+      }
+    }
 
-    void punchInAttendance(authToken, {
-      lat,
-      lng,
-      accuracyMeters,
-      selfieBase64: DEMO_SELFIE_BASE64,
-    })
-      .then((result) => {
-        if (navigateTimeoutRef.current) {
-          clearTimeout(navigateTimeoutRef.current);
-        }
-        navigateTimeoutRef.current = setTimeout(() => {
-          setShowSuccessToast(false);
-          setSubmitting(false);
-          openAttendanceMarked(result);
-        }, 700);
-      })
-      .catch((error: unknown) => {
-        setShowSuccessToast(false);
-        setSubmitting(false);
-        const message = error instanceof Error ? error.message : 'Punch-in failed.';
-        Alert.alert('Attendance', message);
+    if (!cameraRef.current || !cameraReady) {
+      Alert.alert('Camera', 'Camera is still starting. Try again in a moment.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.65,
+        base64: true,
+        exif: false,
+        shutterSound: false,
       });
+
+      if (!photo?.base64) {
+        throw new Error('Could not capture selfie. Please try again.');
+      }
+
+      const { lat, lng, accuracyMeters } = lastKnownLocation;
+      const payload = {
+        lat,
+        lng,
+        accuracyMeters,
+        selfieBase64: photo.base64,
+      };
+      const result = isPunchOut
+        ? await punchOutAttendance(authToken, payload)
+        : await punchInAttendance(authToken, payload);
+
+      openAttendanceMarked(result);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : isPunchOut
+            ? 'Punch-out failed.'
+            : 'Punch-in failed.';
+      Alert.alert('Attendance', message);
+    } finally {
+      setSubmitting(false);
+    }
   }, [
     authToken,
+    cameraReady,
     cameraUnlocked,
-    flashOpacity,
     goBack,
+    isPunchOut,
     lastKnownLocation,
     openAttendanceMarked,
+    permission?.granted,
+    requestPermission,
     submitting,
   ]);
 
+  if (!permission) {
+    return (
+      <View style={[styles.viewport, styles.permissionPane]}>
+        <ActivityIndicator size="large" color={appColors.onPrimary} />
+        <Text style={styles.permissionBody}>Starting camera…</Text>
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={[styles.viewport, styles.permissionPane]}>
+        <Text style={styles.permissionTitle}>Camera access needed</Text>
+        <Text style={styles.permissionBody}>
+          {isPunchOut
+            ? 'Allow the camera to capture your end-of-shift selfie.'
+            : 'Allow the camera to capture your live punch-in selfie.'}
+        </Text>
+        <Pressable
+          style={styles.permissionButton}
+          onPress={() => {
+            void requestPermission();
+          }}
+        >
+          <Text style={styles.permissionButtonLabel}>Allow Camera</Text>
+        </Pressable>
+        <Pressable onPress={goBack} style={styles.permissionCancel}>
+          <Text style={styles.permissionCancelLabel}>Cancel</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.viewport}>
-      <Image
-        source={{ uri: brandAssets.patrolCameraPreviewUri }}
-        style={styles.previewImage}
-        resizeMode="cover"
-      />
-
-      <LinearGradient
-        colors={['rgba(33, 49, 69, 0.8)', 'transparent', 'rgba(33, 49, 69, 0.95)']}
-        locations={[0, 0.45, 1]}
-        style={styles.gradientOverlay}
-      />
-
-      <Animated.View pointerEvents="none" style={[styles.captureFlash, { opacity: flashOpacity }]} />
-
-      <View style={styles.layeredContent}>
-        <PatrolCameraTopControls
-          onCancelPress={goBack}
-          flashEnabled={flashEnabled}
-          onToggleFlash={() => setFlashEnabled((current) => !current)}
-          onFlipCamera={() => undefined}
+      <View style={styles.previewShell}>
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={facing}
+          flash={flashEnabled ? 'on' : 'off'}
+          mirror={facing === 'front'}
+          onCameraReady={() => setCameraReady(true)}
+          mode="picture"
         />
 
-        <View>
-          <PatrolFaceAlignmentGuide />
-          <PatrolLiveStatusBadges />
-        </View>
+        <View style={styles.previewOverlay} pointerEvents="box-none">
+          <View style={styles.previewTopRow} pointerEvents="box-none">
+            <Pressable
+              accessibilityLabel="Toggle flash"
+              onPress={() => setFlashEnabled((current) => !current)}
+              style={styles.roundIconButton}
+            >
+              <MaterialIcons
+                name={flashEnabled ? 'flash-on' : 'flash-off'}
+                size={22}
+                color={appColors.inverseOnSurface}
+              />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Flip camera"
+              onPress={() => {
+                setCameraReady(false);
+                setFacing((current) => (current === 'front' ? 'back' : 'front'));
+              }}
+              style={styles.roundIconButton}
+            >
+              <MaterialIcons
+                name="flip-camera-ios"
+                size={22}
+                color={appColors.inverseOnSurface}
+              />
+            </Pressable>
+          </View>
 
-        <View>
-          <PatrolOfficialPunchWatermark />
-          {submitting ? (
-            <ActivityIndicator
-              size="large"
-              color={appColors.onPrimary}
-              style={{ marginVertical: 16 }}
-            />
-          ) : (
-            <PatrolCameraShutterButton onCapturePress={handleCapture} />
-          )}
-          <PatrolCaptureSuccessToast visible={showSuccessToast} />
+          <View style={styles.guideBlock} pointerEvents="none">
+            <PatrolFaceAlignmentGuide />
+            <PatrolLiveStatusBadges />
+          </View>
+          <View />
         </View>
+      </View>
+
+      {/* Footer sits outside CameraView so Android/Expo Go always shows the button */}
+      <View style={styles.footer}>
+        <Text style={styles.captureHint}>
+          {isPunchOut
+            ? 'End shift selfie • Must be inside site geofence • No gallery upload'
+            : patrolSessionDefaults.securityNotice}
+        </Text>
+        <Pressable
+          accessibilityLabel={
+            isPunchOut ? 'Capture end shift photo' : 'Capture attendance punch photo'
+          }
+          disabled={submitting || !cameraReady}
+          onPress={() => {
+            void handleCapture();
+          }}
+          style={({ pressed }) => [
+            styles.captureButton,
+            (!cameraReady || submitting) && styles.captureButtonDisabled,
+            pressed && styles.captureButtonPressed,
+          ]}
+        >
+          {submitting ? (
+            <ActivityIndicator color={appColors.onPrimary} />
+          ) : (
+            <MaterialIcons
+              name={isPunchOut ? 'logout' : 'photo-camera'}
+              size={22}
+              color={appColors.onPrimary}
+            />
+          )}
+          <Text style={styles.captureLabel}>
+            {submitting
+              ? 'Uploading selfie…'
+              : cameraReady
+                ? isPunchOut
+                  ? 'Capture & End Shift'
+                  : 'Capture & Punch In'
+                : 'Starting camera…'}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );

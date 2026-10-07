@@ -9,6 +9,12 @@ import { leaveRequestFilterTabsStyles as styles } from '../../styles/leave-reque
 type LeaveRequestFilterTabsProps = {
   activeFilter: LeaveRequestFilter;
   onChange: (filter: LeaveRequestFilter) => void;
+  counts?: {
+    all: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
 };
 
 function badgeStyle(tone: (typeof leaveRequestFilterTabs)[number]['badgeTone'], active: boolean) {
@@ -24,12 +30,17 @@ function badgeStyle(tone: (typeof leaveRequestFilterTabs)[number]['badgeTone'], 
   }
 }
 
-export function LeaveRequestFilterTabs({ activeFilter, onChange }: LeaveRequestFilterTabsProps) {
+export function LeaveRequestFilterTabs({
+  activeFilter,
+  onChange,
+  counts,
+}: LeaveRequestFilterTabsProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {leaveRequestFilterTabs.map((tab) => {
         const active = tab.key === activeFilter;
         const isNeutral = tab.badgeTone === 'neutral';
+        const count = counts ? counts[tab.key] : tab.count;
 
         return (
           <Pressable
@@ -39,11 +50,7 @@ export function LeaveRequestFilterTabs({ activeFilter, onChange }: LeaveRequestF
           >
             <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
             <View style={[styles.badge, badgeStyle(tab.badgeTone, active)]}>
-              <Text
-                style={[styles.badgeText, isNeutral && styles.badgeTextNeutral]}
-              >
-                {tab.count}
-              </Text>
+              <Text style={[styles.badgeText, isNeutral && styles.badgeTextNeutral]}>{count}</Text>
             </View>
           </Pressable>
         );
