@@ -43,6 +43,11 @@ export interface Site {
 
   notes: string;
   status: SiteStatus;
+
+  // Location coordinates
+  latitude?: number;
+  longitude?: number;
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

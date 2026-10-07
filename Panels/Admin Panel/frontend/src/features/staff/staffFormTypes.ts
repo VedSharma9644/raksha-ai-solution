@@ -45,6 +45,11 @@ export interface StaffMemberFormValues {
   pfNumber: string;
 
   notes: string;
+
+  // Login credentials (password only stored in Firebase Auth, never Firestore)
+  // Required on Add; leave blank on Edit to keep existing password
+  password: string;
+  confirmPassword: string;
 }
 
 export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
@@ -78,6 +83,8 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   esiNumber: "",
   pfNumber: "",
   notes: "",
+  password: "",
+  confirmPassword: "",
 };
 
 export const SAMPLE_SITE_OPTIONS = [

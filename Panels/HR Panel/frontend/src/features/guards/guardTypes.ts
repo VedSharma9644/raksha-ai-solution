@@ -45,6 +45,11 @@ export interface GuardFormValues {
   pfNumber: string;
 
   notes: string;
+
+  // Login credentials — password stored only in Firebase Auth, never Firestore
+  // Required on Add; leave blank on Edit to keep existing password
+  password: string;
+  confirmPassword: string;
 }
 
 export const EMPTY_GUARD_FORM: GuardFormValues = {
@@ -78,6 +83,8 @@ export const EMPTY_GUARD_FORM: GuardFormValues = {
   esiNumber: "",
   pfNumber: "",
   notes: "",
+  password: "",
+  confirmPassword: "",
 };
 
 export interface GuardListItem {

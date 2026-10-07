@@ -48,6 +48,7 @@ export function AddGuardPage() {
           </p>
         ) : null}
         <AddGuardScreen
+          isNew={true}
           isSubmitting={isSubmitting}
           onBack={goBack}
           onCancel={goBack}

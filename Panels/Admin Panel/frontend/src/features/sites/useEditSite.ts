@@ -50,6 +50,8 @@ export function useEditSite(siteId: string) {
         contactPerson: values.contactPerson,
         contactPhone: values.contactPhone,
         notes: values.notes,
+        latitude: values.latitude ? parseFloat(values.latitude) : undefined,
+        longitude: values.longitude ? parseFloat(values.longitude) : undefined,
       });
       navigate("/sites", { replace: true });
     } catch (err: unknown) {
@@ -74,6 +76,8 @@ export function useEditSite(siteId: string) {
         siteSupervisor: site.siteSupervisor ?? "",
         contactPerson: site.contactPerson ?? "",
         contactPhone: site.contactPhone ?? "",
+        latitude: site.latitude != null ? String(site.latitude) : "",
+        longitude: site.longitude != null ? String(site.longitude) : "",
         notes: site.notes ?? "",
       }
     : undefined;

@@ -2,7 +2,8 @@ export type HrDashboardActionId =
   | "add-guard"
   | "guard-list"
   | "manage-inventory"
-  | "manage-leave";
+  | "manage-leave"
+  | "site-list";
 
 export interface HrDashboardAction {
   id: HrDashboardActionId;
@@ -35,5 +36,11 @@ export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
     title: "Manage Leave",
     description: "Review upcoming and pending leave requests.",
     iconLabel: "V",
+  },
+  {
+    id: "site-list",
+    title: "Site List",
+    description: "View all client sites and assign guards to each location.",
+    iconLabel: "S",
   },
 ];

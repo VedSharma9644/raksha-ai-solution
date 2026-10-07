@@ -10,6 +10,7 @@ export const APP_ROUTES = {
   addSite: "/sites/add",
   siteList: "/sites",
   editSite: "/sites/:id/edit",
+  assignGuards: "/sites/:id/assign-guards",
   // HR Staff
   hrList: "/hr",
   addHrStaff: "/hr/add",
@@ -35,6 +36,11 @@ export function editHrStaffPath(hrStaffId: string): string {
 /** Build the concrete edit-site URL for a specific site ID */
 export function editSitePath(siteId: string): string {
   return `/sites/${siteId}/edit`;
+}
+
+/** Build the assign-guards URL for a specific site ID */
+export function assignGuardsPath(siteId: string): string {
+  return `/sites/${siteId}/assign-guards`;
 }
 
 /** Build the concrete edit-inventory-item URL for a specific item ID */

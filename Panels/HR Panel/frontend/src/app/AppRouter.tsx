@@ -7,6 +7,8 @@ import { ViewGuardPage } from "../pages/ViewGuardPage";
 import { HrDashboardPage } from "../pages/HrDashboardPage";
 import { InventoryPage } from "../pages/InventoryPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
+import { SiteListPage } from "../pages/SiteListPage";
+import { AssignGuardsPage } from "../pages/AssignGuardsPage";
 import { LoginPage } from "../pages/LoginPage";
 import { APP_ROUTES } from "./routePaths";
 
@@ -99,6 +101,22 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <LeaveManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.siteList}
+        element={
+          <ProtectedRoute>
+            <SiteListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.assignGuards}
+        element={
+          <ProtectedRoute>
+            <AssignGuardsPage />
           </ProtectedRoute>
         }
       />

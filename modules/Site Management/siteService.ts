@@ -29,6 +29,8 @@ export interface AddSiteParams {
   contactPerson: string;
   contactPhone: string;
   notes: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateSiteParams {
@@ -46,6 +48,8 @@ export interface UpdateSiteParams {
   contactPhone?: string;
   notes?: string;
   status?: SiteStatus;
+  latitude?: number;
+  longitude?: number;
 }
 
 export async function addSite(

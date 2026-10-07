@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { addGuard } from "@raskha/guard-management";
+import { createGuardAccount } from "@raskha/guard-management";
 import { APP_ROUTES } from "../../app/routePaths";
 import { useAuthContext } from "../authentication";
-import { db, storage } from "../../lib/firebase";
+import { db, storage, clientFirebaseConfig } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff/staffFormTypes";
 
 async function uploadDocumentIfPresent(
@@ -58,8 +58,10 @@ export function useAddGuard() {
           ),
         ]);
 
-      await addGuard(db, {
+      // Create Firebase Auth account + Firestore document (Auth UID as doc ID)
+      await createGuardAccount(db, clientFirebaseConfig, {
         agencyId: agency.id,
+        password: values.password,
         fullName: values.fullName,
         fatherName: values.fatherName,
         phone: values.phone,

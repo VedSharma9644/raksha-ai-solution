@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Button } from "../../../components/Button";
 import { FileField } from "../../../components/FileField";
 import { FormPanel } from "../../../components/FormPanel";
+import { PasswordField } from "../../../components/PasswordField";
 import { SelectField } from "../../../components/SelectField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
@@ -13,6 +14,8 @@ import "./AddGuardForm.css";
 export interface AddGuardFormProps {
   initialValues?: GuardFormValues;
   isSubmitting?: boolean;
+  /** Pass true when creating a new guard — makes password required */
+  isNew?: boolean;
   onSubmit: (values: GuardFormValues) => void | Promise<void>;
   onCancel: () => void;
 }
@@ -20,6 +23,7 @@ export interface AddGuardFormProps {
 export function AddGuardForm({
   initialValues,
   isSubmitting = false,
+  isNew = false,
   onSubmit,
   onCancel,
 }: AddGuardFormProps) {
@@ -61,6 +65,20 @@ export function AddGuardForm({
       nextErrors.aadhaarNumber = "Enter the Aadhaar number.";
     } else if (!/^\d{12}$/.test(values.aadhaarNumber.replace(/\s/g, ""))) {
       nextErrors.aadhaarNumber = "Aadhaar number must be 12 digits.";
+    }
+
+    // Password — required on new guard, optional on edit
+    if (isNew) {
+      if (!values.password) {
+        nextErrors.password = "Enter a password for the guard's login.";
+      } else if (values.password.length < 8) {
+        nextErrors.password = "Password must be at least 8 characters.";
+      }
+    } else if (values.password && values.password.length < 8) {
+      nextErrors.password = "New password must be at least 8 characters.";
+    }
+    if (values.password && values.password !== values.confirmPassword) {
+      nextErrors.confirmPassword = "Passwords do not match.";
     }
 
     setErrors(nextErrors);
@@ -383,6 +401,38 @@ export function AddGuardForm({
           placeholder="Shift preference, certifications, or onboarding notes"
           disabled={isSubmitting}
         />
+
+        {/* ── Section: Login Credentials ── */}
+        <p className="add-guard-form__section-label">Login Credentials</p>
+        <p className="add-guard-form__section-hint">
+          {isNew
+            ? "Set a password the guard will use to log into the Guard App."
+            : "Leave blank to keep the existing password. Fill in to change it."}
+        </p>
+        <div className="form-panel__grid">
+          <PasswordField
+            label={isNew ? "Password" : "New password (optional)"}
+            name="password"
+            value={values.password}
+            onChange={(e) => updateField("password", e.target.value)}
+            errorMessage={errors.password}
+            placeholder="Min. 8 characters"
+            required={isNew}
+            disabled={isSubmitting}
+            autoComplete="new-password"
+          />
+          <PasswordField
+            label="Confirm password"
+            name="confirmPassword"
+            value={values.confirmPassword}
+            onChange={(e) => updateField("confirmPassword", e.target.value)}
+            errorMessage={errors.confirmPassword}
+            placeholder="Re-enter password"
+            required={isNew}
+            disabled={isSubmitting || !values.password}
+            autoComplete="new-password"
+          />
+        </div>
 
         <div className="form-panel__actions">
           <Button

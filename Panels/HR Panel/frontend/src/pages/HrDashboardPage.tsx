@@ -14,6 +14,7 @@ const ACTION_ROUTES: Record<
   "guard-list": APP_ROUTES.guardList,
   "manage-inventory": APP_ROUTES.manageInventory,
   "manage-leave": APP_ROUTES.manageLeave,
+  "site-list": APP_ROUTES.siteList,
 };
 
 export function HrDashboardPage() {

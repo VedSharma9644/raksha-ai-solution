@@ -35,6 +35,10 @@ export interface SiteFormValues {
   contactPerson: string;
   contactPhone: string;
 
+  // Location
+  latitude: string;
+  longitude: string;
+
   notes: string;
 }
 
@@ -51,6 +55,8 @@ export const EMPTY_SITE_FORM: SiteFormValues = {
   siteSupervisor: "",
   contactPerson: "",
   contactPhone: "",
+  latitude: "",
+  longitude: "",
   notes: "",
 };
 

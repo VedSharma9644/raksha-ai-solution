@@ -7,6 +7,7 @@ import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
 import type { SiteFormValues } from "../siteFormTypes";
 import { EMPTY_SITE_FORM, SITE_TYPE_OPTIONS } from "../siteFormTypes";
+import { SiteLocationPicker } from "../SiteLocationPicker/SiteLocationPicker";
 import "./AddSiteForm.css";
 
 export interface AddSiteFormProps {
@@ -125,6 +126,16 @@ export function AddSiteForm({
           onChange={(e) => updateField("address", e.target.value)}
           errorMessage={errors.address}
           required
+          disabled={isSubmitting}
+        />
+
+        {/* ── Section: Location ── */}
+        <p className="add-site-form__section-label">Location</p>
+        <SiteLocationPicker
+          latitude={values.latitude}
+          longitude={values.longitude}
+          onLatChange={(val) => updateField("latitude", val)}
+          onLngChange={(val) => updateField("longitude", val)}
           disabled={isSubmitting}
         />
 

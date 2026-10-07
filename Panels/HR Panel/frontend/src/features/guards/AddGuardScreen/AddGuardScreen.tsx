@@ -6,6 +6,7 @@ import "./AddGuardScreen.css";
 
 export interface AddGuardScreenProps {
   isSubmitting?: boolean;
+  isNew?: boolean;
   onBack: () => void;
   onCancel: () => void;
   onSubmit: (values: GuardFormValues) => void | Promise<void>;
@@ -13,6 +14,7 @@ export interface AddGuardScreenProps {
 
 export function AddGuardScreen({
   isSubmitting,
+  isNew = false,
   onBack,
   onCancel,
   onSubmit,
@@ -27,6 +29,7 @@ export function AddGuardScreen({
           backLabel="Back to dashboard"
         />
         <AddGuardForm
+          isNew={isNew}
           isSubmitting={isSubmitting}
           onCancel={onCancel}
           onSubmit={onSubmit}

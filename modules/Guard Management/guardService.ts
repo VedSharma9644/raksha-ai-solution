@@ -9,6 +9,7 @@ import {
   query,
   where,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 import { GUARDS_COLLECTION } from "./guard";
@@ -139,4 +140,38 @@ export async function deleteGuard(
 ): Promise<void> {
   const ref = doc(db, GUARDS_COLLECTION, guardId);
   await deleteDoc(ref);
+}
+
+/**
+ * Atomically assign / un-assign guards for a site.
+ *
+ * @param addIds    Guard IDs to assign to this site (set their assignedSiteId → siteId)
+ * @param removeIds Guard IDs to un-assign from this site (set their assignedSiteId → "")
+ */
+export async function bulkUpdateGuardSiteAssignment(
+  db: Firestore,
+  siteId: string,
+  addIds: string[],
+  removeIds: string[]
+): Promise<void> {
+  if (addIds.length === 0 && removeIds.length === 0) return;
+
+  const batch = writeBatch(db);
+  const now = serverTimestamp();
+
+  for (const id of addIds) {
+    batch.update(doc(db, GUARDS_COLLECTION, id), {
+      assignedSiteId: siteId,
+      updatedAt: now,
+    });
+  }
+
+  for (const id of removeIds) {
+    batch.update(doc(db, GUARDS_COLLECTION, id), {
+      assignedSiteId: "",
+      updatedAt: now,
+    });
+  }
+
+  await batch.commit();
 }

@@ -43,6 +43,7 @@ export function AddGuardPage() {
         ) : null}
         <AddStaffMemberScreen
           role="guard"
+          isNew={true}
           isSubmitting={isSubmitting}
           onBack={goBack}
           onCancel={goBack}

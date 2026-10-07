@@ -10,6 +10,12 @@ export {
   listGuardsByAgency,
   updateGuard,
   deleteGuard,
+  bulkUpdateGuardSiteAssignment,
   type AddGuardParams,
   type UpdateGuardParams,
 } from "./guardService";
+
+export {
+  createGuardAccount,
+  type CreateGuardAccountParams,
+} from "./guardAuth";

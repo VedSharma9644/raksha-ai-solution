@@ -26,6 +26,7 @@ export interface AddStaffMemberScreenProps {
   role: StaffRole;
   initialValues?: StaffMemberFormValues;
   isSubmitting?: boolean;
+  isNew?: boolean;
   onBack: () => void;
   onCancel: () => void;
   onSubmit: (values: StaffMemberFormValues) => void | Promise<void>;
@@ -35,6 +36,7 @@ export function AddStaffMemberScreen({
   role,
   initialValues,
   isSubmitting,
+  isNew = false,
   onBack,
   onCancel,
   onSubmit,
@@ -54,6 +56,7 @@ export function AddStaffMemberScreen({
           role={role}
           initialValues={initialValues}
           isSubmitting={isSubmitting}
+          isNew={isNew}
           onCancel={onCancel}
           onSubmit={onSubmit}
         />

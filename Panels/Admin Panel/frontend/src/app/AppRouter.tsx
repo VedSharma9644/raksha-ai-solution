@@ -6,6 +6,7 @@ import { EditGuardPage } from "../pages/EditGuardPage";
 import { AddSitePage } from "../pages/AddSitePage";
 import { SiteListPage } from "../pages/SiteListPage";
 import { EditSitePage } from "../pages/EditSitePage";
+import { AssignGuardsPage } from "../pages/AssignGuardsPage";
 import { AgencyDashboardPage } from "../pages/AgencyDashboardPage";
 import { EmployeeListPage } from "../pages/EmployeeListPage";
 import { LoginPage } from "../pages/LoginPage";
@@ -115,6 +116,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <EditSitePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.assignGuards}
+        element={
+          <ProtectedRoute>
+            <AssignGuardsPage />
           </ProtectedRoute>
         }
       />

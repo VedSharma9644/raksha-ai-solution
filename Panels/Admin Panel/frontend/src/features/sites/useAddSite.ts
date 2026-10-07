@@ -36,6 +36,8 @@ export function useAddSite() {
         contactPerson: values.contactPerson,
         contactPhone: values.contactPhone,
         notes: values.notes,
+        latitude: values.latitude ? parseFloat(values.latitude) : undefined,
+        longitude: values.longitude ? parseFloat(values.longitude) : undefined,
       });
       navigate("/sites", { replace: true });
     } catch (err: unknown) {

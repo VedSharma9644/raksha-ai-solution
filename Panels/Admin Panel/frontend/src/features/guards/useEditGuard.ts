@@ -7,6 +7,10 @@ import { APP_ROUTES } from "../../app/routePaths";
 import { db, storage } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff";
 
+// Admin backend base URL — mirrors useEditHrStaff pattern
+const ADMIN_BACKEND_URL =
+  import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001";
+
 async function uploadDocumentIfPresent(
   file: File | null,
   path: string
@@ -111,6 +115,19 @@ export function useEditGuard(guardId: string) {
         notes: values.notes,
       });
 
+      // If a new password was supplied, update Firebase Auth via backend
+      if (values.password) {
+        const res = await fetch(`${ADMIN_BACKEND_URL}/api/guards/${guardId}/password`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: values.password }),
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(body.error ?? "Password update failed.");
+        }
+      }
+
       navigate(APP_ROUTES.employeeList, { replace: true });
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -152,6 +169,8 @@ export function useEditGuard(guardId: string) {
         esiNumber: guard.esiNumber ?? "",
         pfNumber: guard.pfNumber ?? "",
         notes: guard.notes ?? "",
+        password: "",
+        confirmPassword: "",
       }
     : undefined;
 
