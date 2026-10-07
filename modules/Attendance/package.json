@@ -1,6 +1,12 @@
 {
-    "name": "@raskha/attendance",
-    "version": "1.0.0",
-    "private": true,
-    "main": "index.js"
+  "name": "@raskha/attendance",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "dependencies": {
+    "@raskha/guard-management": "1.0.0",
+    "@raskha/site-management": "1.0.0",
+    "firebase": "^12.19.0",
+    "firebase-admin": "^14.5.0"
   }
+}

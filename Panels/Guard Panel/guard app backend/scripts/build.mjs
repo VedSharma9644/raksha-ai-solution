@@ -10,13 +10,12 @@ function resolveMonorepoRoot() {
     return path.resolve(process.env.MONOREPO_ROOT);
   }
 
-  // Local: Panels/<Panel>/backend/scripts -> repo root (4 levels up)
+  // Local: Panels/Guard Panel/guard app backend/scripts -> repo root
   let candidate = path.resolve(__dirname, "../../../..");
   if (existsSync(path.join(candidate, "core"))) {
     return candidate;
   }
 
-  // Docker flat layout: /app/backend/scripts -> /app
   candidate = path.resolve(__dirname, "../..");
   if (existsSync(path.join(candidate, "core"))) {
     return candidate;
@@ -38,19 +37,18 @@ await esbuild.build({
   logLevel: "info",
   alias: {
     "@raskha/core": path.join(monorepoRoot, "core/index.ts"),
-    "@raskha/shared": path.join(monorepoRoot, "shared/index.js"),
+    "@raskha/attendance": path.join(monorepoRoot, "modules/Attendance/index.ts"),
     "@raskha/guard-management": path.join(
       monorepoRoot,
       "modules/Guard Management/index.ts"
     ),
-    "@raskha/hr-management": path.join(
+    "@raskha/site-management": path.join(
       monorepoRoot,
-      "modules/HR Management/index.ts"
+      "modules/Site Management/index.ts"
     ),
-    "@raskha/attendance": path.join(monorepoRoot, "modules/Attendance/index.ts"),
   },
   packages: "external",
   banner: {
-    js: "// Raskha panel backend bundle (workspace packages inlined)",
+    js: "// Raskha Guard App backend bundle (workspace packages inlined)",
   },
 });
