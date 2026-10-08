@@ -17,7 +17,7 @@ export function AttendanceGeofenceComplianceRow() {
         </View>
         <View style={styles.copy}>
           <Text style={styles.title}>{attendanceMarkedDefaults.geofenceTitle}</Text>
-          <Text style={styles.detail} numberOfLines={1}>
+          <Text style={styles.detail}>
             {lastPunchResult?.geofenceDetail ?? attendanceMarkedDefaults.geofenceDetail}
           </Text>
         </View>

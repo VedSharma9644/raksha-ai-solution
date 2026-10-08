@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appLayout, appRadii, appSpacing, appTypography } from '../theme';
+import { appColors, appLayout, appSpacing, appTypography, isCompact } from '../theme';
 
 export const layoutBottomTabMenuStyles = StyleSheet.create({
   wrapper: {
@@ -9,7 +9,9 @@ export const layoutBottomTabMenuStyles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 50,
-    backgroundColor: 'rgba(248, 249, 255, 0.92)',
+    backgroundColor: 'rgba(248, 249, 255, 0.96)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(191, 200, 201, 0.55)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.06,
@@ -24,25 +26,20 @@ export const layoutBottomTabMenuStyles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    minHeight: 64,
+    minWidth: 0,
+    minHeight: appLayout.bottomNavHeight,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
+    paddingHorizontal: 2,
   },
   label: {
     ...appTypography.labelLg,
+    fontSize: isCompact ? 11 : appTypography.labelLg.fontSize,
+    lineHeight: isCompact ? 14 : appTypography.labelLg.lineHeight,
+    textAlign: 'center',
   },
   labelActive: {
     fontFamily: 'PublicSans_700Bold',
-  },
-  homeIndicatorWrap: {
-    alignItems: 'center',
-    paddingBottom: 8,
-  },
-  homeIndicator: {
-    width: 128,
-    height: 4,
-    borderRadius: appRadii.full,
-    backgroundColor: 'rgba(191, 200, 201, 0.6)',
   },
 });

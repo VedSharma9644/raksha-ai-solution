@@ -226,17 +226,33 @@ export function createAttendanceRoutes(): Router {
       }
 
       const open = await getTodayOpenPunchIn(req.guard.guardId);
+      const site = await resolveAssignedSite(req);
+      if (site && req.guard) {
+        req.guard.siteName = site.siteName;
+      }
+
+      const siteName =
+        open?.siteName || req.guard.siteName || site?.siteName || "";
+      const postName = open?.postName || req.guard.postName || "";
+
       res.json({
         shiftActive: Boolean(open),
         openPunchInId: open?.id ?? null,
         punchedAt: open?.punchedAt?.toISOString?.() ?? null,
-        siteName: open?.siteName ?? req.guard.siteName,
-        postName: open?.postName ?? req.guard.postName,
+        punchInStatus: open?.punchInStatus ?? null,
+        minutesLate: open?.minutesLate ?? null,
+        siteName,
+        postName,
+        assignedSiteId: req.guard.assignedSiteId,
+        shiftFrom: req.guard.shiftFrom,
+        shiftTo: req.guard.shiftTo,
         guard: {
           employeeCode: req.guard.employeeCode,
           fullName: req.guard.fullName,
-          siteName: req.guard.siteName,
-          postName: req.guard.postName,
+          siteName,
+          postName,
+          shiftFrom: req.guard.shiftFrom,
+          shiftTo: req.guard.shiftTo,
         },
       });
     } catch (error: unknown) {

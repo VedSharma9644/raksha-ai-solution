@@ -10,6 +10,7 @@ import { IncomingReliefRequestsScreen } from '../screens/IncomingReliefRequestsS
 import { LeaveTimeOffScreen } from '../screens/LeaveTimeOffScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { MainTabPlaceholderScreen } from '../screens/MainTabPlaceholderScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { PatrolSessionScreen } from '../screens/PatrolSessionScreen';
 import { RelieveAGuardScreen } from '../screens/RelieveAGuardScreen';
 import { ShiftDetailsScreen } from '../screens/ShiftDetailsScreen';
@@ -41,6 +42,8 @@ export function GuardAppRoot() {
     screen = <IncomingReliefRequestsScreen />;
   } else if (stackRoute === 'guardProfile') {
     screen = <GuardProfileScreen />;
+  } else if (stackRoute === 'notifications') {
+    screen = <NotificationsScreen />;
   } else if (mainTab === 'schedule') {
     screen = <UpcomingScheduleScreen />;
   } else if (mainTab === 'attendance') {

@@ -53,6 +53,18 @@ await esbuild.build({
       "modules/Inventory Management/index.ts"
     ),
     "@raskha/leave": path.join(monorepoRoot, "modules/Leave Management/index.ts"),
+    "@raskha/relief": path.join(
+      monorepoRoot,
+      "modules/Relief Management/index.ts"
+    ),
+    "@raskha/notifications": path.join(
+      monorepoRoot,
+      "modules/Notifications/index.ts"
+    ),
+    "@raskha/site-management": path.join(
+      monorepoRoot,
+      "modules/Site Management/index.ts"
+    ),
   },
   packages: "external",
   banner: {

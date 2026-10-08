@@ -58,6 +58,7 @@ export {
   markPunchIn,
   markPunchOut,
   listAttendanceHistory,
+  evaluatePunchInPunctuality,
   type MarkPunchInParams,
   type MarkPunchOutParams,
   type OpenPunchInRecord,

@@ -25,7 +25,7 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
           <View style={styles.restIconWrap}>
             <MaterialIcons name="weekend" size={24} color={appColors.primary} />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.restTitle}>{shift.restTitle}</Text>
             <Text style={styles.restMessage}>{shift.restMessage}</Text>
           </View>
@@ -46,9 +46,7 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
               <Text style={styles.tomorrowText}>Tomorrow</Text>
             </View>
           ) : null}
-          <Text style={styles.dayLabel} numberOfLines={1}>
-            {shift.dayLabel}
-          </Text>
+          <Text style={styles.dayLabel}>{shift.dayLabel}</Text>
         </View>
         <View style={[styles.statusBadge, isNight && styles.statusBadgeNight]}>
           <MaterialIcons
@@ -66,13 +64,9 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
         <View style={styles.siteCol}>
           <View style={styles.siteRow}>
             <MaterialIcons name={siteIcon} size={18} color={appColors.secondary} />
-            <Text style={styles.siteName} numberOfLines={1}>
-              {shift.siteName}
-            </Text>
+            <Text style={styles.siteName}>{shift.siteName}</Text>
           </View>
-          <Text style={styles.postName} numberOfLines={2}>
-            {shift.postName}
-          </Text>
+          <Text style={styles.postName}>{shift.postName}</Text>
         </View>
         <MaterialIcons
           name={isNight ? 'nightlight' : 'wb-sunny'}
@@ -91,9 +85,7 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
       <View style={styles.footerRow}>
         <View style={styles.timeRow}>
           <MaterialIcons name="schedule" size={18} color={appColors.secondary} />
-          <Text style={styles.timeText} numberOfLines={1}>
-            {shift.timeLabel}
-          </Text>
+          <Text style={styles.timeText}>{shift.timeLabel}</Text>
         </View>
         <TextChevronLink />
       </View>

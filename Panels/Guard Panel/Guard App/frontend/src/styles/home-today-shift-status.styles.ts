@@ -20,15 +20,19 @@ export const homeTodayShiftStatusStyles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: appSpacing.xs,
+    flexWrap: 'wrap',
   },
   shiftLabelRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.xs,
+    flexGrow: 1,
     flexShrink: 1,
+    flexBasis: '55%',
+    minWidth: 0,
   },
   shiftLabel: {
     ...appTypography.labelLg,
@@ -37,6 +41,8 @@ export const homeTodayShiftStatusStyles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
   },
   timeRow: {
     flexDirection: 'row',
@@ -54,7 +60,7 @@ export const homeTodayShiftStatusStyles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingTop: 4,
     gap: appSpacing.xs,
@@ -62,9 +68,13 @@ export const homeTodayShiftStatusStyles = StyleSheet.create({
   },
   statusLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 6,
+    flexGrow: 1,
     flexShrink: 1,
+    flexBasis: '60%',
+    minWidth: 0,
+    flexWrap: 'wrap',
   },
   statusMuted: {
     ...appTypography.bodyLg,
@@ -74,10 +84,14 @@ export const homeTodayShiftStatusStyles = StyleSheet.create({
     ...appTypography.bodyLg,
     color: appColors.onSurface,
     fontFamily: 'PublicSans_700Bold',
+    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
   },
   countdown: {
     ...appTypography.labelLg,
     color: appColors.primary,
     fontFamily: 'PublicSans_700Bold',
+    flexShrink: 0,
   },
 });

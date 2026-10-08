@@ -10,4 +10,5 @@ export type GuardStackRoute =
   | 'leaveTimeOff'
   | 'relieveAGuard'
   | 'incomingReliefRequests'
-  | 'guardProfile';
+  | 'guardProfile'
+  | 'notifications';

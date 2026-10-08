@@ -2,10 +2,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 
 import { relieveAGuardDefaults } from '../../constants/relieve-a-guard-defaults';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { relieveGuidanceBannerStyles as styles } from '../../styles/relieve-guidance-banner.styles';
 import { appColors } from '../../theme';
 
 export function RelieveGuidanceBanner() {
+  const { guardUser } = useGuardAppNavigation();
+  const name = guardUser?.fullName?.trim() || 'Guard';
+  const code = guardUser?.employeeCode?.trim() || '—';
+
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
@@ -26,10 +31,10 @@ export function RelieveGuidanceBanner() {
         <View style={styles.guardStripLeft}>
           <MaterialIcons name="badge" size={16} color={appColors.onSurfaceVariant} />
           <Text style={styles.guardStripText} numberOfLines={1}>
-            {relieveAGuardDefaults.currentGuardName}
+            {name} (You)
           </Text>
         </View>
-        <Text style={styles.guardId}>{relieveAGuardDefaults.currentGuardId}</Text>
+        <Text style={styles.guardId}>ID: {code}</Text>
       </View>
     </View>
   );

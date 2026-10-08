@@ -27,6 +27,9 @@ export const layoutTopHeaderBarStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: appSpacing.sm,
+    flex: 1,
+    minWidth: 0,
+    paddingRight: appSpacing.sm,
   },
   logo: {
     width: 32,
@@ -47,6 +50,7 @@ export const layoutTopHeaderBarStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: appSpacing.sm,
+    flexShrink: 0,
   },
   iconButton: {
     width: 44,
@@ -69,6 +73,26 @@ export const layoutTopHeaderBarStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: appColors.surface,
   },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    borderRadius: 8,
+    backgroundColor: appColors.tertiaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: appColors.surface,
+  },
+  notificationBadgeText: {
+    color: appColors.onTertiary,
+    fontSize: 9,
+    lineHeight: 11,
+    fontFamily: 'PublicSans_700Bold',
+  },
   avatarWrap: {
     width: 32,
     height: 32,
@@ -87,6 +111,7 @@ export const layoutTopHeaderBarStyles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 2,
     borderColor: 'rgba(0, 70, 74, 0.2)',
+    overflow: 'hidden',
   },
   onlineDot: {
     position: 'absolute',

@@ -26,7 +26,9 @@ export function ScreenShell({
   const { setMainTab } = useGuardAppNavigation();
 
   const contentTopPad = insets.top + appLayout.headerHeight;
-  const contentBottomPad = insets.bottom + appLayout.bottomNavHeight + appSpacing.md;
+  // BottomTabMenu adds safe-area padding itself — don't double-count it.
+  const contentBottomPad =
+    appLayout.bottomNavHeight + Math.max(insets.bottom, 6) + appSpacing.md;
 
   return (
     <View style={styles.root}>

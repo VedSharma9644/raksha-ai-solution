@@ -41,6 +41,7 @@ function saveReadIds(agencyId: string, uid: string, ids: Set<string>): void {
 const KNOWN_KINDS = new Set<HrNotificationKind>([
   "upcoming_leave",
   "leave_request",
+  "relieve_request",
   "inventory_alert",
   "attendance_alert",
   "guard_update",
@@ -50,9 +51,6 @@ const KNOWN_KINDS = new Set<HrNotificationKind>([
 function asKind(value: string): HrNotificationKind {
   if (KNOWN_KINDS.has(value as HrNotificationKind)) {
     return value as HrNotificationKind;
-  }
-  if (value === "relieve_request") {
-    return "general";
   }
   return "general";
 }

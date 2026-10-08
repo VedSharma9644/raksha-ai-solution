@@ -6,7 +6,8 @@ export const homeMarkAttendanceHeroStyles = StyleSheet.create({
   card: {
     backgroundColor: appColors.primaryContainer,
     borderRadius: appRadii.xl,
-    padding: appSpacing.lg,
+    paddingVertical: appSpacing.lg,
+    paddingHorizontal: appSpacing.md,
     alignItems: 'center',
     overflow: 'hidden',
     shadowColor: '#000',
@@ -50,9 +51,9 @@ export const homeMarkAttendanceHeroStyles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   cameraCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: appColors.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
@@ -69,12 +70,14 @@ export const homeMarkAttendanceHeroStyles = StyleSheet.create({
     letterSpacing: -0.4,
     marginTop: appSpacing.xs,
     textAlign: 'center',
+    paddingHorizontal: appSpacing.sm,
   },
   subtitle: {
     ...appTypography.bodyXl,
     color: appColors.onPrimaryContainer,
     textAlign: 'center',
-    maxWidth: 320,
+    alignSelf: 'stretch',
+    paddingHorizontal: appSpacing.sm,
     marginTop: 4,
   },
   lockRow: {

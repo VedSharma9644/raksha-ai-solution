@@ -189,7 +189,11 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 size={18}
                 color={mode === 'phone' ? appColors.onPrimary : appColors.secondary}
               />
-              <Text style={[styles.modeLabel, mode === 'phone' && styles.modeLabelActive]}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={[styles.modeLabel, mode === 'phone' && styles.modeLabelActive]}
+              >
                 {loginScreenDefaults.modePhoneLabel}
               </Text>
             </Pressable>
@@ -202,7 +206,11 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 size={18}
                 color={mode === 'id' ? appColors.onPrimary : appColors.secondary}
               />
-              <Text style={[styles.modeLabel, mode === 'id' && styles.modeLabelActive]}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={[styles.modeLabel, mode === 'id' && styles.modeLabelActive]}
+              >
                 {loginScreenDefaults.modeIdLabel}
               </Text>
             </Pressable>

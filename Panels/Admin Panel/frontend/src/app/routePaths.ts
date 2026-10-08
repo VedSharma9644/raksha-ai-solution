@@ -21,6 +21,10 @@ export const APP_ROUTES = {
   editInventoryItem: "/inventory/:id/edit",
   // Attendance
   attendance: "/attendance",
+  // Leave
+  manageLeave: "/leave",
+  // Relief
+  manageRelief: "/relief",
   // Scheduling
   scheduling: "/scheduling/:siteId",
 } as const;

@@ -97,7 +97,50 @@ export type OpenPunchInRecord = {
   siteName: string;
   postName: string;
   selfieUrl?: string;
+  punchInStatus?: string;
+  minutesLate?: number;
 };
+
+function parseShiftHhMm(value: string): { hours: number; minutes: number } | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) {
+    return null;
+  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+    return null;
+  }
+  return { hours, minutes };
+}
+
+/**
+ * Compare punch time against scheduled shift start (local device/server time).
+ * Returns Late when punch is after shift start.
+ */
+export function evaluatePunchInPunctuality(params: {
+  punchedAt: Date;
+  shiftFrom: string;
+}): { punchInStatus: "On Time" | "Late"; minutesLate: number } {
+  const parsed = parseShiftHhMm(params.shiftFrom || "08:00");
+  if (!parsed) {
+    return { punchInStatus: "On Time", minutesLate: 0 };
+  }
+
+  const start = new Date(params.punchedAt);
+  start.setSeconds(0, 0);
+  start.setHours(parsed.hours, parsed.minutes, 0, 0);
+
+  const minutesLate = Math.max(
+    0,
+    Math.floor((params.punchedAt.getTime() - start.getTime()) / 60_000)
+  );
+
+  if (minutesLate > 0) {
+    return { punchInStatus: "Late", minutesLate };
+  }
+  return { punchInStatus: "On Time", minutesLate: 0 };
+}
 
 export async function getTodayOpenPunchIn(
   guardId: string
@@ -129,6 +172,7 @@ export async function getTodayOpenPunchIn(
       continue;
     }
     if (!best || punchedAt.getTime() > best.punchedAt.getTime()) {
+      const minutesLateRaw = Number(data.minutesLate);
       best = {
         id: docSnap.id,
         punchedAt,
@@ -137,6 +181,9 @@ export async function getTodayOpenPunchIn(
         postName:
           (typeof data.postName === "string" && data.postName) || "Assigned Post",
         selfieUrl: typeof data.selfieUrl === "string" ? data.selfieUrl : undefined,
+        punchInStatus:
+          typeof data.punchInStatus === "string" ? data.punchInStatus : undefined,
+        minutesLate: Number.isFinite(minutesLateRaw) ? minutesLateRaw : undefined,
       };
     }
   }
@@ -190,6 +237,11 @@ export async function markPunchIn(
   });
 
   const now = new Date();
+  const punctuality = evaluatePunchInPunctuality({
+    punchedAt: now,
+    shiftFrom: params.guard.shiftFrom,
+  });
+
   const docRef = await db.collection(ATTENDANCE_COLLECTION).add({
     guardId: params.guard.guardId,
     agencyId: params.guard.agencyId,
@@ -203,6 +255,10 @@ export async function markPunchIn(
     selfieStoragePath: storagePath,
     geofenceStatus: geofence.status,
     shiftStatus: "started",
+    punchInStatus: punctuality.punchInStatus,
+    loginPunctuality:
+      punctuality.punchInStatus === "Late" ? "late" : "on_time",
+    minutesLate: punctuality.minutesLate,
     guardName: params.guard.fullName,
     guardEmployeeCode: params.guard.employeeCode,
     siteName: params.guard.siteName || "Assigned Site",
@@ -219,7 +275,7 @@ export async function markPunchIn(
     guardId: params.guard.employeeCode,
     punchInTime: formatPunchTime(now),
     punchInDate: formatPunchDate(now),
-    punchInStatus: "On Time",
+    punchInStatus: punctuality.punchInStatus,
     dutySiteName: params.guard.siteName || "Assigned Site",
     dutyPostName: params.guard.postName || "Assigned Post",
     rosterTitle: "Day Duty",
@@ -472,6 +528,7 @@ export async function listAttendanceHistory(params: {
     siteName: string;
     geofenceStatus: string;
     shiftStatus: string;
+    punchInStatus: string;
     selfieUrl?: string;
   };
 
@@ -501,6 +558,10 @@ export async function listAttendanceHistory(params: {
         (typeof data.siteName === "string" && data.siteName) || "Assigned Site",
       geofenceStatus: String(data.geofenceStatus ?? ""),
       shiftStatus: String(data.shiftStatus ?? ""),
+      punchInStatus:
+        typeof data.punchInStatus === "string" && data.punchInStatus.trim()
+          ? data.punchInStatus
+          : "On Time",
       selfieUrl: typeof data.selfieUrl === "string" ? data.selfieUrl : undefined,
     });
   }
@@ -559,17 +620,34 @@ export async function listAttendanceHistory(params: {
         tags.push("Selfie Saved");
       }
 
+      const late = row.punchInStatus.toLowerCase() === "late";
+      if (late) {
+        tags.push("Late Login");
+      }
+
       return {
         id: row.id,
         kind: onDuty ? "onDuty" : "present",
-        statusLabel: onDuty ? "ON DUTY • TODAY" : "PRESENT • PUNCHED IN",
+        statusLabel: onDuty
+          ? late
+            ? "ON DUTY • LATE LOGIN"
+            : "ON DUTY • TODAY"
+          : late
+            ? "PRESENT • LATE LOGIN"
+            : "PRESENT • PUNCHED IN",
         dateLabel: formatShortDate(row.punchedAt).toUpperCase(),
         postLabel: row.postName || row.siteName,
         postIcon: "shield",
         detailPrimaryLabel: onDuty ? "Punch In" : "In",
         detailPrimaryValue: formatPunchTime(row.punchedAt),
         detailSecondaryLabel: onDuty ? "Status" : "Site",
-        detailSecondaryValue: onDuty ? "Shift active" : row.siteName,
+        detailSecondaryValue: onDuty
+          ? late
+            ? "Late check-in"
+            : "Shift active"
+          : row.siteName,
+        detailTertiaryLabel: late ? "Login" : undefined,
+        detailTertiaryValue: late ? "Late" : undefined,
         footerTags: tags,
         punchedAtIso: row.punchedAt.toISOString(),
         dayOfMonth: row.punchedAt.getDate(),

@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appSpacing } from '../theme';
+import { appColors, appSpacing, contentMaxWidth } from '../theme';
 
 export const layoutScreenShellStyles = StyleSheet.create({
   root: {
@@ -11,6 +11,9 @@ export const layoutScreenShellStyles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    width: '100%',
+    maxWidth: contentMaxWidth,
+    alignSelf: 'center',
     paddingHorizontal: appSpacing.gutter,
     gap: appSpacing.md,
   },

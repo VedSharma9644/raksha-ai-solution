@@ -6,6 +6,7 @@ export const APP_ROUTES = {
   viewGuard: "/guards/:id",
   manageInventory: "/inventory",
   manageLeave: "/leave",
+  manageRelief: "/relief",
   siteList: "/sites",
   assignGuards: "/sites/:id/assign-guards",
   // Attendance

@@ -1,15 +1,26 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appRadii, appSpacing, appTypography } from '../theme';
+import {
+  appColors,
+  appRadii,
+  appSpacing,
+  appTypography,
+  fontScale,
+  isCompact,
+  twoColumnTileWidth,
+} from '../theme';
+
+const tileWidth = twoColumnTileWidth({
+  horizontalGutter: appSpacing.gutter,
+  gap: appSpacing.sm,
+});
 
 export const sharedStatSummaryTileStyles = StyleSheet.create({
   tile: {
-    width: '48%',
-    flexGrow: 1,
-    minWidth: '46%',
+    width: tileWidth,
     backgroundColor: appColors.surfaceContainerLowest,
     borderRadius: appRadii.xl,
-    padding: appSpacing.md,
+    padding: isCompact ? appSpacing.sm : appSpacing.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -27,8 +38,8 @@ export const sharedStatSummaryTileStyles = StyleSheet.create({
   },
   value: {
     fontFamily: 'PublicSans_800ExtraBold',
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: fontScale(isCompact ? 26 : 30),
+    lineHeight: fontScale(isCompact ? 32 : 36),
     color: appColors.onSurface,
   },
   label: {

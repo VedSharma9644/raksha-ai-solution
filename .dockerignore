@@ -11,6 +11,8 @@ node_modules
 **/.tmp
 **/tsconfig.*.tsbuildinfo
 Panels/*/frontend
+Panels/**/frontend
 Panels/Employee Panel
 Panels/Guard Web
+Panels/Guard Panel/Guard App
 package-lock.json

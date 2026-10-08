@@ -1,21 +1,26 @@
 import { Text, View } from 'react-native';
 
-import { incomingReliefRequestsDefaults } from '../../constants/incoming-relief-requests-defaults';
+import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { incomingReliefRosterBarStyles as styles } from '../../styles/incoming-relief-roster-bar.styles';
 
 export function IncomingReliefRosterBar() {
+  const { guardUser } = useGuardAppNavigation();
+  const duty = useGuardDutyAssignment();
+  const name = guardUser?.fullName?.trim() || 'Guard';
+  const code = guardUser?.employeeCode?.trim() || '—';
+
   return (
     <View style={styles.bar}>
       <View style={styles.left}>
         <View style={styles.pulseDot} />
-        <Text style={styles.rosterText} numberOfLines={1}>
-          Active Roster:{' '}
-          <Text style={styles.rosterName}>{incomingReliefRequestsDefaults.rosterName}</Text>
-          {` (${incomingReliefRequestsDefaults.rosterId})`}
+        <Text style={styles.rosterText}>
+          Active Roster: <Text style={styles.rosterName}>{name}</Text>
+          {` (${code})`}
         </Text>
       </View>
       <View style={styles.postChip}>
-        <Text style={styles.postText}>{incomingReliefRequestsDefaults.rosterPost}</Text>
+        <Text style={styles.postText}>{duty.postName}</Text>
       </View>
     </View>
   );

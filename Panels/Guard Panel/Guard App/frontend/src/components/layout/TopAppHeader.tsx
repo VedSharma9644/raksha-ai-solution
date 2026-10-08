@@ -1,14 +1,15 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { brandAssets } from '../../constants/brand-assets';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
-import { appColors } from '../../theme';
 import { layoutTopHeaderBarStyles as styles } from '../../styles/layout-top-header-bar.styles';
+import { GuardUserAvatar } from '../shared/GuardUserAvatar';
+import { NotificationBellButton } from './NotificationBellButton';
 
 type TopAppHeaderProps = {
   screenTitle?: string;
+  /** Optional override; defaults to signed-in guard profile picture. */
   profilePhotoUri?: string;
 };
 
@@ -25,33 +26,35 @@ export function TopAppHeader({ screenTitle = 'Home', profilePhotoUri }: TopAppHe
             style={styles.logo}
             resizeMode="contain"
           />
-          <View>
-            <Text style={styles.brand}>Raksha</Text>
-            <Text style={styles.subtitle}>{screenTitle}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.brand} numberOfLines={1}>
+              Raksha
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {screenTitle}
+            </Text>
           </View>
         </View>
 
         <View style={styles.actions}>
-          <Pressable
-            accessibilityLabel="Notifications"
-            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
-          >
-            <MaterialIcons name="notifications-none" size={24} color={appColors.onSurfaceVariant} />
-            <View style={styles.notificationDot} />
-          </Pressable>
+          <NotificationBellButton
+            style={styles.iconButton}
+            pressedStyle={styles.iconButtonPressed}
+            badgeStyle={styles.notificationBadge}
+            badgeTextStyle={styles.notificationBadgeText}
+            dotStyle={styles.notificationDot}
+          />
 
           <Pressable
             accessibilityLabel="Open guard profile"
             onPress={openGuardProfile}
             style={styles.avatarWrap}
           >
-            {profilePhotoUri ? (
-              <Image source={{ uri: profilePhotoUri }} style={styles.avatarPhoto} />
-            ) : (
-              <View style={styles.avatar}>
-                <MaterialIcons name="person" size={18} color={appColors.onPrimary} />
-              </View>
-            )}
+            <GuardUserAvatar
+              photoUri={profilePhotoUri}
+              size={36}
+              style={styles.avatarPhoto}
+            />
             <View style={styles.onlineDot} />
           </Pressable>
         </View>

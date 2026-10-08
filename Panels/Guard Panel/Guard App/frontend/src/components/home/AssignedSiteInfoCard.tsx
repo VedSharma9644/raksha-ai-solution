@@ -14,34 +14,36 @@ type AssignedSiteInfoCardProps = {
 };
 
 export function AssignedSiteInfoCard({
-  siteName = 'ABC Green Valley Heights',
-  siteDetail = 'Sector 62, Main Entrance',
-  supervisorName = 'Amit Singh',
-  supervisorPhone = '+919876543210',
+  siteName = 'Assigned site',
+  siteDetail,
+  supervisorName,
+  supervisorPhone,
   gpsLocked = true,
 }: AssignedSiteInfoCardProps) {
+  const canCall = Boolean(supervisorPhone?.trim());
+
   return (
     <View style={styles.siteCard}>
       <View style={styles.siteRow}>
         <MaterialIcons name="location-on" size={22} color={appColors.primary} />
         <View style={styles.siteTextCol}>
-          <Text style={styles.siteName} numberOfLines={1}>
-            {siteName}
-          </Text>
-          <Text style={styles.siteDetail} numberOfLines={1}>
-            {siteDetail}
-          </Text>
+          <Text style={styles.siteName}>{siteName}</Text>
+          {siteDetail ? <Text style={styles.siteDetail}>{siteDetail}</Text> : null}
         </View>
       </View>
 
       <View style={styles.chipsRow}>
-        <Pressable
-          style={({ pressed }) => [styles.callChip, pressed && styles.callChipPressed]}
-          onPress={() => Linking.openURL(`tel:${supervisorPhone}`)}
-        >
-          <MaterialIcons name="call" size={18} color={appColors.primary} />
-          <Text style={styles.callText}>Supervisor: {supervisorName} (Call)</Text>
-        </Pressable>
+        {canCall ? (
+          <Pressable
+            style={({ pressed }) => [styles.callChip, pressed && styles.callChipPressed]}
+            onPress={() => Linking.openURL(`tel:${supervisorPhone}`)}
+          >
+            <MaterialIcons name="call" size={18} color={appColors.primary} />
+            <Text style={styles.callText}>
+              Supervisor{supervisorName ? `: ${supervisorName}` : ''} (Call)
+            </Text>
+          </Pressable>
+        ) : null}
 
         {gpsLocked ? (
           <View style={styles.gpsChip}>

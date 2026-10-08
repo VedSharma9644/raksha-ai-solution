@@ -2,18 +2,24 @@ import { getFirestore, type Timestamp } from "firebase-admin/firestore";
 import { listAgencyAttendanceForDate } from "@raskha/attendance";
 import { INVENTORY_COLLECTION } from "@raskha/inventory-management";
 import { listLeaveRequestsForAgency } from "@raskha/leave";
+import {
+  RELIEF_METHOD_LABELS,
+  listReliefRequestsForAgency,
+} from "@raskha/relief";
 
 const IST = "Asia/Kolkata";
 
 export type AgencyNotificationKind =
   | "leave_request"
   | "upcoming_leave"
+  | "relieve_request"
   | "attendance_alert"
   | "inventory_alert"
   | "general";
 
 export type AgencyNotificationAction =
   | "leave"
+  | "relief"
   | "attendance"
   | "inventory"
   | "none";
@@ -88,10 +94,14 @@ export async function listAgencyNotifications(
   const tomorrow = addDaysToDateKey(today, 1);
   const nowIso = new Date().toISOString();
 
-  const [leaves, attendance, inventorySnap] = await Promise.all([
+  const [leaves, reliefs, attendance, inventorySnap] = await Promise.all([
     listLeaveRequestsForAgency({
       agencyId: trimmed,
       status: ["pending", "approved"],
+    }),
+    listReliefRequestsForAgency({
+      agencyId: trimmed,
+      status: "pending",
     }),
     listAgencyAttendanceForDate({ agencyId: trimmed, date: today }),
     getFirestore()
@@ -101,6 +111,17 @@ export async function listAgencyNotifications(
   ]);
 
   const notifications: AgencyNotificationDto[] = [];
+
+  for (const relief of reliefs) {
+    notifications.push({
+      id: `relief:pending:${relief.id}`,
+      kind: "relieve_request",
+      title: "New relief request",
+      message: `${relief.guardName || "A guard"} requested ${RELIEF_METHOD_LABELS[relief.method] ?? relief.method} for ${relief.dutyDate} (${relief.siteName || "site"}).`,
+      createdAt: toIso(relief.appliedAt, new Date()),
+      action: "relief",
+    });
+  }
 
   for (const leave of leaves) {
     if (leave.status === "pending") {

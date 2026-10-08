@@ -19,6 +19,8 @@ import { InventoryListPage } from "../pages/InventoryListPage";
 import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
 import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
 import { AttendancePage } from "../pages/AttendancePage";
+import { LeaveManagementPage } from "../pages/LeaveManagementPage";
+import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SchedulingPage } from "../pages/SchedulingPage";
 import { APP_ROUTES } from "./routePaths";
 
@@ -195,6 +197,22 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <AttendancePage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.manageLeave}
+        element={
+          <ModuleRoute>
+            <LeaveManagementPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.manageRelief}
+        element={
+          <ModuleRoute>
+            <ReliefManagementPage />
           </ModuleRoute>
         }
       />

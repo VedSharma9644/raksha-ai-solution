@@ -10,6 +10,8 @@ export type GuardSessionUser = {
   postName: string;
   shiftFrom: string;
   shiftTo: string;
+  /** Guard profile picture URL from Admin/HR; empty when unset. */
+  profilePictureUrl?: string;
 };
 
 export type PunchInResult = {
@@ -36,8 +38,13 @@ export type TodayShiftStatus = {
   shiftActive: boolean;
   openPunchInId: string | null;
   punchedAt: string | null;
+  punchInStatus?: string | null;
+  minutesLate?: number | null;
   siteName?: string;
   postName?: string;
+  assignedSiteId?: string;
+  shiftFrom?: string;
+  shiftTo?: string;
 };
 
 export type GeofenceCheckResult = {
@@ -358,5 +365,176 @@ export async function withdrawLeaveRequest(
       headers: { Authorization: `Bearer ${token}` },
     },
   );
+  return parseJson(response);
+}
+
+export type ReliefMethodKey = 'remaining' | 'swap' | 'cover';
+export type ReliefReasonKey =
+  | 'urgentFamily'
+  | 'medical'
+  | 'transport'
+  | 'personalEmergency';
+
+export type ReliefRequestCardDto = {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  statusLabel: string;
+  method: ReliefMethodKey;
+  methodLabel: string;
+  reasonLabel: string;
+  note: string;
+  siteName: string;
+  postName: string;
+  dutyDate: string;
+  shiftFrom: string;
+  shiftTo: string;
+  timeRangeLabel: string;
+  handoverFrom?: string;
+  assignedGuardName?: string;
+  assignedEmployeeCode?: string;
+  appliedAt: string | null;
+  decidedByName?: string;
+  rejectionRemark?: string;
+  approvalNote?: string;
+  isAssignment?: boolean;
+  requesterName?: string;
+};
+
+export type ReliefRequestsResponse = {
+  filterCounts: {
+    all: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  requests: ReliefRequestCardDto[];
+  assignments: ReliefRequestCardDto[];
+};
+
+export type SubmitReliefResult = {
+  id: string;
+  status: 'pending';
+  message: string;
+};
+
+export async function fetchReliefRequests(
+  token: string,
+  status: 'all' | 'pending' | 'approved' | 'rejected' = 'all',
+): Promise<ReliefRequestsResponse> {
+  const query = new URLSearchParams({ status });
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/relief/requests?${query.toString()}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return parseJson(response);
+}
+
+export async function submitReliefRequest(
+  token: string,
+  params: {
+    method: ReliefMethodKey;
+    reason: ReliefReasonKey;
+    note?: string;
+    dutyDate?: string;
+    shiftFrom?: string;
+    shiftTo?: string;
+    siteId?: string;
+    siteName?: string;
+    postName?: string;
+    handoverFrom?: string;
+  },
+): Promise<SubmitReliefResult> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/relief/requests`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  return parseJson(response);
+}
+
+export async function withdrawReliefRequest(
+  token: string,
+  requestId: string,
+): Promise<{ ok: true; message: string }> {
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/relief/requests/${encodeURIComponent(requestId)}/withdraw`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return parseJson(response);
+}
+
+export type GuardNotificationDto = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  read: boolean;
+  createdAt: string;
+};
+
+export async function registerPushToken(
+  token: string,
+  params: {
+    expoPushToken: string;
+    deviceId: string;
+    platform: 'ios' | 'android' | 'web' | 'unknown';
+  },
+): Promise<{ ok: true; id: string }> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/notifications/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  return parseJson(response);
+}
+
+export async function unregisterPushToken(
+  token: string,
+  params: { deviceId?: string; expoPushToken?: string },
+): Promise<{ ok: true }> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/notifications/unregister`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  return parseJson(response);
+}
+
+export async function fetchGuardNotifications(
+  token: string,
+): Promise<{ notifications: GuardNotificationDto[]; unreadCount: number }> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/notifications`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson(response);
+}
+
+export async function markGuardNotificationsRead(
+  token: string,
+  params: { all?: boolean; notificationIds?: string[] },
+): Promise<{ ok: true; updated: number }> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/notifications/read`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
   return parseJson(response);
 }

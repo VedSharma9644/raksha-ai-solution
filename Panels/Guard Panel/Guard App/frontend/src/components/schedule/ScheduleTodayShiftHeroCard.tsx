@@ -1,15 +1,24 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Linking from 'expo-linking';
 import { Alert, Pressable, Text, View } from 'react-native';
 
-import { scheduleTodayShiftDefaults } from '../../constants/schedule-today-shift-defaults';
-import { upcomingScheduleDefaults } from '../../constants/upcoming-schedule-defaults';
+import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { scheduleTodayShiftHeroStyles as styles } from '../../styles/schedule-today-shift-hero.styles';
 
 export function ScheduleTodayShiftHeroCard() {
   const { openShiftDetails } = useGuardAppNavigation();
+  const duty = useGuardDutyAssignment();
+
+  const dutyStatus = duty.shiftActive
+    ? duty.punchInStatus?.toLowerCase() === 'late'
+      ? 'On Duty • Late login'
+      : 'On Duty • Checked-in'
+    : duty.isDelayed
+      ? 'Delayed • Not at site'
+      : duty.statusBadge === 'MISSED'
+        ? 'Missed • No check-in'
+        : 'Assigned • Check-in pending';
 
   return (
     <View style={styles.card}>
@@ -18,50 +27,35 @@ export function ScheduleTodayShiftHeroCard() {
         <View style={styles.badgeRow}>
           <View style={styles.todayBadge}>
             <MaterialIcons name="calendar-today" size={16} color={appColors.onPrimary} />
-            <Text style={styles.todayBadgeText}>{scheduleTodayShiftDefaults.todayBadge}</Text>
+            <Text style={styles.todayBadgeText}>{duty.todayBadge}</Text>
           </View>
           <View style={styles.liveBadge}>
             <View style={styles.liveDot} />
-            <Text style={styles.liveText}>{scheduleTodayShiftDefaults.dutyStatus}</Text>
+            <Text style={styles.liveText}>{dutyStatus}</Text>
           </View>
         </View>
 
-        <Text style={styles.siteName}>{scheduleTodayShiftDefaults.siteName}</Text>
+        <Text style={styles.siteName}>{duty.siteName}</Text>
         <View style={styles.postRow}>
           <MaterialIcons name="location-on" size={18} color={appColors.primary} />
-          <Text style={styles.postText}>{scheduleTodayShiftDefaults.postName}</Text>
+          <Text style={styles.postText}>{duty.postName}</Text>
         </View>
 
         <View style={styles.timeCard}>
           <View style={styles.timeLeft}>
             <MaterialIcons name="schedule" size={22} color={appColors.primary} />
             <View>
-              <Text style={styles.timeRange}>{scheduleTodayShiftDefaults.timeRange}</Text>
-              <Text style={styles.timeMeta}>{scheduleTodayShiftDefaults.dutyType}</Text>
+              <Text style={styles.timeRange}>{duty.timeRange}</Text>
+              <Text style={styles.timeMeta}>{duty.dutyType}</Text>
             </View>
           </View>
           <View style={styles.sunCircle}>
-            <MaterialIcons name="wb-sunny" size={20} color={appColors.primary} />
+            <MaterialIcons
+              name={duty.isNight ? 'nights-stay' : 'wb-sunny'}
+              size={20}
+              color={appColors.primary}
+            />
           </View>
-        </View>
-
-        <View style={styles.supervisorRow}>
-          <View style={styles.supervisorLeft}>
-            <View style={styles.supervisorIcon}>
-              <MaterialIcons name="security" size={18} color={appColors.onSecondaryContainer} />
-            </View>
-            <View>
-              <Text style={styles.supervisorName}>{upcomingScheduleDefaults.supervisorName}</Text>
-              <Text style={styles.supervisorRole}>{upcomingScheduleDefaults.supervisorRole}</Text>
-            </View>
-          </View>
-          <Pressable
-            style={styles.callButton}
-            onPress={() => Linking.openURL(`tel:${upcomingScheduleDefaults.supervisorPhone}`)}
-          >
-            <MaterialIcons name="phone" size={18} color={appColors.primary} />
-            <Text style={styles.callText}>Call</Text>
-          </Pressable>
         </View>
 
         <View style={styles.actions}>

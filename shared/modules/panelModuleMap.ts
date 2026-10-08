@@ -31,6 +31,8 @@ export const ADMIN_DASHBOARD_ACTION_MODULE: Record<string, PlatformModuleId> = {
   "site-list": "site_management",
   "manage-inventory": "inventory",
   attendance: "attendance",
+  "manage-leave": "leave",
+  "manage-relief": "leave",
 };
 
 /**
@@ -42,6 +44,7 @@ export const HR_DASHBOARD_ACTION_MODULE: Record<string, PlatformModuleId> = {
   "site-list": "site_management",
   "manage-inventory": "inventory",
   "manage-leave": "leave",
+  "manage-relief": "leave",
   attendance: "attendance",
 };
 
@@ -68,6 +71,14 @@ export const ADMIN_ROUTE_MODULE: Array<{
     match: (p) => p === "/attendance",
     moduleId: "attendance",
   },
+  {
+    match: (p) => p.startsWith("/leave"),
+    moduleId: "leave",
+  },
+  {
+    match: (p) => p.startsWith("/relief"),
+    moduleId: "leave",
+  },
 ];
 
 /** HR app paths → required module. */
@@ -89,6 +100,10 @@ export const HR_ROUTE_MODULE: Array<{
   },
   {
     match: (p) => p.startsWith("/leave"),
+    moduleId: "leave",
+  },
+  {
+    match: (p) => p.startsWith("/relief"),
     moduleId: "leave",
   },
   {
@@ -170,6 +185,7 @@ export function moduleForNotificationAction(
   action: string | undefined | null
 ): PlatformModuleId | null {
   if (action === "leave") return "leave";
+  if (action === "relief") return "leave";
   if (action === "attendance") return "attendance";
   if (action === "inventory") return "inventory";
   return null;

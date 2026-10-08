@@ -6,11 +6,14 @@ import { brandAssets } from '../../constants/brand-assets';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { layoutBackNavigationHeaderStyles as styles } from '../../styles/layout-back-navigation-header.styles';
+import { GuardUserAvatar } from '../shared/GuardUserAvatar';
+import { NotificationBellButton } from './NotificationBellButton';
 
 type BackNavigationHeaderProps = {
   screenTitle: string;
   onBackPress: () => void;
   brandEyebrow?: string;
+  /** Optional override; defaults to signed-in guard profile picture. */
   profilePhotoUri?: string;
   showNotifications?: boolean;
   enableProfilePress?: boolean;
@@ -28,12 +31,8 @@ export function BackNavigationHeader({
   const { openGuardProfile, stackRoute } = useGuardAppNavigation();
   const canOpenProfile = enableProfilePress && stackRoute !== 'guardProfile';
 
-  const profileNode = profilePhotoUri ? (
-    <Image source={{ uri: profilePhotoUri }} style={styles.profilePhoto} />
-  ) : (
-    <View style={styles.profileAvatar}>
-      <MaterialIcons name="person" size={18} color={appColors.onPrimary} />
-    </View>
+  const profileNode = (
+    <GuardUserAvatar photoUri={profilePhotoUri} size={36} style={styles.profilePhoto} />
   );
 
   return (
@@ -62,10 +61,12 @@ export function BackNavigationHeader({
 
         <View style={styles.rightActions}>
           {showNotifications ? (
-            <Pressable accessibilityLabel="Notifications" style={styles.notificationButton}>
-              <MaterialIcons name="notifications-none" size={24} color={appColors.onSurfaceVariant} />
-              <View style={styles.notificationDot} />
-            </Pressable>
+            <NotificationBellButton
+              style={styles.notificationButton}
+              badgeStyle={styles.notificationBadge}
+              badgeTextStyle={styles.notificationBadgeText}
+              dotStyle={styles.notificationDot}
+            />
           ) : null}
 
           {canOpenProfile ? (

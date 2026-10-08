@@ -32,10 +32,13 @@ export const leaveBalanceQuotaCardsStyles = StyleSheet.create({
   },
   grid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   card: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '30%',
+    minWidth: 96,
     backgroundColor: appColors.surfaceContainerLowest,
     borderRadius: appRadii.xl,
     padding: appSpacing.sm,
@@ -45,7 +48,7 @@ export const leaveBalanceQuotaCardsStyles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
     justifyContent: 'space-between',
-    minHeight: 100,
+    minHeight: 96,
   },
   cardHighlighted: {
     borderBottomWidth: 2,
@@ -61,8 +64,8 @@ export const leaveBalanceQuotaCardsStyles = StyleSheet.create({
     marginVertical: 4,
   },
   value: {
-    fontSize: 26,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 26,
     fontFamily: 'PublicSans_700Bold',
     color: appColors.primary,
   },

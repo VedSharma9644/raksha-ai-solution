@@ -15,6 +15,7 @@ const ACTION_ROUTES: Record<
   "guard-list": APP_ROUTES.guardList,
   "manage-inventory": APP_ROUTES.manageInventory,
   "manage-leave": APP_ROUTES.manageLeave,
+  "manage-relief": APP_ROUTES.manageRelief,
   "site-list": APP_ROUTES.siteList,
   attendance: APP_ROUTES.attendance,
   scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
@@ -75,6 +76,10 @@ export function HrDashboardPage() {
         }
         if (action === "leave") {
           navigate(APP_ROUTES.manageLeave);
+          return;
+        }
+        if (action === "relief") {
+          navigate(APP_ROUTES.manageRelief);
         }
       }}
       onMarkAllNotificationsRead={markAllRead}

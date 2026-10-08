@@ -11,7 +11,9 @@ import { createAttendanceRoutes } from "./routes/attendanceRoutes";
 import { createGuardRoutes } from "./routes/guardRoutes";
 import { createHrStaffRoutes } from "./routes/hrStaffRoutes";
 import { createFormSchemaRoutes } from "./routes/formSchemaRoutes";
+import { createLeaveRoutes } from "./routes/leaveRoutes";
 import { createNotificationRoutes } from "./routes/notificationRoutes";
+import { createReliefRoutes } from "./routes/reliefRoutes";
 import { createSchedulingRoutes } from "./routes/schedulingRoutes";
 
 // Local monorepo .env; Cloud Run injects env vars instead
@@ -101,6 +103,8 @@ app.use("/api/guards", createGuardRoutes(db));
 app.use("/api/hr-staff", createHrStaffRoutes());
 app.use("/api/form-schemas", createFormSchemaRoutes());
 app.use("/api/attendance", createAttendanceRoutes());
+app.use("/api/leave", createLeaveRoutes());
+app.use("/api/relief", createReliefRoutes());
 app.use("/api/notifications", createNotificationRoutes());
 app.use("/api/scheduling", createSchedulingRoutes());
 

@@ -21,7 +21,7 @@ export const homeGuardGreetingBannerStyles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.xs,
     marginTop: 4,
     flexWrap: 'wrap',
@@ -30,21 +30,21 @@ export const homeGuardGreetingBannerStyles = StyleSheet.create({
     ...appTypography.labelLg,
     color: appColors.secondary,
     fontFamily: 'PublicSans_700Bold',
+    flexShrink: 0,
   },
   post: {
     ...appTypography.labelLg,
     color: appColors.onSurfaceVariant,
     fontFamily: 'PublicSans_700Bold',
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '40%',
+    minWidth: 0,
   },
   photoWrap: {
     width: 48,
     height: 48,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: appColors.surfaceContainer,
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
   },
 });

@@ -15,7 +15,7 @@ WORKDIR /app/backend
 ENV MONOREPO_ROOT=/app
 
 RUN npm install --no-save --no-audit --no-fund \
-      esbuild@0.25.0 express dotenv firebase \
+      esbuild@0.25.0 express dotenv firebase firebase-admin \
     && node scripts/build.mjs
 
 FROM node:20-bookworm-slim AS runtime
@@ -27,7 +27,7 @@ ENV PORT=8080
 COPY --from=build /app/backend/dist ./dist
 
 RUN npm init -y >/dev/null \
-    && npm install --omit=dev --no-audit --no-fund express dotenv firebase \
+    && npm install --omit=dev --no-audit --no-fund express dotenv firebase firebase-admin \
     && npm cache clean --force
 
 EXPOSE 8080

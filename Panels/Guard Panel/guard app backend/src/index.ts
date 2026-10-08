@@ -11,6 +11,8 @@ import {
 import { createAttendanceRoutes } from "./routes/attendanceRoutes";
 import { createAuthRoutes } from "./routes/authRoutes";
 import { createLeaveRoutes } from "./routes/leaveRoutes";
+import { createNotificationRoutes } from "./routes/notificationRoutes";
+import { createReliefRoutes } from "./routes/reliefRoutes";
 
 const rootEnv = resolve(process.cwd(), "../../../.env");
 if (existsSync(rootEnv)) {
@@ -107,6 +109,8 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", createAuthRoutes());
 app.use("/api/attendance", createAttendanceRoutes());
 app.use("/api/leave", createLeaveRoutes());
+app.use("/api/relief", createReliefRoutes());
+app.use("/api/notifications", createNotificationRoutes());
 
 const PORT = Number(process.env.GUARD_APP_API_PORT ?? process.env.PORT ?? 3005);
 const HOST = process.env.GUARD_APP_API_HOST ?? "0.0.0.0";

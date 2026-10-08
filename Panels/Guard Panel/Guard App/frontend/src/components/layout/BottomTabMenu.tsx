@@ -6,7 +6,7 @@ import {
   bottomTabMenuItems,
   type BottomTabKey,
 } from '../../constants/bottom-tab-menu-items';
-import { appColors } from '../../theme';
+import { appColors, isCompact } from '../../theme';
 import { layoutBottomTabMenuStyles as styles } from '../../styles/layout-bottom-tab-menu.styles';
 
 type BottomTabMenuProps = {
@@ -16,9 +16,10 @@ type BottomTabMenuProps = {
 
 export function BottomTabMenu({ activeTab = 'home', onTabPress }: BottomTabMenuProps) {
   const insets = useSafeAreaInsets();
+  const iconSize = isCompact ? 22 : 24;
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       <View style={styles.row}>
         {bottomTabMenuItems.map((tab) => {
           const active = tab.key === activeTab;
@@ -30,18 +31,20 @@ export function BottomTabMenu({ activeTab = 'home', onTabPress }: BottomTabMenuP
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               onPress={() => onTabPress?.(tab.key)}
-              style={styles.tab}
+              style={({ pressed }) => [styles.tab, pressed && { opacity: 0.85 }]}
             >
-              <MaterialIcons name={tab.icon} size={26} color={color} />
-              <Text style={[styles.label, { color }, active && styles.labelActive]}>
+              <MaterialIcons name={tab.icon} size={iconSize} color={color} />
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                style={[styles.label, { color }, active && styles.labelActive]}
+              >
                 {tab.label}
               </Text>
             </Pressable>
           );
         })}
-      </View>
-      <View style={styles.homeIndicatorWrap}>
-        <View style={styles.homeIndicator} />
       </View>
     </View>
   );

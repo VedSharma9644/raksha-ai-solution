@@ -11,9 +11,16 @@ import { appColors } from '../../theme';
 type IncomingReliefTabSwitcherProps = {
   activeTab: IncomingReliefTab;
   onChange: (tab: IncomingReliefTab) => void;
+  incomingCount?: number;
+  sentCount?: number;
 };
 
-export function IncomingReliefTabSwitcher({ activeTab, onChange }: IncomingReliefTabSwitcherProps) {
+export function IncomingReliefTabSwitcher({
+  activeTab,
+  onChange,
+  incomingCount = 0,
+  sentCount = 0,
+}: IncomingReliefTabSwitcherProps) {
   const incomingActive = activeTab === 'incoming';
 
   return (
@@ -31,9 +38,7 @@ export function IncomingReliefTabSwitcher({ activeTab, onChange }: IncomingRelie
           {incomingReliefRequestsDefaults.incomingTabLabel}
         </Text>
         <View style={[styles.badge, styles.badgeIncoming]}>
-          <Text style={styles.badgeTextIncoming}>
-            {incomingReliefRequestsDefaults.incomingCount}
-          </Text>
+          <Text style={styles.badgeTextIncoming}>{incomingCount}</Text>
         </View>
       </Pressable>
 
@@ -50,7 +55,7 @@ export function IncomingReliefTabSwitcher({ activeTab, onChange }: IncomingRelie
           {incomingReliefRequestsDefaults.sentTabLabel}
         </Text>
         <View style={[styles.badge, styles.badgeSent]}>
-          <Text style={styles.badgeTextSent}>{incomingReliefRequestsDefaults.sentCount}</Text>
+          <Text style={styles.badgeTextSent}>{sentCount}</Text>
         </View>
       </Pressable>
     </View>

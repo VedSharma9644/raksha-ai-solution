@@ -3,6 +3,7 @@ export type HrDashboardActionId =
   | "guard-list"
   | "manage-inventory"
   | "manage-leave"
+  | "manage-relief"
   | "site-list"
   | "attendance"
   | "scheduling";
@@ -38,6 +39,13 @@ export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
     title: "Manage Leave",
     description: "Review upcoming and pending leave requests.",
     iconLabel: "V",
+  },
+  {
+    id: "manage-relief",
+    title: "Manage Relief",
+    description:
+      "Approve remaining-shift handovers and assign a replacement guard.",
+    iconLabel: "R",
   },
   {
     id: "site-list",

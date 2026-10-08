@@ -13,6 +13,7 @@ import {
   normalizePhone,
   phoneLookupVariants,
 } from "./phone";
+import { getSiteGeofenceById } from "./siteLookup";
 
 export type AuthenticateGuardParams = {
   /** Mobile number, employee / Guard ID, or email */
@@ -24,6 +25,8 @@ export type AuthenticateGuardParams = {
 type GuardDoc = Guard;
 
 function toContext(guard: GuardDoc): AuthenticatedGuardContext {
+  const profilePictureUrl =
+    typeof guard.profilePictureUrl === "string" ? guard.profilePictureUrl.trim() : "";
   return {
     guardId: guard.id,
     employeeCode: guard.employeeCode,
@@ -35,7 +38,26 @@ function toContext(guard: GuardDoc): AuthenticatedGuardContext {
     shiftFrom: guard.shiftFrom || "08:00",
     shiftTo: guard.shiftTo || "20:00",
     phone: guard.phone,
+    profilePictureUrl,
   };
+}
+
+/** Resolve site display name from assignedSiteId (existing sites collection). */
+async function withResolvedSiteName(
+  ctx: AuthenticatedGuardContext
+): Promise<AuthenticatedGuardContext> {
+  if (ctx.siteName?.trim() || !ctx.assignedSiteId?.trim()) {
+    return ctx;
+  }
+  try {
+    const site = await getSiteGeofenceById(ctx.assignedSiteId);
+    if (!site?.siteName) {
+      return ctx;
+    }
+    return { ...ctx, siteName: site.siteName };
+  } catch {
+    return ctx;
+  }
 }
 
 function demoPhone(): string {
@@ -73,6 +95,7 @@ function demoContext(
       shiftFrom: "08:00",
       shiftTo: "20:00",
       phone: expectedPhone,
+      profilePictureUrl: "",
     };
   }
 
@@ -192,10 +215,12 @@ export async function getGuardContextById(
   if (!snap.exists) {
     return null;
   }
-  return toContext({
-    id: snap.id,
-    ...(snap.data() as Omit<GuardDoc, "id">),
-  });
+  return withResolvedSiteName(
+    toContext({
+      id: snap.id,
+      ...(snap.data() as Omit<GuardDoc, "id">),
+    })
+  );
 }
 
 export function getDemoGuardContext(): AuthenticatedGuardContext {
@@ -210,6 +235,7 @@ export function getDemoGuardContext(): AuthenticatedGuardContext {
     shiftFrom: "08:00",
     shiftTo: "20:00",
     phone: demoPhone(),
+    profilePictureUrl: "",
   };
 }
 
@@ -231,34 +257,32 @@ export async function authenticateGuard(
   if (demoMode) {
     const matched = demoContext(identifier, password);
     if (matched) {
-      return matched;
+      return withResolvedSiteName(matched);
     }
   }
 
   try {
     const guard = await findGuardByIdentifier(identifier);
     if (!guard) {
-      return demoMode ? demoContext(identifier, password) : null;
+      const fallback = demoMode ? demoContext(identifier, password) : null;
+      return fallback ? withResolvedSiteName(fallback) : null;
     }
 
     const email = await resolveLoginEmail(guard);
     if (!email) {
-      return demoMode ? demoContext(identifier, password) : null;
+      const fallback = demoMode ? demoContext(identifier, password) : null;
+      return fallback ? withResolvedSiteName(fallback) : null;
     }
 
     const authResult = await verifyFirebaseEmailPassword(email, password);
     if (!authResult.ok) {
-      return demoMode ? demoContext(identifier, password) : null;
+      const fallback = demoMode ? demoContext(identifier, password) : null;
+      return fallback ? withResolvedSiteName(fallback) : null;
     }
 
-    // Prefer Auth UID when it matches the guard doc id (createGuardAccount path)
-    if (authResult.localId === guard.id) {
-      return toContext(guard);
-    }
-
-    // Legacy: Auth UID differs — still allow if email matches this guard
-    return toContext(guard);
+    return withResolvedSiteName(toContext(guard));
   } catch {
-    return demoMode ? demoContext(identifier, password) : null;
+    const fallback = demoMode ? demoContext(identifier, password) : null;
+    return fallback ? withResolvedSiteName(fallback) : null;
   }
 }

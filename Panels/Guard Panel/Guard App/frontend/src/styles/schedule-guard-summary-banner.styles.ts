@@ -15,12 +15,13 @@ export const scheduleGuardSummaryBannerStyles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    gap: appSpacing.xs,
   },
   left: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.sm,
     flex: 1,
     minWidth: 0,
@@ -32,6 +33,7 @@ export const scheduleGuardSummaryBannerStyles = StyleSheet.create({
     backgroundColor: appColors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   initialsText: {
     ...appTypography.labelXl,
@@ -39,19 +41,24 @@ export const scheduleGuardSummaryBannerStyles = StyleSheet.create({
   },
   nameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.xs,
     flexWrap: 'wrap',
   },
   name: {
     ...appTypography.titleLg,
     color: appColors.onSurface,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '45%',
+    minWidth: 0,
   },
   idBadge: {
     backgroundColor: appColors.surfaceContainerHigh,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: appRadii.full,
+    flexShrink: 0,
   },
   idText: {
     ...appTypography.labelLg,
@@ -68,11 +75,12 @@ export const scheduleGuardSummaryBannerStyles = StyleSheet.create({
     backgroundColor: appColors.surfaceContainer,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   statPill: {
     marginTop: appSpacing.sm,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.xs,
     backgroundColor: 'rgba(211, 228, 254, 0.8)',
     paddingHorizontal: appSpacing.sm,
@@ -84,13 +92,21 @@ export const scheduleGuardSummaryBannerStyles = StyleSheet.create({
     ...appTypography.labelLg,
     color: appColors.onSurface,
     fontFamily: 'PublicSans_700Bold',
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '50%',
+    minWidth: 0,
   },
   statMuted: {
     ...appTypography.labelLg,
     color: appColors.secondary,
+    flexShrink: 1,
+    minWidth: 0,
   },
   dot: {
     ...appTypography.labelLg,
     color: appColors.outlineVariant,
+    flexShrink: 0,
   },
 });
+

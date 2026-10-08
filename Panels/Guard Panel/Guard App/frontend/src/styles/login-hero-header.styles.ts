@@ -1,33 +1,36 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appRadii, appSpacing } from '../theme';
+import { appColors, appRadii, fontScale, isCompact, ms } from '../theme';
 
 export const loginHeroHeaderStyles = StyleSheet.create({
   header: {
     backgroundColor: appColors.primary,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingHorizontal: ms(20),
+    paddingBottom: isCompact ? ms(28) : ms(40),
     overflow: 'hidden',
   },
   glow: {
     position: 'absolute',
     top: -64,
     right: -64,
-    width: 224,
-    height: 224,
-    borderRadius: 112,
+    width: ms(200),
+    height: ms(200),
+    borderRadius: ms(100),
     backgroundColor: 'rgba(30, 94, 99, 0.4)',
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 24,
+    paddingBottom: isCompact ? ms(16) : ms(24),
+    gap: ms(8),
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
+    minWidth: 0,
   },
   logoWrap: {
     width: 40,
@@ -45,14 +48,14 @@ export const loginHeroHeaderStyles = StyleSheet.create({
     height: 28,
   },
   brandName: {
-    fontSize: 20,
-    lineHeight: 22,
+    fontSize: fontScale(18),
+    lineHeight: fontScale(22),
     fontFamily: 'PublicSans_700Bold',
     color: appColors.onPrimary,
   },
   brandSubtitle: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: fontScale(10),
+    lineHeight: fontScale(13),
     fontFamily: 'PublicSans_500Medium',
     color: appColors.primaryFixed,
     textTransform: 'uppercase',
@@ -69,19 +72,21 @@ export const loginHeroHeaderStyles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
+    flexShrink: 0,
   },
   langButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   langLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: fontScale(11),
+    lineHeight: fontScale(15),
     fontFamily: 'PublicSans_600SemiBold',
     color: appColors.onPrimary,
   },
   heroCenter: {
     alignItems: 'center',
     paddingTop: 4,
+    paddingHorizontal: ms(8),
   },
   authorizedBadge: {
     flexDirection: 'row',
@@ -93,24 +98,24 @@ export const loginHeroHeaderStyles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: 12,
+    marginBottom: ms(10),
   },
   authorizedText: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: fontScale(11),
+    lineHeight: fontScale(15),
     fontFamily: 'PublicSans_500Medium',
     color: appColors.primaryFixed,
   },
   welcomeTitle: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: fontScale(isCompact ? 22 : 24),
+    lineHeight: fontScale(isCompact ? 28 : 30),
     fontFamily: 'PublicSans_800ExtraBold',
     color: appColors.onPrimary,
     textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: fontScale(13),
+    lineHeight: fontScale(19),
     fontFamily: 'PublicSans_400Regular',
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',

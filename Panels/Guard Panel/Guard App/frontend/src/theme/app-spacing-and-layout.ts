@@ -1,11 +1,13 @@
+import { isCompact, ms } from './responsive';
+
 export const appSpacing = {
-  xs: 6,
-  sm: 12,
-  md: 16,
-  lg: 24,
-  xl: 36,
-  gutter: 16,
-  margin: 16,
+  xs: ms(6),
+  sm: ms(12),
+  md: ms(16),
+  lg: ms(24),
+  xl: ms(36),
+  gutter: isCompact ? ms(14) : ms(16),
+  margin: isCompact ? ms(14) : ms(16),
 } as const;
 
 export const appRadii = {
@@ -17,6 +19,7 @@ export const appRadii = {
 } as const;
 
 export const appLayout = {
-  headerHeight: 64,
-  bottomNavHeight: 80,
+  headerHeight: isCompact ? 56 : 64,
+  /** Tab row only — safe-area inset is applied separately by BottomTabMenu. */
+  bottomNavHeight: isCompact ? 64 : 72,
 } as const;

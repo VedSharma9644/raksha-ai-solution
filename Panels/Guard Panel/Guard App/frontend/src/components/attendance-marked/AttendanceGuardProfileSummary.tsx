@@ -23,9 +23,7 @@ export function AttendanceGuardProfileSummary() {
       </View>
 
       <View style={styles.copy}>
-        <Text style={styles.name} numberOfLines={1}>
-          {name}
-        </Text>
+        <Text style={styles.name}>{name}</Text>
         <Text style={styles.guardId}>Guard ID: {guardId}</Text>
         <View style={styles.dutyRow}>
           <View style={styles.dutyDot} />

@@ -3,6 +3,7 @@
 # Usage:
 #   ./scripts/deploy-backend.sh admin
 #   ./scripts/deploy-backend.sh hr
+#   ./scripts/deploy-backend.sh guard
 set -euo pipefail
 
 PANEL="${1:-}"
@@ -19,8 +20,16 @@ case "$PANEL" in
     SERVICE="raskha-hr-api"
     DOCKERFILE="Panels/HR Panel/backend/Dockerfile"
     ;;
+  super-admin)
+    SERVICE="raskha-super-admin-api"
+    DOCKERFILE="Panels/Super Admin Panel/backend/Dockerfile"
+    ;;
+  guard)
+    SERVICE="raskha-guard-app-api"
+    DOCKERFILE="Panels/Guard Panel/guard app backend/Dockerfile"
+    ;;
   *)
-    echo "Usage: $0 <admin|hr>"
+    echo "Usage: $0 <admin|hr|super-admin|guard>"
     exit 1
     ;;
 esac

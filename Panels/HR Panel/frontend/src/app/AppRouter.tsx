@@ -8,6 +8,7 @@ import { ViewGuardPage } from "../pages/ViewGuardPage";
 import { HrDashboardPage } from "../pages/HrDashboardPage";
 import { InventoryPage } from "../pages/InventoryPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
+import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SiteListPage } from "../pages/SiteListPage";
 import { AssignGuardsPage } from "../pages/AssignGuardsPage";
 import { AttendancePage } from "../pages/AttendancePage";
@@ -108,6 +109,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <LeaveManagementPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.manageRelief}
+        element={
+          <ModuleRoute>
+            <ReliefManagementPage />
           </ModuleRoute>
         }
       />

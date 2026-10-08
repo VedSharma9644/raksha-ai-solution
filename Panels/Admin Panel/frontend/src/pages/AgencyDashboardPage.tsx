@@ -19,6 +19,8 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   "hr-list": APP_ROUTES.hrList,
   "manage-inventory": APP_ROUTES.inventoryList,
   attendance: APP_ROUTES.attendance,
+  "manage-leave": APP_ROUTES.manageLeave,
+  "manage-relief": APP_ROUTES.manageRelief,
   scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
 };
 
@@ -72,7 +74,11 @@ export function AgencyDashboardPage() {
       return;
     }
     if (action === "leave") {
-      navigate(APP_ROUTES.employeeList);
+      navigate(APP_ROUTES.manageLeave);
+      return;
+    }
+    if (action === "relief") {
+      navigate(APP_ROUTES.manageRelief);
     }
   }
 

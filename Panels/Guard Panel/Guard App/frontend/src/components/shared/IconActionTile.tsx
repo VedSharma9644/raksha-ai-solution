@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
-import { appColors } from '../../theme';
+import { appColors, isCompact } from '../../theme';
 import { sharedIconActionTileStyles as styles } from '../../styles/shared-icon-action-tile.styles';
 
 type IconActionTileProps = {
@@ -18,10 +18,14 @@ export function IconActionTile({ title, subtitle, icon, onPress }: IconActionTil
       onPress={onPress}
     >
       <View style={styles.iconWrap}>
-        <MaterialIcons name={icon} size={28} color={appColors.primary} />
+        <MaterialIcons name={icon} size={isCompact ? 24 : 28} color={appColors.primary} />
       </View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.title} numberOfLines={2}>
+        {title}
+      </Text>
+      <Text style={styles.subtitle} numberOfLines={2}>
+        {subtitle}
+      </Text>
     </Pressable>
   );
 }

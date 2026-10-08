@@ -37,12 +37,29 @@ await esbuild.build({
   logLevel: "info",
   alias: {
     "@raskha/core": path.join(monorepoRoot, "core/index.ts"),
+    "@raskha/shared": path.join(monorepoRoot, "shared/index.js"),
     "@raskha/attendance": path.join(monorepoRoot, "modules/Attendance/index.ts"),
     "@raskha/guard-management": path.join(
       monorepoRoot,
       "modules/Guard Management/index.ts"
     ),
+    "@raskha/hr-management": path.join(
+      monorepoRoot,
+      "modules/HR Management/index.ts"
+    ),
+    "@raskha/inventory-management": path.join(
+      monorepoRoot,
+      "modules/Inventory Management/index.ts"
+    ),
     "@raskha/leave": path.join(monorepoRoot, "modules/Leave Management/index.ts"),
+    "@raskha/relief": path.join(
+      monorepoRoot,
+      "modules/Relief Management/index.ts"
+    ),
+    "@raskha/notifications": path.join(
+      monorepoRoot,
+      "modules/Notifications/index.ts"
+    ),
     "@raskha/site-management": path.join(
       monorepoRoot,
       "modules/Site Management/index.ts"

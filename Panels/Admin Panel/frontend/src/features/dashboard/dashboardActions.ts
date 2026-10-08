@@ -8,6 +8,8 @@ export type DashboardActionId =
   | "hr-list"
   | "form-builder"
   | "attendance"
+  | "manage-leave"
+  | "manage-relief"
   | "scheduling";
 
 export interface DashboardAction {
@@ -71,6 +73,19 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "Attendance",
     description: "View daily punch-in and punch-out records for all guards.",
     iconLabel: "📋",
+  },
+  {
+    id: "manage-leave",
+    title: "Manage Leave",
+    description: "Review, approve, or reject leave requests from guards.",
+    iconLabel: "V",
+  },
+  {
+    id: "manage-relief",
+    title: "Manage Relief",
+    description:
+      "Approve remaining-shift handovers and assign a replacement guard.",
+    iconLabel: "R",
   },
   {
     id: "scheduling",

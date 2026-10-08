@@ -1,16 +1,17 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { brandAssets } from '../../constants/brand-assets';
 import { homeGuardGreetingBannerStyles as styles } from '../../styles/home-guard-greeting-banner.styles';
+import { GuardUserAvatar } from '../shared/GuardUserAvatar';
 import { RaisedCard } from '../shared/RaisedCard';
 import { StatusPill } from '../shared/StatusPill';
 import { AssignedSiteInfoCard } from './AssignedSiteInfoCard';
 
 type GuardGreetingBannerProps = {
   guardName?: string;
+  fullName?: string;
   guardId?: string;
   post?: string;
-  photoUri?: string;
+  photoUri?: string | null;
   siteName?: string;
   siteDetail?: string;
   supervisorName?: string;
@@ -18,10 +19,11 @@ type GuardGreetingBannerProps = {
 };
 
 export function GuardGreetingBanner({
-  guardName = 'Rajesh',
+  guardName = 'Guard',
+  fullName,
   guardId = '#RK-4092',
   post = 'Gate No. 3',
-  photoUri = brandAssets.sampleGuardPhotoUri,
+  photoUri,
   siteName,
   siteDetail,
   supervisorName,
@@ -39,7 +41,7 @@ export function GuardGreetingBanner({
           </View>
         </View>
         <View style={styles.photoWrap}>
-          <Image source={{ uri: photoUri }} style={styles.photo} />
+          <GuardUserAvatar photoUri={photoUri} fullName={fullName ?? guardName} size={48} />
         </View>
       </View>
 

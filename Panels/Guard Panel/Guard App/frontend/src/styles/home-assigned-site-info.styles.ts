@@ -12,7 +12,7 @@ export const homeAssignedSiteInfoStyles = StyleSheet.create({
   },
   siteRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: appSpacing.xs,
   },
   siteTextCol: {
@@ -29,7 +29,7 @@ export const homeAssignedSiteInfoStyles = StyleSheet.create({
   },
   chipsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingTop: 4,
     gap: appSpacing.xs,
@@ -37,13 +37,16 @@ export const homeAssignedSiteInfoStyles = StyleSheet.create({
   },
   callChip: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 6,
     backgroundColor: appColors.surfaceContainerHighest,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: appRadii.full,
+    flexGrow: 1,
     flexShrink: 1,
+    flexBasis: '55%',
+    minWidth: 0,
   },
   callChipPressed: {
     opacity: 0.85,
@@ -53,6 +56,9 @@ export const homeAssignedSiteInfoStyles = StyleSheet.create({
     ...appTypography.labelLg,
     color: appColors.primary,
     fontFamily: 'PublicSans_700Bold',
+    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
   },
   gpsChip: {
     flexDirection: 'row',
@@ -62,6 +68,7 @@ export const homeAssignedSiteInfoStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: appRadii.full,
+    flexShrink: 0,
   },
   gpsDot: {
     width: 8,

@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GuardAppNavigationProvider } from './src/navigation/GuardAppNavigationProvider';
 import { GuardAppRoot } from './src/navigation/GuardAppRoot';
+import { GuardNotificationsProvider } from './src/notifications/GuardNotificationsProvider';
 import { appColors } from './src/theme';
 import { appStartupLoadingStyles as loadingStyles } from './src/styles/app-startup-loading.styles';
 
@@ -34,7 +35,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <GuardAppNavigationProvider>
-        <GuardAppRoot />
+        <GuardNotificationsProvider>
+          <GuardAppRoot />
+        </GuardNotificationsProvider>
       </GuardAppNavigationProvider>
     </SafeAreaProvider>
   );

@@ -1,37 +1,39 @@
+import { fontScale } from './responsive';
+
 export const appTypography = {
   displayLg: {
     fontFamily: 'PublicSans_800ExtraBold',
-    fontSize: 36,
-    lineHeight: 44,
+    fontSize: fontScale(32),
+    lineHeight: fontScale(40),
   },
   headlineSm: {
     fontFamily: 'PublicSans_700Bold',
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: fontScale(20),
+    lineHeight: fontScale(26),
   },
   titleLg: {
     fontFamily: 'PublicSans_600SemiBold',
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: fontScale(18),
+    lineHeight: fontScale(24),
   },
   bodyXl: {
     fontFamily: 'PublicSans_500Medium',
-    fontSize: 19,
-    lineHeight: 28,
+    fontSize: fontScale(17),
+    lineHeight: fontScale(24),
   },
   bodyLg: {
     fontFamily: 'PublicSans_400Regular',
-    fontSize: 17,
-    lineHeight: 24,
+    fontSize: fontScale(16),
+    lineHeight: fontScale(22),
   },
   labelXl: {
     fontFamily: 'PublicSans_700Bold',
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: fontScale(16),
+    lineHeight: fontScale(22),
   },
   labelLg: {
     fontFamily: 'PublicSans_600SemiBold',
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: fontScale(13),
+    lineHeight: fontScale(18),
   },
 } as const;

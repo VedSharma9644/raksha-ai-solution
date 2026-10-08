@@ -26,6 +26,7 @@ type GuardAppNavigationContextValue = {
   openRelieveAGuard: () => void;
   openIncomingReliefRequests: () => void;
   openGuardProfile: () => void;
+  openNotifications: () => void;
   setCameraUnlocked: (unlocked: boolean) => void;
   setShiftActive: (active: boolean) => void;
   setPatrolMode: (mode: PatrolMode) => void;
@@ -112,6 +113,10 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
     setStackRoute('guardProfile');
   }, []);
 
+  const openNotifications = useCallback(() => {
+    setStackRoute('notifications');
+  }, []);
+
   const setCameraUnlocked = useCallback((unlocked: boolean) => {
     setCameraUnlockedState(unlocked);
   }, []);
@@ -186,6 +191,7 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       openRelieveAGuard,
       openIncomingReliefRequests,
       openGuardProfile,
+      openNotifications,
       setCameraUnlocked,
       setShiftActive,
       setPatrolMode,
@@ -215,6 +221,7 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       openRelieveAGuard,
       openIncomingReliefRequests,
       openGuardProfile,
+      openNotifications,
       setCameraUnlocked,
       setShiftActive,
       setPatrolMode,

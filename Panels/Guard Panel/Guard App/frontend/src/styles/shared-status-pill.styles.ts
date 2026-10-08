@@ -7,6 +7,8 @@ export const sharedStatusPillStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 2,
     borderRadius: appRadii.full,
+    flexShrink: 0,
+    maxWidth: '100%',
   },
   label: {
     ...appTypography.labelLg,
@@ -22,4 +24,23 @@ export const sharedStatusPillStyles = StyleSheet.create({
     backgroundColor: appColors.surfaceContainerHigh,
     paddingHorizontal: 8,
   },
+  warning: {
+    backgroundColor: 'rgba(180, 83, 9, 0.14)',
+  },
+  warningLabel: {
+    color: '#b45309',
+  },
+  danger: {
+    backgroundColor: appColors.errorContainer,
+  },
+  dangerLabel: {
+    color: appColors.onErrorContainer,
+  },
+  success: {
+    backgroundColor: 'rgba(6, 95, 70, 0.12)',
+  },
+  successLabel: {
+    color: '#065f46',
+  },
 });
+

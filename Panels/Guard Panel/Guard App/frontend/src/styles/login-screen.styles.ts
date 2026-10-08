@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { appColors, appSpacing } from '../theme';
+import { appColors, appSpacing, contentMaxWidth, isCompact, ms } from '../theme';
 
 export const loginScreenStyles = StyleSheet.create({
   root: {
@@ -11,9 +11,13 @@ export const loginScreenStyles = StyleSheet.create({
     flexGrow: 1,
   },
   main: {
+    width: '100%',
+    maxWidth: contentMaxWidth,
+    alignSelf: 'center',
     flex: 1,
-    paddingHorizontal: 20,
-    marginTop: -24,
+    paddingHorizontal: appSpacing.gutter,
+    marginTop: isCompact ? -16 : -24,
     zIndex: 2,
+    paddingBottom: ms(24),
   },
 });

@@ -47,6 +47,8 @@ export interface AuthenticatedGuardContext {
   shiftFrom: string;
   shiftTo: string;
   phone: string;
+  /** Firebase Storage URL from guard profile; empty when unset. */
+  profilePictureUrl: string;
 }
 
 export interface GeofenceCheckResult {

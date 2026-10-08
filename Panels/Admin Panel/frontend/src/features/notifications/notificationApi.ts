@@ -13,7 +13,12 @@ function resolveAdminApiBase(): string {
 
 const API_BASE = resolveAdminApiBase();
 
-export type NotificationAction = "leave" | "attendance" | "inventory" | "none";
+export type NotificationAction =
+  | "leave"
+  | "relief"
+  | "attendance"
+  | "inventory"
+  | "none";
 
 export type ApiNotification = {
   id: string;

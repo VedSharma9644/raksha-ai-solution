@@ -21,6 +21,7 @@ function sessionPayload(token: string, guard: {
   postName: string;
   shiftFrom: string;
   shiftTo: string;
+  profilePictureUrl?: string;
 }) {
   return {
     token,
@@ -34,6 +35,10 @@ function sessionPayload(token: string, guard: {
       postName: guard.postName,
       shiftFrom: guard.shiftFrom,
       shiftTo: guard.shiftTo,
+      profilePictureUrl:
+        typeof guard.profilePictureUrl === "string"
+          ? guard.profilePictureUrl.trim()
+          : "",
     },
   };
 }
