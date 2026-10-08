@@ -21,6 +21,8 @@ export const APP_ROUTES = {
   editInventoryItem: "/inventory/:id/edit",
   // Attendance
   attendance: "/attendance",
+  // Scheduling
+  scheduling: "/scheduling/:siteId",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -48,4 +50,9 @@ export function assignGuardsPath(siteId: string): string {
 /** Build the concrete edit-inventory-item URL for a specific item ID */
 export function editInventoryItemPath(itemId: string): string {
   return `/inventory/${itemId}/edit`;
+}
+
+/** Build the scheduling URL for a specific site */
+export function schedulingPath(siteId: string): string {
+  return `/scheduling/${siteId}`;
 }

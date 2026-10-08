@@ -20,6 +20,19 @@ const SITE_TYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+function IconCalendar() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  );
+}
+
 function IconShield() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -35,6 +48,7 @@ export interface SiteListScreenProps {
   guards: Guard[];
   onBack: () => void;
   onAssignGuards: (siteId: string) => void;
+  onSchedule: (siteId: string) => void;
 }
 
 export function SiteListScreen({
@@ -42,6 +56,7 @@ export function SiteListScreen({
   guards,
   onBack,
   onAssignGuards,
+  onSchedule,
 }: SiteListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -98,7 +113,7 @@ export function SiteListScreen({
                 <th scope="col">Manager</th>
                 <th scope="col" style={{ textAlign: "center" }}>Guards</th>
                 <th scope="col">Status</th>
-                <th scope="col" style={{ width: "60px", textAlign: "center" }}>Assign</th>
+                <th scope="col" style={{ width: "80px", textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -129,15 +144,26 @@ export function SiteListScreen({
                         </span>
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className="site-action-btn site-action-btn--assign"
-                          onClick={() => onAssignGuards(site.id)}
-                          title="Assign guards"
-                          aria-label={`Assign guards to ${site.siteName}`}
-                        >
-                          <IconShield />
-                        </button>
+                        <div className="site-table__actions">
+                          <button
+                            type="button"
+                            className="site-action-btn site-action-btn--schedule"
+                            onClick={() => onSchedule(site.id)}
+                            title="View schedule"
+                            aria-label={`Schedule for ${site.siteName}`}
+                          >
+                            <IconCalendar />
+                          </button>
+                          <button
+                            type="button"
+                            className="site-action-btn site-action-btn--assign"
+                            onClick={() => onAssignGuards(site.id)}
+                            title="Assign guards"
+                            aria-label={`Assign guards to ${site.siteName}`}
+                          >
+                            <IconShield />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -11,6 +11,7 @@ import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { SiteListPage } from "../pages/SiteListPage";
 import { AssignGuardsPage } from "../pages/AssignGuardsPage";
 import { AttendancePage } from "../pages/AttendancePage";
+import { SchedulingPage } from "../pages/SchedulingPage";
 import { LoginPage } from "../pages/LoginPage";
 import { APP_ROUTES } from "./routePaths";
 
@@ -131,6 +132,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <AttendancePage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.scheduling}
+        element={
+          <ModuleRoute>
+            <SchedulingPage />
           </ModuleRoute>
         }
       />

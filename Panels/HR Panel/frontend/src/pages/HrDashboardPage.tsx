@@ -17,6 +17,7 @@ const ACTION_ROUTES: Record<
   "manage-leave": APP_ROUTES.manageLeave,
   "site-list": APP_ROUTES.siteList,
   attendance: APP_ROUTES.attendance,
+  scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
 };
 
 export function HrDashboardPage() {

@@ -1,0 +1,163 @@
+.weekly-roster {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.weekly-roster__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.weekly-roster__empty-sub {
+  font-size: 0.85rem;
+  margin-block-start: 0.5rem;
+}
+
+.weekly-roster__grid {
+  display: grid;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  min-width: 700px;
+}
+
+.weekly-roster__header-cell {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #6b7280);
+  background: var(--color-surface-raised, #f9fafb);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  text-align: center;
+}
+
+.weekly-roster__shift-col {
+  text-align: left;
+}
+
+.weekly-roster__shift-label-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface, #fff);
+  border-right: 1px solid var(--color-border, #e5e7eb);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.weekly-roster__shift-type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-block-start: 4px;
+}
+
+.weekly-roster__shift-type-dot--day    { background: #f59e0b; }
+.weekly-roster__shift-type-dot--night  { background: #6366f1; }
+.weekly-roster__shift-type-dot--custom { background: #10b981; }
+
+.weekly-roster__shift-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+.weekly-roster__shift-time {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin-block-start: 2px;
+}
+
+.weekly-roster__shift-required {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary, #9ca3af);
+  margin-block-start: 2px;
+}
+
+.weekly-roster__add-btn {
+  margin-block-start: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-primary, #2563eb);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.weekly-roster__add-btn:hover {
+  color: #1d4ed8;
+}
+
+.weekly-roster__day-cell {
+  padding: 0.5rem 0.5rem 0.6rem;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  border-right: 1px solid var(--color-border, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.weekly-roster__day-cell--full {
+  background: #f0fdf4;
+}
+
+.weekly-roster__fill-bar {
+  width: 100%;
+  height: 4px;
+  background: #f3f4f6;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.weekly-roster__fill-bar-inner {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s;
+}
+
+.weekly-roster__fill-count {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary, #9ca3af);
+  font-weight: 600;
+}
+
+.weekly-roster__avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.weekly-roster__avatar-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.weekly-roster__avatar-btn:not(:disabled):hover {
+  opacity: 0.85;
+  transform: scale(1.1);
+}
+
+.weekly-roster__avatar-btn:disabled {
+  cursor: default;
+}

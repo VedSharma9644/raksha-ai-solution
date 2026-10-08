@@ -13,3 +13,181 @@
   padding-block-end: 0.5rem;
   border-bottom: 1px solid var(--color-border, #e5e7eb);
 }
+
+/* ── Shift Configuration ──────────────────────────────────────────────────── */
+
+.shift-config {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+
+.shift-config__toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.shift-config__checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-primary, #2563eb);
+  cursor: pointer;
+}
+
+.shift-config__toggle-label {
+  font-size: 0.875rem;
+  color: var(--color-text, #111827);
+  font-weight: 500;
+}
+
+.shift-config__interval-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.shift-config__interval-label {
+  font-size: 0.875rem;
+  color: var(--color-text, #111827);
+  font-weight: 500;
+}
+
+.shift-config__interval-input {
+  width: 5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #111827);
+  text-align: center;
+}
+
+.shift-config__interval-unit {
+  font-size: 0.875rem;
+  color: var(--color-text, #111827);
+  font-weight: 500;
+}
+
+.shift-config__interval-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.shift-config__shifts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-start: 0.25rem;
+}
+
+.shift-config__shifts-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+.shift-config__add-btn {
+  padding: 0.3rem 0.75rem;
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.shift-config__add-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.shift-config__add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shift-config__empty-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #6b7280);
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+.shift-config__shift-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface-raised, #f9fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+}
+
+.shift-config__shift-row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.shift-config__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.shift-config__field--label { flex: 2; min-width: 140px; }
+.shift-config__field--type  { flex: 1; min-width: 90px; }
+.shift-config__field--time  { flex: 1; min-width: 90px; }
+.shift-config__field--guards { flex: 1; min-width: 80px; }
+
+.shift-config__field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.shift-config__input,
+.shift-config__select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #111827);
+  width: 100%;
+}
+
+.shift-config__input--error {
+  border-color: var(--color-danger, #ef4444);
+}
+
+.shift-config__field-error {
+  font-size: 0.72rem;
+  color: var(--color-danger, #ef4444);
+}
+
+.shift-config__remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary, #9ca3af);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm, 6px);
+  margin-block-start: 1.2rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.shift-config__remove-btn:hover:not(:disabled) {
+  color: var(--color-danger, #ef4444);
+  background: var(--color-danger-bg, #fee2e2);
+}

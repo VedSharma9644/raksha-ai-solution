@@ -31,6 +31,14 @@ export default defineConfig({
         projectRoot,
         "../../../modules/Inventory Management/index.ts"
       ),
+      "@raskha/site-management": path.resolve(
+        projectRoot,
+        "../../../modules/Site Management/index.ts"
+      ),
+      "@raskha/scheduling": path.resolve(
+        projectRoot,
+        "../../../modules/Scheduling/index.ts"
+      ),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },

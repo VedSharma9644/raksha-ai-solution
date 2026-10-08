@@ -2,6 +2,27 @@ import { Timestamp } from "firebase/firestore";
 
 export type SiteStatus = "active" | "inactive";
 
+// ─── Shift configuration types ──────────────────────────────────────────────
+
+export type ShiftType = "day" | "night" | "custom";
+
+export interface SiteShift {
+  /** Unique within the site — use "day", "night", or a short uuid for custom shifts */
+  id: string;
+  label: string;        // e.g. "Day Shift", "Night Shift"
+  shiftType: ShiftType;
+  startTime: string;    // HH:MM  e.g. "07:00"
+  endTime: string;      // HH:MM  e.g. "19:00"
+  requiredGuards: number;
+}
+
+export interface SiteShiftConfig {
+  has24hSurveillance: boolean;
+  shifts: SiteShift[];
+}
+
+// ─── Site type ───────────────────────────────────────────────────────────────
+
 export type SiteType =
   | "industrial"
   | "hospital"
@@ -41,7 +62,7 @@ export interface Site {
   contactPerson: string;
   contactPhone: string;
 
-  // Geofence (set by Admin/HR on the site)
+  // Geofence / location
   latitude?: number | null;
   longitude?: number | null;
   geofenceRadiusMeters?: number | null;
@@ -49,9 +70,11 @@ export interface Site {
   notes: string;
   status: SiteStatus;
 
-  // Location coordinates
-  latitude?: number;
-  longitude?: number;
+  // ── Scheduling ──────────────────────────────────────────────────────────
+  /** Minutes between mandatory interval check-ins (null = disabled) */
+  intervalCheckinMinutes?: number | null;
+  /** Shift slots and 24h surveillance flag */
+  shiftConfig?: SiteShiftConfig | null;
 
   createdAt: Timestamp;
   updatedAt: Timestamp;

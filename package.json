@@ -14,7 +14,7 @@
         "Panels/Guard Panel/guard app backend"
     ],
     "scripts": {
-        "dev": "concurrently --names \"ADMIN-BE,ADMIN-FE,HR-FE\" --prefix-colors \"bgRed.bold,bgBlue.bold,bgGreen.bold\" \"npm run dev --prefix \\\"Panels/Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Admin Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/frontend\\\"\""
+        "dev": "concurrently --names \"ADMIN-BE,ADMIN-FE,HR-BE,HR-FE,SA-BE,SA-FE\" --prefix-colors \"bgRed.bold,bgBlue.bold,bgCyan.bold,bgGreen.bold,bgMagenta.bold,bgYellow.bold\" \"npm run dev --prefix \\\"Panels/Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Admin Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/frontend\\\"\""
     },
     "devDependencies": {
         "@types/express": "^5.0.6",

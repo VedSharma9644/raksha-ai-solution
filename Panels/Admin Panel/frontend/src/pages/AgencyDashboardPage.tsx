@@ -19,6 +19,7 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   "hr-list": APP_ROUTES.hrList,
   "manage-inventory": APP_ROUTES.inventoryList,
   attendance: APP_ROUTES.attendance,
+  scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
 };
 
 export function AgencyDashboardPage() {

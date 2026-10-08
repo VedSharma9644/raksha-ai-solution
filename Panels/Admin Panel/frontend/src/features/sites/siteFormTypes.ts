@@ -12,6 +12,31 @@ export type SiteType =
   | "other"
   | "";
 
+// ─── Shift form types ────────────────────────────────────────────────────────
+
+export type ShiftTypeOption = "day" | "night" | "custom";
+
+export interface SiteShiftRowValues {
+  /** Temp client-side id for React key; will be used as SiteShift.id */
+  id: string;
+  label: string;
+  shiftType: ShiftTypeOption;
+  startTime: string; // HH:MM
+  endTime: string;   // HH:MM
+  requiredGuards: string; // string for input, parsed to number on save
+}
+
+export const EMPTY_SHIFT_ROW = (): SiteShiftRowValues => ({
+  id: crypto.randomUUID(),
+  label: "",
+  shiftType: "day",
+  startTime: "06:00",
+  endTime: "18:00",
+  requiredGuards: "1",
+});
+
+// ─── Site form values ────────────────────────────────────────────────────────
+
 export interface SiteFormValues {
   // Basic info
   siteName: string;
@@ -40,6 +65,11 @@ export interface SiteFormValues {
   longitude: string;
 
   notes: string;
+
+  // ── Scheduling ────────────────────────────────────────────────────────────
+  has24hSurveillance: boolean;
+  intervalCheckinMinutes: string; // parsed to number on save; "" = disabled
+  shifts: SiteShiftRowValues[];
 }
 
 export const EMPTY_SITE_FORM: SiteFormValues = {
@@ -58,6 +88,9 @@ export const EMPTY_SITE_FORM: SiteFormValues = {
   latitude: "",
   longitude: "",
   notes: "",
+  has24hSurveillance: false,
+  intervalCheckinMinutes: "",
+  shifts: [],
 };
 
 export const SITE_TYPE_OPTIONS = [

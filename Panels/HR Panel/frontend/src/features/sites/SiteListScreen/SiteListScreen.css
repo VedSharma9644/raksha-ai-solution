@@ -105,3 +105,15 @@
   background: #f0fdf4;
   color: #15803d;
 }
+
+.site-action-btn--schedule:hover {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.site-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}

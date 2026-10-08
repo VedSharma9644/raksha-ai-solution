@@ -115,6 +115,11 @@
   color: #15803d;
 }
 
+.site-action-btn--schedule:hover {
+  background: #fef3c7;
+  color: #b45309;
+}
+
 .site-table__empty {
   text-align: center;
   color: var(--color-text-secondary, #6b7280);

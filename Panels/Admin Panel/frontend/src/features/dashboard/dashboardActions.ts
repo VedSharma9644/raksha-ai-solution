@@ -7,7 +7,8 @@ export type DashboardActionId =
   | "add-hr"
   | "hr-list"
   | "form-builder"
-  | "attendance";
+  | "attendance"
+  | "scheduling";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -70,5 +71,11 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "Attendance",
     description: "View daily punch-in and punch-out records for all guards.",
     iconLabel: "📋",
+  },
+  {
+    id: "scheduling",
+    title: "Scheduling",
+    description: "Manage guard shift assignments and view weekly or monthly rosters per site.",
+    iconLabel: "📅",
   },
 ];

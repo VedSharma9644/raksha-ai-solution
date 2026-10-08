@@ -19,6 +19,7 @@ import { InventoryListPage } from "../pages/InventoryListPage";
 import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
 import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
 import { AttendancePage } from "../pages/AttendancePage";
+import { SchedulingPage } from "../pages/SchedulingPage";
 import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -194,6 +195,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <AttendancePage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.scheduling}
+        element={
+          <ModuleRoute>
+            <SchedulingPage />
           </ModuleRoute>
         }
       />

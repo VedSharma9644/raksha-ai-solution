@@ -1,0 +1,266 @@
+.monthly-roster {
+  width: 100%;
+}
+
+.monthly-roster__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-block-end: 1rem;
+}
+
+.monthly-roster__nav-btn {
+  background: var(--color-surface-hover, #f3f4f6);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text, #374151);
+  transition: background 0.15s;
+}
+
+.monthly-roster__nav-btn:hover {
+  background: var(--color-border, #e5e7eb);
+}
+
+.monthly-roster__month-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #111827);
+  min-width: 160px;
+  text-align: center;
+}
+
+.monthly-roster__layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.monthly-roster__calendar {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Week day headers */
+.monthly-roster__week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-block-end: 0.25rem;
+}
+
+.monthly-roster__week-day {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #6b7280);
+  padding: 0.25rem 0;
+}
+
+/* Day grid */
+.monthly-roster__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.monthly-roster__cell {
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.35rem 0.3rem 0.4rem;
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 56px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.monthly-roster__cell:hover {
+  border-color: var(--color-primary, #2563eb);
+  background: #eff6ff;
+}
+
+.monthly-roster__cell--today {
+  border-color: var(--color-primary, #2563eb);
+}
+
+.monthly-roster__cell--selected {
+  background: #eff6ff;
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+.monthly-roster__cell--empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+.monthly-roster__cell-num {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+.monthly-roster__cell-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.monthly-roster__pill {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.monthly-roster__pill--day    { background: #f59e0b; }
+.monthly-roster__pill--night  { background: #6366f1; }
+.monthly-roster__pill--custom { background: #10b981; }
+
+.monthly-roster__cell-no-shift {
+  height: 4px;
+}
+
+/* ── Sidebar ── */
+.monthly-roster__sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: sidebar-in 200ms ease both;
+}
+
+@keyframes sidebar-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.monthly-roster__sidebar-date {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text, #111827);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  padding-block-end: 0.5rem;
+}
+
+.monthly-roster__sidebar-empty {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #9ca3af);
+  font-style: italic;
+}
+
+.monthly-roster__sidebar-shift {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.monthly-roster__sidebar-shift-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.monthly-roster__sidebar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.monthly-roster__sidebar-dot--day    { background: #f59e0b; }
+.monthly-roster__sidebar-dot--night  { background: #6366f1; }
+.monthly-roster__sidebar-dot--custom { background: #10b981; }
+
+.monthly-roster__sidebar-shift-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+.monthly-roster__sidebar-shift-time {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin-inline-start: auto;
+}
+
+.monthly-roster__sidebar-no-guards {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #9ca3af);
+  font-style: italic;
+  padding-inline-start: 1rem;
+}
+
+.monthly-roster__sidebar-guards {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.monthly-roster__sidebar-guard {
+  font-size: 0.8rem;
+  color: var(--color-text, #374151);
+}
+
+.monthly-roster__sidebar-fill {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary, #6b7280);
+  padding-inline-start: 1rem;
+}
+
+.monthly-roster__sidebar-shortage {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.monthly-roster__sidebar-assign-btn {
+  margin-block-start: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-primary, #2563eb);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-align: left;
+}
+
+.monthly-roster__sidebar-assign-btn:hover {
+  color: #1d4ed8;
+}
+
+@media (max-width: 640px) {
+  .monthly-roster__layout {
+    flex-direction: column;
+  }
+
+  .monthly-roster__sidebar {
+    width: 100%;
+  }
+}

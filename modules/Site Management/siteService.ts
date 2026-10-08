@@ -12,7 +12,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { SITES_COLLECTION } from "./site";
-import type { Site, SiteStatus, SiteType } from "./site";
+import type { Site, SiteStatus, SiteType, SiteShiftConfig } from "./site";
 
 export interface AddSiteParams {
   agencyId: string;
@@ -31,6 +31,9 @@ export interface AddSiteParams {
   notes: string;
   latitude?: number;
   longitude?: number;
+  geofenceRadiusMeters?: number | null;
+  intervalCheckinMinutes?: number | null;
+  shiftConfig?: SiteShiftConfig | null;
 }
 
 export interface UpdateSiteParams {
@@ -50,6 +53,9 @@ export interface UpdateSiteParams {
   status?: SiteStatus;
   latitude?: number;
   longitude?: number;
+  geofenceRadiusMeters?: number | null;
+  intervalCheckinMinutes?: number | null;
+  shiftConfig?: SiteShiftConfig | null;
 }
 
 export async function addSite(

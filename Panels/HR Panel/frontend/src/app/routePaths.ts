@@ -10,6 +10,8 @@ export const APP_ROUTES = {
   assignGuards: "/sites/:id/assign-guards",
   // Attendance
   attendance: "/attendance",
+  // Scheduling
+  scheduling: "/scheduling/:siteId",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -20,4 +22,8 @@ export function viewGuardPath(guardId: string): string {
 
 export function assignGuardsPath(siteId: string): string {
   return `/sites/${siteId}/assign-guards`;
+}
+
+export function schedulingPath(siteId: string): string {
+  return `/scheduling/${siteId}`;
 }

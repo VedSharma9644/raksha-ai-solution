@@ -5,10 +5,16 @@ import { FormPanel } from "../../../components/FormPanel";
 import { SelectField } from "../../../components/SelectField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
-import type { SiteFormValues } from "../siteFormTypes";
-import { EMPTY_SITE_FORM, SITE_TYPE_OPTIONS } from "../siteFormTypes";
+import type { SiteFormValues, SiteShiftRowValues } from "../siteFormTypes";
+import { EMPTY_SITE_FORM, EMPTY_SHIFT_ROW, SITE_TYPE_OPTIONS } from "../siteFormTypes";
 import { SiteLocationPicker } from "../SiteLocationPicker/SiteLocationPicker";
 import "./AddSiteForm.css";
+
+const SHIFT_TYPE_OPTIONS = [
+  { value: "day", label: "Day" },
+  { value: "night", label: "Night" },
+  { value: "custom", label: "Custom" },
+];
 
 export interface AddSiteFormProps {
   isSubmitting?: boolean;
@@ -24,7 +30,7 @@ export function AddSiteForm({
   onCancel,
 }: AddSiteFormProps) {
   const [values, setValues] = useState<SiteFormValues>(initialValues ?? EMPTY_SITE_FORM);
-  const [errors, setErrors] = useState<Partial<Record<keyof SiteFormValues, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
   function updateField<K extends keyof SiteFormValues>(
     field: K,
@@ -34,8 +40,25 @@ export function AddSiteForm({
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
+  // ── Shift row helpers ──────────────────────────────────────────────────────
+  function addShift() {
+    setValues((v) => ({ ...v, shifts: [...v.shifts, EMPTY_SHIFT_ROW()] }));
+  }
+
+  function removeShift(idx: number) {
+    setValues((v) => ({ ...v, shifts: v.shifts.filter((_, i) => i !== idx) }));
+  }
+
+  function updateShift(idx: number, patch: Partial<SiteShiftRowValues>) {
+    setValues((v) => {
+      const next = [...v.shifts];
+      next[idx] = { ...next[idx], ...patch };
+      return { ...v, shifts: next };
+    });
+  }
+
   function validate(): boolean {
-    const nextErrors: Partial<Record<keyof SiteFormValues, string>> = {};
+    const nextErrors: Partial<Record<string, string>> = {};
 
     if (!values.siteName.trim()) nextErrors.siteName = "Enter the site name.";
     if (!values.siteType) nextErrors.siteType = "Select a site type.";
@@ -44,6 +67,15 @@ export function AddSiteForm({
     if (!values.city.trim()) nextErrors.city = "Enter the city.";
     if (!values.managerName.trim()) nextErrors.managerName = "Enter the manager name.";
     if (!values.managerContact.trim()) nextErrors.managerContact = "Enter the manager contact number.";
+
+    // Validate shift rows
+    values.shifts.forEach((s, i) => {
+      if (!s.label.trim()) nextErrors[`shift_label_${i}`] = "Enter shift name.";
+      if (!s.startTime) nextErrors[`shift_start_${i}`] = "Set start time.";
+      if (!s.endTime) nextErrors[`shift_end_${i}`] = "Set end time.";
+      const rg = parseInt(s.requiredGuards, 10);
+      if (isNaN(rg) || rg < 1) nextErrors[`shift_guards_${i}`] = "Min 1 guard.";
+    });
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -207,6 +239,149 @@ export function AddSiteForm({
           placeholder="Gates, patrol zones, access instructions"
           disabled={isSubmitting}
         />
+
+        {/* ── Shift Configuration ── */}
+        <p className="add-site-form__section-label">Shift Configuration</p>
+        <div className="shift-config">
+          {/* 24h surveillance toggle */}
+          <label className="shift-config__toggle-row">
+            <input
+              type="checkbox"
+              className="shift-config__checkbox"
+              checked={values.has24hSurveillance}
+              onChange={(e) => updateField("has24hSurveillance", e.target.checked)}
+              disabled={isSubmitting}
+            />
+            <span className="shift-config__toggle-label">24-hour surveillance required</span>
+          </label>
+
+          {/* Interval check-in */}
+          <div className="shift-config__interval-row">
+            <label className="shift-config__interval-label" htmlFor="intervalCheckinMinutes">
+              Regular interval check-in every
+            </label>
+            <input
+              id="intervalCheckinMinutes"
+              type="number"
+              className="shift-config__interval-input"
+              min={5}
+              step={5}
+              placeholder="–"
+              value={values.intervalCheckinMinutes}
+              onChange={(e) => updateField("intervalCheckinMinutes", e.target.value)}
+              disabled={isSubmitting}
+            />
+            <span className="shift-config__interval-unit">minutes</span>
+            <span className="shift-config__interval-hint">(leave blank to disable)</span>
+          </div>
+
+          {/* Shift list */}
+          <div className="shift-config__shifts-header">
+            <span className="shift-config__shifts-title">Shift Slots</span>
+            <button
+              type="button"
+              className="shift-config__add-btn"
+              onClick={addShift}
+              disabled={isSubmitting}
+            >
+              + Add Shift
+            </button>
+          </div>
+
+          {values.shifts.length === 0 && (
+            <p className="shift-config__empty-hint">
+              No shifts defined. Click "+ Add Shift" to add a Day or Night shift.
+            </p>
+          )}
+
+          {values.shifts.map((shift, idx) => (
+            <div key={shift.id} className="shift-config__shift-row">
+              <div className="shift-config__shift-row-fields">
+                <div className="shift-config__field shift-config__field--label">
+                  <label className="shift-config__field-label">Shift name</label>
+                  <input
+                    type="text"
+                    className={`shift-config__input${errors[`shift_label_${idx}`] ? " shift-config__input--error" : ""}`}
+                    placeholder="e.g. Day Shift"
+                    value={shift.label}
+                    onChange={(e) => updateShift(idx, { label: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                  {errors[`shift_label_${idx}`] && (
+                    <span className="shift-config__field-error">{errors[`shift_label_${idx}`]}</span>
+                  )}
+                </div>
+
+                <div className="shift-config__field shift-config__field--type">
+                  <label className="shift-config__field-label">Type</label>
+                  <select
+                    className="shift-config__select"
+                    value={shift.shiftType}
+                    onChange={(e) =>
+                      updateShift(idx, {
+                        shiftType: e.target.value as SiteShiftRowValues["shiftType"],
+                        startTime: e.target.value === "day" ? "06:00" : e.target.value === "night" ? "18:00" : shift.startTime,
+                        endTime: e.target.value === "day" ? "18:00" : e.target.value === "night" ? "06:00" : shift.endTime,
+                      })
+                    }
+                    disabled={isSubmitting}
+                  >
+                    {SHIFT_TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="shift-config__field shift-config__field--time">
+                  <label className="shift-config__field-label">Start</label>
+                  <input
+                    type="time"
+                    className={`shift-config__input${errors[`shift_start_${idx}`] ? " shift-config__input--error" : ""}`}
+                    value={shift.startTime}
+                    onChange={(e) => updateShift(idx, { startTime: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div className="shift-config__field shift-config__field--time">
+                  <label className="shift-config__field-label">End</label>
+                  <input
+                    type="time"
+                    className={`shift-config__input${errors[`shift_end_${idx}`] ? " shift-config__input--error" : ""}`}
+                    value={shift.endTime}
+                    onChange={(e) => updateShift(idx, { endTime: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div className="shift-config__field shift-config__field--guards">
+                  <label className="shift-config__field-label">Guards needed</label>
+                  <input
+                    type="number"
+                    className={`shift-config__input${errors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
+                    min={1}
+                    value={shift.requiredGuards}
+                    onChange={(e) => updateShift(idx, { requiredGuards: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                  {errors[`shift_guards_${idx}`] && (
+                    <span className="shift-config__field-error">{errors[`shift_guards_${idx}`]}</span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="shift-config__remove-btn"
+                onClick={() => removeShift(idx)}
+                disabled={isSubmitting}
+                title="Remove shift"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
 
         <div className="form-panel__actions">
           <Button

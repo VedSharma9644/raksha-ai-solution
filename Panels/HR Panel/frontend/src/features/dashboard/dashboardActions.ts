@@ -4,7 +4,8 @@ export type HrDashboardActionId =
   | "manage-inventory"
   | "manage-leave"
   | "site-list"
-  | "attendance";
+  | "attendance"
+  | "scheduling";
 
 export interface HrDashboardAction {
   id: HrDashboardActionId;
@@ -49,5 +50,11 @@ export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
     title: "Attendance",
     description: "View daily punch-in and punch-out records for all guards.",
     iconLabel: "📋",
+  },
+  {
+    id: "scheduling",
+    title: "Scheduling",
+    description: "Assign guards to shifts and view weekly or monthly rosters per site.",
+    iconLabel: "📅",
   },
 ];

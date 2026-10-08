@@ -1,0 +1,274 @@
+.assign-shift-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.assign-shift-modal {
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: assign-modal-in 240ms ease both;
+}
+
+@keyframes assign-modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.assign-shift-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.assign-shift-modal__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text, #111827);
+  margin: 0;
+}
+
+.assign-shift-modal__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--color-text-secondary, #9ca3af);
+  padding: 0.25rem;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.assign-shift-modal__close:hover {
+  color: var(--color-text, #111827);
+  background: var(--color-surface-hover, #f3f4f6);
+}
+
+.assign-shift-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.assign-shift-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.assign-shift-modal__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.assign-shift-modal__optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.assign-shift-modal__select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #111827);
+}
+
+.assign-shift-modal__select--error {
+  border-color: var(--color-danger, #ef4444);
+}
+
+/* ── Shift cards ─── */
+.assign-shift-modal__shift-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.assign-shift-modal__shift-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.assign-shift-modal__shift-card--selected {
+  border-color: var(--color-primary, #2563eb);
+  background: #eff6ff;
+}
+
+.assign-shift-modal__radio {
+  display: none;
+}
+
+.assign-shift-modal__shift-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.assign-shift-modal__shift-badge {
+  font-size: 1rem;
+}
+
+.assign-shift-modal__shift-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+.assign-shift-modal__shift-time {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin-inline-start: auto;
+}
+
+.assign-shift-modal__no-shifts {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #6b7280);
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* ── Day chips ── */
+.assign-shift-modal__days {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.assign-shift-modal__day-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-secondary, #6b7280);
+  background: var(--color-surface, #fff);
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.assign-shift-modal__day-chip--on {
+  background: var(--color-primary, #2563eb);
+  border-color: var(--color-primary, #2563eb);
+  color: #fff;
+}
+
+.assign-shift-modal__day-checkbox {
+  display: none;
+}
+
+/* ── Date row ── */
+.assign-shift-modal__date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.assign-shift-modal__date {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #111827);
+  width: 100%;
+}
+
+.assign-shift-modal__date--error {
+  border-color: var(--color-danger, #ef4444);
+}
+
+/* ── Error ── */
+.assign-shift-modal__error {
+  font-size: 0.75rem;
+  color: var(--color-danger, #ef4444);
+}
+
+.assign-shift-modal__save-error {
+  padding: 0.5rem 0.75rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* ── Footer ── */
+.assign-shift-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-block-start: 0.5rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  padding-block-end: 0.25rem;
+}
+
+.assign-shift-modal__footer-right {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.assign-shift-modal__cancel-btn,
+.assign-shift-modal__save-btn,
+.assign-shift-modal__delete-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.assign-shift-modal__cancel-btn {
+  background: var(--color-surface-hover, #f3f4f6);
+  color: var(--color-text, #374151);
+}
+
+.assign-shift-modal__save-btn {
+  background: var(--color-primary, #2563eb);
+  color: #fff;
+}
+
+.assign-shift-modal__delete-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.assign-shift-modal__cancel-btn:disabled,
+.assign-shift-modal__save-btn:disabled,
+.assign-shift-modal__delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

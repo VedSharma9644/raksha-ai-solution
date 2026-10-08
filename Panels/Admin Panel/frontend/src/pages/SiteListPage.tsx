@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { APP_ROUTES, assignGuardsPath, editSitePath } from "../app/routePaths";
+import { APP_ROUTES, assignGuardsPath, editSitePath, schedulingPath } from "../app/routePaths";
 import { SiteListScreen } from "../features/sites";
 import { useSiteList } from "../features/sites";
 import { useGuardList } from "../features/guards/useGuardList";
@@ -20,6 +20,7 @@ export function SiteListPage() {
       onAddSite={() => navigate(APP_ROUTES.addSite)}
       onSelectSite={(id) => navigate(editSitePath(id))}
       onAssignGuards={(id) => navigate(assignGuardsPath(id))}
+      onSchedule={(id) => navigate(schedulingPath(id))}
     />
   );
 }
