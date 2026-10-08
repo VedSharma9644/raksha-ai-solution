@@ -28,7 +28,7 @@ async function authHeaders(): Promise<Headers> {
 }
 
 export function useScheduling(siteId: string) {
-  const { agency } = useAuthContext();
+  const { hrStaff } = useAuthContext();
   const [site, setSite] = useState<Site | null>(null);
   const [assignments, setAssignments] = useState<GuardShiftAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +36,7 @@ export function useScheduling(siteId: string) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!siteId || !agency) {
+    if (!siteId || !hrStaff) {
       setIsLoading(false);
       return;
     }
@@ -68,7 +68,7 @@ export function useScheduling(siteId: string) {
         setError(e.message ?? "Failed to load schedule.");
       })
       .finally(() => setIsLoading(false));
-  }, [siteId, agency, tick]);
+  }, [siteId, hrStaff, tick]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
 

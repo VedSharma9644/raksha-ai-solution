@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { SaveGuardShiftAssignmentParams, GuardShiftAssignment } from "@raskha/scheduling";
 import { auth } from "../../lib/firebase";
-import { useAuthContext } from "../authentication";
 
 function resolveAdminApiBase(): string {
   const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
@@ -44,7 +43,6 @@ async function apiRequest<T>(
 }
 
 export function useSaveShiftAssignment() {
-  const { agency: _agency } = useAuthContext();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
