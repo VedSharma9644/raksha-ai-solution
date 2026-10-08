@@ -7,6 +7,7 @@ import {
   initializeFirebase,
   isAllowedCorsOrigin,
 } from "@raskha/core";
+import { createAttendanceRoutes } from "./routes/attendanceRoutes";
 import { createGuardRoutes } from "./routes/guardRoutes";
 import { createHrStaffRoutes } from "./routes/hrStaffRoutes";
 import { createFormSchemaRoutes } from "./routes/formSchemaRoutes";
@@ -97,6 +98,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/guards", createGuardRoutes(db));
 app.use("/api/hr-staff", createHrStaffRoutes());
 app.use("/api/form-schemas", createFormSchemaRoutes());
+app.use("/api/attendance", createAttendanceRoutes());
 
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {

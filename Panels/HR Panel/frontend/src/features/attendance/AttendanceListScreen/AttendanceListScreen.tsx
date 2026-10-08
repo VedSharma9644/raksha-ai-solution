@@ -3,12 +3,16 @@ import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import { SelectField } from "../../../components/SelectField";
-import type { AttendanceRecord, AttendanceStats } from "../attendanceTypes";
+import type {
+  AttendanceRecord,
+  AttendanceStats,
+  GeofenceStatus,
+} from "../attendanceTypes";
 import { formatDuration } from "../attendanceTypes";
 import { AttendanceDetailModal } from "../AttendanceDetailModal";
 import "./AttendanceListScreen.css";
 
-const GEOFENCE_LABELS: Record<AttendanceRecord["geofenceStatus"], string> = {
+const GEOFENCE_LABELS: Record<GeofenceStatus, string> = {
   passed: "✓ Verified",
   demo_passed: "◎ Demo",
   failed: "✗ Outside Zone",
@@ -19,6 +23,10 @@ export interface AttendanceListScreenProps {
   stats: AttendanceStats;
   sites: { siteId: string; siteName: string }[];
   onBack: () => void;
+  dateFilter: string;
+  onDateFilterChange: (date: string) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function AttendanceListScreen({
@@ -26,11 +34,11 @@ export function AttendanceListScreen({
   stats,
   sites,
   onBack,
+  dateFilter,
+  onDateFilterChange,
+  isLoading = false,
+  error = null,
 }: AttendanceListScreenProps) {
-  const [dateFilter, setDateFilter] = useState(() => {
-    const now = new Date();
-    return now.toISOString().slice(0, 10);
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
@@ -38,7 +46,6 @@ export function AttendanceListScreen({
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return records.filter((r) => {
-      if (r.punchInDate !== dateFilter) return false;
       if (siteFilter !== "all" && r.siteId !== siteFilter) return false;
       if (q) {
         const haystack = `${r.guardName} ${r.guardEmployeeCode}`.toLowerCase();
@@ -46,7 +53,7 @@ export function AttendanceListScreen({
       }
       return true;
     });
-  }, [records, dateFilter, searchQuery, siteFilter]);
+  }, [records, searchQuery, siteFilter]);
 
   const siteOptions = [
     { value: "all", label: "All Sites" },
@@ -114,7 +121,7 @@ export function AttendanceListScreen({
               type="date"
               className="att-filters__date-input"
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => onDateFilterChange(e.target.value)}
             />
           </div>
 
@@ -139,26 +146,45 @@ export function AttendanceListScreen({
           </div>
         </div>
 
+        {error ? (
+          <p className="att-empty__sub" style={{ color: "#b91c1c", marginBottom: 12 }}>
+            {error}
+          </p>
+        ) : null}
+
         {/* ── Results Summary ── */}
         <p className="att-results-summary">
-          Showing <strong>{filtered.length}</strong> record{filtered.length !== 1 ? "s" : ""}
-          {onShiftCount > 0 && (
-            <span className="att-results-summary__active">
-              &nbsp;·&nbsp;
-              <span className="att-pulse-dot" />
-              {onShiftCount} on shift
-            </span>
-          )}
-          {completedCount > 0 && (
-            <span className="att-results-summary__completed">
-              &nbsp;·&nbsp;{completedCount} completed
-            </span>
+          {isLoading ? (
+            <>Loading attendance…</>
+          ) : (
+            <>
+              Showing <strong>{filtered.length}</strong> record
+              {filtered.length !== 1 ? "s" : ""}
+              {onShiftCount > 0 && (
+                <span className="att-results-summary__active">
+                  &nbsp;·&nbsp;
+                  <span className="att-pulse-dot" />
+                  {onShiftCount} on shift
+                </span>
+              )}
+              {completedCount > 0 && (
+                <span className="att-results-summary__completed">
+                  &nbsp;·&nbsp;{completedCount} completed
+                </span>
+              )}
+            </>
           )}
         </p>
 
         {/* ── Table ── */}
         <div className="att-table-wrap">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="att-empty">
+              <div className="att-empty__icon">⏳</div>
+              <p className="att-empty__title">Loading attendance</p>
+              <p className="att-empty__sub">Fetching punch-in records for this date…</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="att-empty">
               <div className="att-empty__icon">🕐</div>
               <p className="att-empty__title">No records found</p>
@@ -191,6 +217,7 @@ export function AttendanceListScreen({
                       onClick={() => setSelectedRecord(record)}
                       title="Click to view details"
                     >
+                      {/* Guard */}
                       <td className="att-table__cell att-table__cell--guard">
                         <div className="att-guard-cell">
                           <span
@@ -206,16 +233,19 @@ export function AttendanceListScreen({
                         </div>
                       </td>
 
+                      {/* Site */}
                       <td className="att-table__cell att-table__cell--site">
                         <span className="att-site-name">{record.siteName}</span>
                         <span className="att-site-post">{record.postName}</span>
                       </td>
 
+                      {/* Punch In */}
                       <td className="att-table__cell att-table__cell--time">
                         <span className="att-time">{record.punchInTime}</span>
                         <span className="att-date">{record.punchInDate}</span>
                       </td>
 
+                      {/* Punch Out */}
                       <td className="att-table__cell att-table__cell--time">
                         {isOnShift ? (
                           <span className="att-on-shift-badge">
@@ -230,6 +260,7 @@ export function AttendanceListScreen({
                         )}
                       </td>
 
+                      {/* Duration */}
                       <td className="att-table__cell att-table__cell--duration">
                         {record.durationMinutes !== null ? (
                           <span className="att-duration">
@@ -240,6 +271,7 @@ export function AttendanceListScreen({
                         )}
                       </td>
 
+                      {/* Geofence Status */}
                       <td className="att-table__cell">
                         <span
                           className={`att-geo-badge att-geo-badge--${record.punchInGeofenceStatus}`}
@@ -248,6 +280,7 @@ export function AttendanceListScreen({
                         </span>
                       </td>
 
+                      {/* Selfie */}
                       <td className="att-table__cell att-table__cell--selfie">
                         <img
                           src={record.punchInSelfieUrl}
@@ -273,6 +306,7 @@ export function AttendanceListScreen({
         </div>
       </div>
 
+      {/* ── Detail Modal ── */}
       {selectedRecord !== null && (
         <AttendanceDetailModal
           record={selectedRecord}

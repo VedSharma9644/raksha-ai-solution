@@ -3,12 +3,16 @@ import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import { SelectField } from "../../../components/SelectField";
-import type { AttendanceRecord, AttendanceStats } from "../attendanceTypes";
+import type {
+  AttendanceRecord,
+  AttendanceStats,
+  GeofenceStatus,
+} from "../attendanceTypes";
 import { formatDuration } from "../attendanceTypes";
 import { AttendanceDetailModal } from "../AttendanceDetailModal";
 import "./AttendanceListScreen.css";
 
-const GEOFENCE_LABELS: Record<AttendanceRecord["geofenceStatus"], string> = {
+const GEOFENCE_LABELS: Record<GeofenceStatus, string> = {
   passed: "✓ Verified",
   demo_passed: "◎ Demo",
   failed: "✗ Outside Zone",
@@ -19,6 +23,10 @@ export interface AttendanceListScreenProps {
   stats: AttendanceStats;
   sites: { siteId: string; siteName: string }[];
   onBack: () => void;
+  dateFilter: string;
+  onDateFilterChange: (date: string) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function AttendanceListScreen({
@@ -26,11 +34,11 @@ export function AttendanceListScreen({
   stats,
   sites,
   onBack,
+  dateFilter,
+  onDateFilterChange,
+  isLoading = false,
+  error = null,
 }: AttendanceListScreenProps) {
-  const [dateFilter, setDateFilter] = useState(() => {
-    const now = new Date();
-    return now.toISOString().slice(0, 10); // "YYYY-MM-DD"
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
@@ -38,7 +46,6 @@ export function AttendanceListScreen({
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return records.filter((r) => {
-      if (r.punchInDate !== dateFilter) return false;
       if (siteFilter !== "all" && r.siteId !== siteFilter) return false;
       if (q) {
         const haystack = `${r.guardName} ${r.guardEmployeeCode}`.toLowerCase();
@@ -46,7 +53,7 @@ export function AttendanceListScreen({
       }
       return true;
     });
-  }, [records, dateFilter, searchQuery, siteFilter]);
+  }, [records, searchQuery, siteFilter]);
 
   const siteOptions = [
     { value: "all", label: "All Sites" },
@@ -114,7 +121,7 @@ export function AttendanceListScreen({
               type="date"
               className="att-filters__date-input"
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => onDateFilterChange(e.target.value)}
             />
           </div>
 
@@ -139,26 +146,45 @@ export function AttendanceListScreen({
           </div>
         </div>
 
+        {error ? (
+          <p className="att-empty__sub" style={{ color: "#b91c1c", marginBottom: 12 }}>
+            {error}
+          </p>
+        ) : null}
+
         {/* ── Results Summary ── */}
         <p className="att-results-summary">
-          Showing <strong>{filtered.length}</strong> record{filtered.length !== 1 ? "s" : ""}
-          {onShiftCount > 0 && (
-            <span className="att-results-summary__active">
-              &nbsp;·&nbsp;
-              <span className="att-pulse-dot" />
-              {onShiftCount} on shift
-            </span>
-          )}
-          {completedCount > 0 && (
-            <span className="att-results-summary__completed">
-              &nbsp;·&nbsp;{completedCount} completed
-            </span>
+          {isLoading ? (
+            <>Loading attendance…</>
+          ) : (
+            <>
+              Showing <strong>{filtered.length}</strong> record
+              {filtered.length !== 1 ? "s" : ""}
+              {onShiftCount > 0 && (
+                <span className="att-results-summary__active">
+                  &nbsp;·&nbsp;
+                  <span className="att-pulse-dot" />
+                  {onShiftCount} on shift
+                </span>
+              )}
+              {completedCount > 0 && (
+                <span className="att-results-summary__completed">
+                  &nbsp;·&nbsp;{completedCount} completed
+                </span>
+              )}
+            </>
           )}
         </p>
 
         {/* ── Table ── */}
         <div className="att-table-wrap">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="att-empty">
+              <div className="att-empty__icon">⏳</div>
+              <p className="att-empty__title">Loading attendance</p>
+              <p className="att-empty__sub">Fetching punch-in records for this date…</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="att-empty">
               <div className="att-empty__icon">🕐</div>
               <p className="att-empty__title">No records found</p>

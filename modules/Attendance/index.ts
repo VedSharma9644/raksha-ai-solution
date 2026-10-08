@@ -65,3 +65,11 @@ export {
   type AttendanceHistoryLogDto,
   type AttendanceHistoryDayStatus,
 } from "./attendanceService";
+
+export {
+  listAgencyAttendanceForDate,
+  type AgencyAttendanceDayResponse,
+  type AgencyAttendanceIntervalDto,
+  type AgencyAttendanceRecordDto,
+  type AgencyAttendanceStatsDto,
+} from "./agencyAttendance";
