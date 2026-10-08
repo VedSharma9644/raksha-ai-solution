@@ -42,7 +42,7 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--color-secondary);
-  background: #f8fbfb;
+  background: var(--color-surface-muted);
 }
 
 .employee-list-table tbody tr:last-child td {
@@ -109,18 +109,18 @@
 }
 
 .emp-action-btn--view:hover {
-  color: var(--color-primary, #2563eb);
-  background: #eff6ff;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .emp-action-btn--edit:hover {
-  color: #0284c7;
-  background: #f0f9ff;
+  color: var(--color-primary-dark);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
 }
 
 .emp-action-btn--delete:hover {
-  color: var(--color-error, #dc2626);
-  background: #fef2f2;
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface));
 }
 
 .employee-list-table__name {
@@ -156,8 +156,8 @@
 }
 
 .employee-list-table__status--inactive {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
 }
 
 @keyframes employee-list-enter {

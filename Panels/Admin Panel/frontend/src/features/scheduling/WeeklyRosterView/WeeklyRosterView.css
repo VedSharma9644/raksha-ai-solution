@@ -106,13 +106,13 @@
 }
 
 .weekly-roster__day-cell--full {
-  background: #f0fdf4;
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
 }
 
 .weekly-roster__fill-bar {
   width: 100%;
   height: 4px;
-  background: #f3f4f6;
+  background: var(--color-surface-muted);
   border-radius: 99px;
   overflow: hidden;
 }

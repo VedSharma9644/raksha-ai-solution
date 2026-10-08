@@ -59,6 +59,19 @@
   --shadow-surface: 0 2px 4px rgba(18, 24, 32, 0.06);
   --shadow-raised: 0 4px 12px rgba(18, 24, 32, 0.12);
 
+  /* ── Compatibility aliases ─────────────────────────────────────────────── */
+  --color-text:            var(--color-on-surface);
+  --color-text-primary:    var(--color-on-surface);
+  --color-text-secondary:  var(--color-on-surface-variant);
+  --color-surface-raised:  var(--color-surface-muted);
+  --color-surface-hover:   color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  --color-bg-primary:      var(--color-surface);
+  --color-bg-secondary:    var(--color-surface-muted);
+  --color-bg-hover:        color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  --color-primary-hover:   var(--color-primary-dark);
+  --color-danger:          var(--color-error);
+  --color-danger-bg:       var(--color-error-container);
+
   /* Motion */
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;

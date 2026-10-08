@@ -47,7 +47,7 @@
 
 .text-field--error .text-field__input {
   border-color: var(--color-error);
-  background: #fff8f7;
+  background: color-mix(in srgb, var(--color-error) 6%, var(--color-surface));
 }
 
 .text-field--error .text-field__input:focus {

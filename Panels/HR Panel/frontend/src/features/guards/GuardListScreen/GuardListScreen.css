@@ -41,7 +41,7 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--color-secondary);
-  background: #f8fbfb;
+  background: var(--color-surface-muted);
 }
 
 .guard-list-table tbody tr:last-child td {
@@ -72,8 +72,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #dbeafe;
-  color: #2563eb;
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  color: var(--color-primary);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -99,9 +99,9 @@
   transition: background 0.12s, color 0.12s;
   color: var(--color-text-secondary, #6b7280);
 }
-.guard-action-btn:hover { background: #f1f5f9; }
-.guard-action-btn--view:hover { color: #2563eb; background: #eff6ff; }
-.guard-action-btn--delete:hover { color: #dc2626; background: #fef2f2; }
+.guard-action-btn:hover { background: var(--color-surface-muted); }
+.guard-action-btn--view:hover { color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)); }
+.guard-action-btn--delete:hover { color: var(--color-error); background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface)); }
 
 .guard-list-table__name {
   font-weight: 500;
@@ -134,8 +134,8 @@
 }
 
 .guard-list-table__status--inactive {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
 }
 
 @keyframes hr-screen-enter {

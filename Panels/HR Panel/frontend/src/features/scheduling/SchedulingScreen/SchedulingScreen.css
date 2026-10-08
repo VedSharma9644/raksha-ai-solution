@@ -57,10 +57,10 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: color-mix(in srgb, var(--color-error) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, var(--color-border));
   border-radius: var(--radius-md, 8px);
-  color: #9a3412;
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-block-end: 1.25rem;
 }
@@ -73,8 +73,8 @@
 /* ── Error ── */
 .scheduling-screen__error {
   padding: 0.75rem 1rem;
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
   border-radius: var(--radius-sm, 6px);
   font-size: 0.875rem;
   margin-block-end: 1rem;

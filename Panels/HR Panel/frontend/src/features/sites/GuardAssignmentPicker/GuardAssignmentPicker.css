@@ -12,7 +12,7 @@
   border: 1.5px solid var(--color-border-strong, #d1d5db);
   border-radius: var(--radius-sm, 8px);
   padding: 0.5rem 0.75rem;
-  background: #fff;
+  background: var(--color-surface);
   transition: border-color 0.15s;
 }
 
@@ -102,7 +102,7 @@
   gap: 0.75rem;
   padding: 0.7rem 1rem;
   cursor: pointer;
-  background: #fff;
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border, #f3f4f6);
   transition: background 0.1s;
 }
@@ -112,15 +112,15 @@
 }
 
 .guard-assignment-picker__item:hover:not(.guard-assignment-picker__item--disabled) {
-  background: #f8faff;
+  background: var(--color-hover-tint);
 }
 
 .guard-assignment-picker__item--checked {
-  background: #eff6ff;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .guard-assignment-picker__item--checked:hover {
-  background: #dbeafe;
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
 }
 
 .guard-assignment-picker__item--elsewhere {

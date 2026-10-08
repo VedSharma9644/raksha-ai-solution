@@ -116,7 +116,7 @@
 
 .assign-shift-modal__shift-card--selected {
   border-color: var(--color-primary, #2563eb);
-  background: #eff6ff;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .assign-shift-modal__radio {
@@ -216,8 +216,8 @@
 
 .assign-shift-modal__save-error {
   padding: 0.5rem 0.75rem;
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
   border-radius: 6px;
   font-size: 0.85rem;
 }
@@ -252,8 +252,8 @@
 }
 
 .assign-shift-modal__cancel-btn {
-  background: var(--color-surface-hover, #f3f4f6);
-  color: var(--color-text, #374151);
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface);
 }
 
 .assign-shift-modal__save-btn {
@@ -262,8 +262,8 @@
 }
 
 .assign-shift-modal__delete-btn {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-container);
+  color: var(--color-error);
 }
 
 .assign-shift-modal__cancel-btn:disabled,

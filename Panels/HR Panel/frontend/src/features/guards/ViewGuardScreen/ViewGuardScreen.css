@@ -10,10 +10,10 @@
   align-items: center;
   gap: 1.25rem;
   padding: 1.25rem 1.5rem;
-  background: #fff;
-  border: 1.5px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-surface);
 }
 
 .view-guard-screen__hero-avatar {
@@ -25,21 +25,21 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--color-border);
 }
 
 .view-guard-screen__avatar-initials {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   font-weight: 700;
-  border: 2px solid #bfdbfe;
+  border: 2px solid var(--color-border);
 }
 
 .view-guard-screen__hero-info {
@@ -51,13 +51,13 @@
 .view-guard-screen__hero-name {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-on-surface);
   margin: 0;
 }
 
 .view-guard-screen__hero-sub {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--color-on-surface-variant);
   margin: 0;
 }
 
@@ -74,7 +74,7 @@
 
 .view-guard-screen__status--active   { background: #dcfce7; color: #15803d; }
 .view-guard-screen__status--on_leave { background: #ffedd5; color: #b45309; }
-.view-guard-screen__status--inactive { background: #e2e8f0; color: #475569; }
+.view-guard-screen__status--inactive { background: var(--color-surface-muted); color: var(--color-on-surface-variant); }
 
 /* ── Info grid ── */
 .view-guard-screen__info-grid {
@@ -83,8 +83,8 @@
   gap: 0.75rem 1.25rem;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-bg-secondary, #f9fafb);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
 }
 
 .view-guard-screen__info-row {

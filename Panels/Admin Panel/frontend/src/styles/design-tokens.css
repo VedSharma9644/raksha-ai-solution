@@ -32,6 +32,19 @@
   --shadow-surface: 0 2px 4px rgba(18, 24, 32, 0.06);
   --shadow-raised: 0 4px 12px rgba(18, 24, 32, 0.12);
 
+  /* ── Compatibility aliases (used by feature components) ──────────────────── */
+  --color-text:            var(--color-on-surface);
+  --color-text-primary:    var(--color-on-surface);
+  --color-text-secondary:  var(--color-on-surface-variant);
+  --color-surface-raised:  var(--color-surface-muted);
+  --color-surface-hover:   var(--color-hover-tint);
+  --color-bg-primary:      var(--color-surface);
+  --color-bg-secondary:    var(--color-surface-muted);
+  --color-bg-hover:        var(--color-hover-tint);
+  --color-primary-hover:   var(--color-primary-dark);
+  --color-danger:          var(--color-error);
+  --color-danger-bg:       var(--color-error-container);
+
   /* Typography */
   --font-family: "Public Sans", "Segoe UI", sans-serif;
 
@@ -106,4 +119,17 @@
   --color-grid-line: rgba(232, 238, 242, 0.04);
   --shadow-surface: 0 2px 4px rgba(0, 0, 0, 0.35);
   --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+  /* ── Compatibility aliases ─────────────────────────────────────────────── */
+  --color-text:            var(--color-on-surface);
+  --color-text-primary:    var(--color-on-surface);
+  --color-text-secondary:  var(--color-on-surface-variant);
+  --color-surface-raised:  var(--color-surface-muted);
+  --color-surface-hover:   var(--color-hover-tint);
+  --color-bg-primary:      var(--color-surface);
+  --color-bg-secondary:    var(--color-surface-muted);
+  --color-bg-hover:        var(--color-hover-tint);
+  --color-primary-hover:   var(--color-primary-dark);
+  --color-danger:          var(--color-error);
+  --color-danger-bg:       var(--color-error-container);
 }

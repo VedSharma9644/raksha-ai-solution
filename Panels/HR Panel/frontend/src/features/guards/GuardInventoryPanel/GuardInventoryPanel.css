@@ -102,8 +102,8 @@
   height: 24px;
   border-radius: 50%;
   border: none;
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--color-error-container);
+  color: var(--color-error);
   font-size: 0.7rem;
   cursor: pointer;
   display: flex;
@@ -114,7 +114,7 @@
 }
 
 .guard-inventory-panel__remove-btn:hover:not(:disabled) {
-  background: #fca5a5;
+  background: color-mix(in srgb, var(--color-error) 25%, var(--color-surface));
 }
 
 .guard-inventory-panel__remove-btn:disabled {

@@ -66,7 +66,7 @@
 }
 
 .site-table__status--active   { background: #dcfce7; color: #166534; }
-.site-table__status--inactive { background: #f3f4f6; color: #6b7280; }
+.site-table__status--inactive { background: var(--color-surface-muted); color: var(--color-on-surface-variant); }
 
 .site-table__guard-count {
   display: inline-flex;
@@ -78,13 +78,13 @@
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
 }
 
 .site-table__guard-count--active {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: color-mix(in srgb, var(--color-primary) 15%, var(--color-surface));
+  color: var(--color-primary);
 }
 
 .site-action-btn {
@@ -98,17 +98,17 @@
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
   background: transparent;
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--color-on-surface-variant);
 }
 
 .site-action-btn--assign:hover {
-  background: #f0fdf4;
-  color: #15803d;
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  color: var(--color-success);
 }
 
 .site-action-btn--schedule:hover {
-  background: #fef3c7;
-  color: #b45309;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-muted));
+  color: var(--color-primary-dark);
 }
 
 .site-table__actions {
