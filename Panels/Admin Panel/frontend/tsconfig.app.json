@@ -17,7 +17,8 @@
       "@raskha/site-management": ["../../../modules/Site Management/index.ts"],
       "@raskha/form-builder": ["../../../modules/Form Builder/index.ts"],
       "@raskha/inventory-management": ["../../../modules/Inventory Management/index.ts"],
-      "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"]
+      "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"],
+      "@raskha/client-management": ["../../../modules/Client Management/index.ts"]
     },
 
     /* Bundler mode */

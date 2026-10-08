@@ -97,6 +97,9 @@ export function WeeklyRosterView({
                     className="weekly-roster__add-btn"
                     onClick={() => onAddAssignment(shift.id)}
                     title="Assign guard to this shift"
+                    disabled={
+                      assignments.filter((a) => a.shiftId === shift.id).length >= shift.requiredGuards
+                    }
                   >
                     + Assign
                   </button>

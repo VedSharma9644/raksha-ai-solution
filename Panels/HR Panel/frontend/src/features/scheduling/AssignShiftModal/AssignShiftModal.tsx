@@ -9,6 +9,8 @@ import "./AssignShiftModal.css";
 export interface AssignShiftModalProps {
   /** Guards already assigned to this site */
   guards: Guard[];
+  /** All existing shift assignments for this site */
+  assignments: GuardShiftAssignment[];
   /** Shift slots from site.shiftConfig.shifts */
   shifts: SiteShift[];
   /** If editing an existing assignment */
@@ -34,6 +36,7 @@ const today = () => new Date().toISOString().split("T")[0]!;
 
 export function AssignShiftModal({
   guards,
+  assignments,
   shifts,
   existingAssignment,
   isSaving,
@@ -42,8 +45,18 @@ export function AssignShiftModal({
   onDelete,
   onClose,
 }: AssignShiftModalProps) {
+  // Initialize to the first non-full shift (or preselected shift, or shifts[0])
+  const firstAvailableShiftId = (() => {
+    if (existingAssignment) return existingAssignment.shiftId;
+    // Prefer the first shift that is NOT already at capacity
+    const nonFull = shifts.find(
+      (s) => assignments.filter((a) => a.shiftId === s.id).length < s.requiredGuards
+    );
+    return nonFull?.id ?? shifts[0]?.id ?? "";
+  })();
+
   const [guardId, setGuardId] = useState(existingAssignment?.guardId ?? "");
-  const [shiftId, setShiftId] = useState(existingAssignment?.shiftId ?? "");
+  const [shiftId, setShiftId] = useState(firstAvailableShiftId);
   const [recurringDays, setRecurringDays] = useState<DayOfWeek[]>(
     existingAssignment?.recurringDays ?? ALL_DAYS
   );
@@ -55,7 +68,7 @@ export function AssignShiftModal({
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Keep shiftId in sync when the shift list loads
+  // Update shiftId if shifts load after mount and nothing is selected yet
   useEffect(() => {
     if (!shiftId && shifts.length > 0) {
       setShiftId(shifts[0]!.id);
@@ -74,6 +87,16 @@ export function AssignShiftModal({
     if (!shiftId) errs.shiftId = "Select a shift.";
     if (recurringDays.length === 0) errs.recurringDays = "Select at least one day.";
     if (!effectiveFrom) errs.effectiveFrom = "Set effective from date.";
+
+    // Enforce requiredGuards cap (skip when editing an existing assignment)
+    if (!existingAssignment && shiftId) {
+      const selectedShift = shifts.find((s) => s.id === shiftId);
+      const assignedCount = assignments.filter((a) => a.shiftId === shiftId).length;
+      if (selectedShift && assignedCount >= selectedShift.requiredGuards) {
+        errs.guardId = `This shift is full — ${assignedCount}/${selectedShift.requiredGuards} guards already assigned.`;
+      }
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -100,6 +123,21 @@ export function AssignShiftModal({
       effectiveTo: effectiveTo || null,
     });
   }
+
+  // Guards not yet assigned to the currently selected shift (when creating)
+  const availableGuards = existingAssignment
+    ? guards  // editing — keep the existing guard selectable
+    : guards.filter(
+        (g) => !assignments.some((a) => a.guardId === g.id && a.shiftId === shiftId)
+      );
+
+  // Whether the currently selected shift is already at capacity
+  const selectedShiftDef = shifts.find((s) => s.id === shiftId);
+  const assignedToShift = assignments.filter((a) => a.shiftId === shiftId).length;
+  const shiftIsFull =
+    !existingAssignment &&
+    !!selectedShiftDef &&
+    assignedToShift >= selectedShiftDef.requiredGuards;
 
   return (
     <div className="assign-shift-modal__backdrop" onClick={onClose}>
@@ -132,16 +170,29 @@ export function AssignShiftModal({
               className={`assign-shift-modal__select${errors.guardId ? " assign-shift-modal__select--error" : ""}`}
               value={guardId}
               onChange={(e) => setGuardId(e.target.value)}
-              disabled={isSaving || !!existingAssignment}
+              disabled={isSaving || !!existingAssignment || shiftIsFull}
             >
               <option value="">Select a guard…</option>
-              {guards.map((g) => (
+              {availableGuards.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.fullName} ({g.employeeCode})
                 </option>
               ))}
             </select>
-            {errors.guardId && <span className="assign-shift-modal__error">{errors.guardId}</span>}
+            {shiftIsFull && (
+              <p className="assign-shift-modal__shift-full">
+                This shift is full ({assignedToShift}/{selectedShiftDef!.requiredGuards} guards assigned).
+                {shifts.length > 1 ? " Select a different shift below." : " Remove an existing guard first."}
+              </p>
+            )}
+            {!shiftIsFull && availableGuards.length === 0 && !existingAssignment && (
+              <span className="assign-shift-modal__error">
+                All site guards are already assigned to this shift.
+              </span>
+            )}
+            {errors.guardId && !shiftIsFull && (
+              <span className="assign-shift-modal__error">{errors.guardId}</span>
+            )}
           </div>
 
           {/* Shift selector */}
@@ -153,28 +204,35 @@ export function AssignShiftModal({
               </p>
             ) : (
               <div className="assign-shift-modal__shift-options">
-                {shifts.map((s) => (
-                  <label key={s.id} className={`assign-shift-modal__shift-card${shiftId === s.id ? " assign-shift-modal__shift-card--selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="shiftId"
-                      value={s.id}
-                      checked={shiftId === s.id}
-                      onChange={() => setShiftId(s.id)}
-                      disabled={isSaving}
-                      className="assign-shift-modal__radio"
-                    />
-                    <div className="assign-shift-modal__shift-info">
-                      <span className={`assign-shift-modal__shift-badge assign-shift-modal__shift-badge--${s.shiftType}`}>
-                        {s.shiftType === "day" ? "☀" : s.shiftType === "night" ? "🌙" : "⏰"}
-                      </span>
-                      <span className="assign-shift-modal__shift-label">{s.label}</span>
-                      <span className="assign-shift-modal__shift-time">
-                        {s.startTime} – {s.endTime}
-                      </span>
-                    </div>
-                  </label>
-                ))}
+                {shifts.map((s) => {
+                  const countForShift = assignments.filter((a) => a.shiftId === s.id).length;
+                  const isFull = countForShift >= s.requiredGuards;
+                  return (
+                    <label key={s.id} className={`assign-shift-modal__shift-card${shiftId === s.id ? " assign-shift-modal__shift-card--selected" : ""}${isFull ? " assign-shift-modal__shift-card--full" : ""}`}>
+                      <input
+                        type="radio"
+                        name="shiftId"
+                        value={s.id}
+                        checked={shiftId === s.id}
+                        onChange={() => { setShiftId(s.id); setGuardId(""); }}
+                        disabled={isSaving}
+                        className="assign-shift-modal__radio"
+                      />
+                      <div className="assign-shift-modal__shift-info">
+                        <span className={`assign-shift-modal__shift-badge assign-shift-modal__shift-badge--${s.shiftType}`}>
+                          {s.shiftType === "day" ? "☀" : s.shiftType === "night" ? "🌙" : "⏰"}
+                        </span>
+                        <span className="assign-shift-modal__shift-label">{s.label}</span>
+                        <span className="assign-shift-modal__shift-time">
+                          {s.startTime} – {s.endTime}
+                        </span>
+                        <span className={`assign-shift-modal__shift-count${isFull ? " assign-shift-modal__shift-count--full" : ""}`}>
+                          {countForShift}/{s.requiredGuards}
+                        </span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             )}
             {errors.shiftId && <span className="assign-shift-modal__error">{errors.shiftId}</span>}
@@ -266,7 +324,7 @@ export function AssignShiftModal({
               <button
                 type="submit"
                 className="assign-shift-modal__save-btn"
-                disabled={isSaving || shifts.length === 0}
+                disabled={isSaving || shifts.length === 0 || shiftIsFull}
               >
                 {isSaving ? "Saving…" : existingAssignment ? "Update" : "Assign"}
               </button>

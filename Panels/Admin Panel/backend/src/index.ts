@@ -15,6 +15,7 @@ import { createLeaveRoutes } from "./routes/leaveRoutes";
 import { createNotificationRoutes } from "./routes/notificationRoutes";
 import { createReliefRoutes } from "./routes/reliefRoutes";
 import { createSchedulingRoutes } from "./routes/schedulingRoutes";
+import { createProspectRoutes } from "./routes/prospectRoutes";
 
 // Local monorepo .env; Cloud Run injects env vars instead
 const rootEnv = resolve(process.cwd(), "../../../.env");
@@ -107,6 +108,7 @@ app.use("/api/leave", createLeaveRoutes());
 app.use("/api/relief", createReliefRoutes());
 app.use("/api/notifications", createNotificationRoutes());
 app.use("/api/scheduling", createSchedulingRoutes());
+app.use("/api/prospects", createProspectRoutes());
 
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {

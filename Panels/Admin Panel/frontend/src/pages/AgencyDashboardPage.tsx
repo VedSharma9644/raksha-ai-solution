@@ -22,6 +22,7 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   "manage-leave": APP_ROUTES.manageLeave,
   "manage-relief": APP_ROUTES.manageRelief,
   scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
+  "prospect-clients": APP_ROUTES.prospects,
 };
 
 export function AgencyDashboardPage() {

@@ -55,6 +55,38 @@ export function createSchedulingRoutes(): Router {
       }
 
       const adminDb = getFirestore();
+
+      // ── Enforce requiredGuards cap ─────────────────────────────────────────
+      // 1. Fetch the site to get shiftConfig
+      const siteDoc = await adminDb.collection("sites").doc(String(siteId)).get();
+      if (!siteDoc.exists) {
+        res.status(404).json({ error: "Site not found." }); return;
+      }
+      const siteData = siteDoc.data() as Record<string, unknown>;
+      // Verify site belongs to this agency
+      if (siteData.agencyId !== agencyId) {
+        res.status(403).json({ error: "Forbidden." }); return;
+      }
+      // Find the shift definition
+      const shiftConfig = siteData.shiftConfig as { shifts?: Array<{ id: string; requiredGuards: number }> } | null | undefined;
+      const shiftDef = shiftConfig?.shifts?.find((s) => s.id === String(shiftId));
+      if (!shiftDef) {
+        res.status(400).json({ error: "Shift not found on this site." }); return;
+      }
+      // Count how many guards are already assigned to this shift
+      const existingSnap = await adminDb
+        .collection(SHIFT_ASSIGNMENTS_COLLECTION)
+        .where("siteId", "==", String(siteId))
+        .where("shiftId", "==", String(shiftId))
+        .get();
+      if (existingSnap.size >= shiftDef.requiredGuards) {
+        res.status(409).json({
+          error: `This shift is full — ${existingSnap.size}/${shiftDef.requiredGuards} guards already assigned.`,
+        });
+        return;
+      }
+      // ── End cap check ──────────────────────────────────────────────────────
+
       const data = {
         agencyId,
         siteId, guardId, guardName: guardName ?? "",

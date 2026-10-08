@@ -22,6 +22,8 @@ import { AttendancePage } from "../pages/AttendancePage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SchedulingPage } from "../pages/SchedulingPage";
+import { ProspectsPage } from "../pages/ProspectsPage";
+import { ProspectDetailPage } from "../pages/ProspectDetailPage";
 import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -221,6 +223,22 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <SchedulingPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.prospects}
+        element={
+          <ModuleRoute>
+            <ProspectsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.prospectDetail}
+        element={
+          <ModuleRoute>
+            <ProspectDetailPage />
           </ModuleRoute>
         }
       />

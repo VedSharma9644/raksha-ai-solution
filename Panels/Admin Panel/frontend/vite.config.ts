@@ -28,6 +28,8 @@ export default defineConfig({
       "@raskha/inventory-management": path.resolve(projectRoot, "../../../modules/Inventory Management/index.ts"),
       // Resolve @raskha/scheduling from TypeScript source
       "@raskha/scheduling": path.resolve(projectRoot, "../../../modules/Scheduling/index.ts"),
+      // Resolve @raskha/client-management from TypeScript source
+      "@raskha/client-management": path.resolve(projectRoot, "../../../modules/Client Management/index.ts"),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
     },
   },

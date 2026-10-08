@@ -1,0 +1,173 @@
+.add-prospect-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.add-prospect-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  width: 100%;
+  max-width: 640px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: prospect-modal-in 240ms ease both;
+}
+
+@keyframes prospect-modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.add-prospect-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.add-prospect-modal__title {
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+.add-prospect-modal__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--color-on-surface-variant);
+  padding: 0.25rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.add-prospect-modal__close:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface);
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+.add-prospect-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.5rem;
+}
+
+.add-prospect-modal__section-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-on-surface-variant);
+  margin: 0.5rem 0 0;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.add-prospect-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+@media (max-width: 520px) {
+  .add-prospect-modal__row { grid-template-columns: 1fr; }
+}
+
+/* ── Date field ──────────────────────────────────────────────────────────────── */
+.add-prospect-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.add-prospect-modal__date-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface);
+}
+
+.add-prospect-modal__date-input {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font: inherit;
+  font-size: var(--font-size-body);
+  transition: border-color var(--transition-base);
+}
+
+.add-prospect-modal__date-input:focus {
+  outline: none;
+  border-color: var(--color-focus);
+  border-width: 2.5px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+/* ── Save error ──────────────────────────────────────────────────────────────── */
+.add-prospect-modal__save-error {
+  padding: 0.5rem 0.75rem;
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.add-prospect-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.add-prospect-modal__cancel-btn,
+.add-prospect-modal__save-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  border: none;
+  transition: opacity var(--transition-fast);
+}
+
+.add-prospect-modal__cancel-btn {
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface);
+}
+
+.add-prospect-modal__save-btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.add-prospect-modal__cancel-btn:disabled,
+.add-prospect-modal__save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

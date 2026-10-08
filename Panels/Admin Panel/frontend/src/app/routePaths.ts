@@ -27,6 +27,9 @@ export const APP_ROUTES = {
   manageRelief: "/relief",
   // Scheduling
   scheduling: "/scheduling/:siteId",
+  // Prospect Clients
+  prospects: "/prospects",
+  prospectDetail: "/prospects/:id",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -59,4 +62,9 @@ export function editInventoryItemPath(itemId: string): string {
 /** Build the scheduling URL for a specific site */
 export function schedulingPath(siteId: string): string {
   return `/scheduling/${siteId}`;
+}
+
+/** Build the prospect detail URL for a specific prospect */
+export function prospectDetailPath(prospectId: string): string {
+  return `/prospects/${prospectId}`;
 }

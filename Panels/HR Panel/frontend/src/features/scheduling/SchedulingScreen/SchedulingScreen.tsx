@@ -217,6 +217,7 @@ export function SchedulingScreen({
         {modalOpen && (
           <AssignShiftModal
             guards={siteGuards}
+            assignments={assignments}
             shifts={modalShifts}
             existingAssignment={editingAssignment}
             isSaving={isSaving}

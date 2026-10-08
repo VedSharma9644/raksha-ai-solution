@@ -10,7 +10,8 @@ export type DashboardActionId =
   | "attendance"
   | "manage-leave"
   | "manage-relief"
-  | "scheduling";
+  | "scheduling"
+  | "prospect-clients";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -92,5 +93,11 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "Scheduling",
     description: "Manage guard shift assignments and view weekly or monthly rosters per site.",
     iconLabel: "📅",
+  },
+  {
+    id: "prospect-clients",
+    title: "Prospect Clients",
+    description: "Track and manage prospective client leads through your sales pipeline.",
+    iconLabel: "🤝",
   },
 ];

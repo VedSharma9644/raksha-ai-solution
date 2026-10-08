@@ -119,6 +119,15 @@
   background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
+.assign-shift-modal__shift-card--full {
+  opacity: 0.65;
+}
+
+.assign-shift-modal__shift-card--full.assign-shift-modal__shift-card--selected {
+  border-color: var(--color-error, #dc2626);
+  background: color-mix(in srgb, var(--color-error) 8%, var(--color-surface));
+}
+
 .assign-shift-modal__radio {
   display: none;
 }
@@ -146,11 +155,37 @@
   margin-inline-start: auto;
 }
 
+.assign-shift-modal__shift-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary, #2563eb);
+  margin-inline-start: 0.25rem;
+}
+
+.assign-shift-modal__shift-count--full {
+  background: var(--color-error-container, #fee2e2);
+  color: var(--color-error, #dc2626);
+}
+
 .assign-shift-modal__no-shifts {
   font-size: 0.85rem;
   color: var(--color-text-secondary, #6b7280);
   font-style: italic;
   padding: 0.5rem 0;
+}
+
+.assign-shift-modal__shift-full {
+  font-size: 0.85rem;
+  color: var(--color-on-error-container, #7f1d1d);
+  background: var(--color-error-container, #fee2e2);
+  border: 1px solid color-mix(in srgb, var(--color-error, #dc2626) 30%, transparent);
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.6rem 0.875rem;
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* ── Day chips ── */
