@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { ModuleProtectedRoute } from "../components/ModuleProtectedRoute";
 import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { GuardListPage } from "../pages/GuardListPage";
@@ -13,7 +14,6 @@ import { AttendancePage } from "../pages/AttendancePage";
 import { LoginPage } from "../pages/LoginPage";
 import { APP_ROUTES } from "./routePaths";
 
-// Redirects to login if no authenticated HR staff session
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { hrStaff, isLoading } = useAuthContext();
 
@@ -28,7 +28,6 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// Redirects to dashboard if already logged in
 function GuestRoute({ children }: { children: ReactNode }) {
   const { hrStaff, isLoading } = useAuthContext();
 
@@ -43,10 +42,17 @@ function GuestRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function ModuleRoute({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <ModuleProtectedRoute>{children}</ModuleProtectedRoute>
+    </ProtectedRoute>
+  );
+}
+
 export function AppRouter() {
   return (
     <Routes>
-      {/* Guest-only */}
       <Route
         path={APP_ROUTES.login}
         element={
@@ -56,7 +62,6 @@ export function AppRouter() {
         }
       />
 
-      {/* Protected */}
       <Route
         path={APP_ROUTES.dashboard}
         element={
@@ -68,65 +73,65 @@ export function AppRouter() {
       <Route
         path={APP_ROUTES.addGuard}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AddGuardPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.guardList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <GuardListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.viewGuard}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <ViewGuardPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.manageInventory}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <InventoryPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.manageLeave}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <LeaveManagementPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.siteList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <SiteListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.assignGuards}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AssignGuardsPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.attendance}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AttendancePage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
 

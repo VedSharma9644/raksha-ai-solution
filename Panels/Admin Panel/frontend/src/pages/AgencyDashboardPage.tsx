@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
+import { useAuthContext } from "../features/authentication";
 import type { DashboardActionId } from "../features/dashboard";
-import { AgencyDashboardScreen } from "../features/dashboard";
-import type { AgencyNotification } from "../features/notifications";
-import { SAMPLE_AGENCY_NOTIFICATIONS } from "../features/notifications";
+import { AgencyDashboardScreen, DASHBOARD_ACTIONS } from "../features/dashboard";
+import { useEnabledModules } from "../features/modules/useEnabledModules";
+import { useAgencyNotifications } from "../features/notifications/useAgencyNotifications";
 
 const DASHBOARD_ACTION_ROUTES: Partial<
   Record<DashboardActionId, string>
@@ -17,43 +18,67 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   "add-hr": APP_ROUTES.addHrStaff,
   "hr-list": APP_ROUTES.hrList,
   "manage-inventory": APP_ROUTES.inventoryList,
-  "attendance": APP_ROUTES.attendance,
+  attendance: APP_ROUTES.attendance,
 };
 
 export function AgencyDashboardPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<AgencyNotification[]>(
-    SAMPLE_AGENCY_NOTIFICATIONS,
+  const { refreshAgency } = useAuthContext();
+  const { isActionEnabled, isNotificationActionEnabled } = useEnabledModules();
+  const {
+    notifications,
+    markRead,
+    markAllRead,
+    getAction,
+  } = useAgencyNotifications();
+
+  useEffect(() => {
+    void refreshAgency();
+    const onFocus = () => {
+      void refreshAgency();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refreshAgency]);
+
+  const visibleActions = useMemo(
+    () => DASHBOARD_ACTIONS.filter((action) => isActionEnabled(action.id)),
+    [isActionEnabled],
   );
 
-  const sortedNotifications = useMemo(
+  const visibleNotifications = useMemo(
     () =>
-      [...notifications].sort(
-        (left, right) =>
-          new Date(right.createdAt).getTime() -
-          new Date(left.createdAt).getTime(),
+      notifications.filter((n) =>
+        isNotificationActionEnabled(getAction(n.id)),
       ),
-    [notifications],
+    [getAction, isNotificationActionEnabled, notifications],
   );
 
   function handleSelectNotification(notificationId: string) {
-    setNotifications((current) =>
-      current.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true }
-          : notification,
-      ),
-    );
-    console.info("Notification selected", notificationId);
-  }
+    const action = getAction(notificationId);
+    markRead(notificationId);
 
-  function handleMarkAllNotificationsRead() {
-    setNotifications((current) =>
-      current.map((notification) => ({ ...notification, isRead: true })),
-    );
+    if (!isNotificationActionEnabled(action)) {
+      return;
+    }
+
+    if (action === "attendance") {
+      navigate(APP_ROUTES.attendance);
+      return;
+    }
+    if (action === "inventory") {
+      navigate(APP_ROUTES.inventoryList);
+      return;
+    }
+    if (action === "leave") {
+      navigate(APP_ROUTES.employeeList);
+    }
   }
 
   function handleActionClick(actionId: DashboardActionId) {
+    if (!isActionEnabled(actionId)) {
+      return;
+    }
     const route = DASHBOARD_ACTION_ROUTES[actionId];
 
     if (route) {
@@ -66,9 +91,10 @@ export function AgencyDashboardPage() {
 
   return (
     <AgencyDashboardScreen
-      notifications={sortedNotifications}
+      actions={visibleActions}
+      notifications={visibleNotifications}
       onSelectNotification={handleSelectNotification}
-      onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+      onMarkAllNotificationsRead={markAllRead}
       onActionClick={handleActionClick}
     />
   );

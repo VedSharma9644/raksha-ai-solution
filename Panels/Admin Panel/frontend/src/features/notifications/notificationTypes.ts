@@ -1,5 +1,6 @@
 export type NotificationKind =
   | "upcoming_leave"
+  | "leave_request"
   | "relieve_request"
   | "attendance_alert"
   | "inventory_alert"
@@ -16,6 +17,7 @@ export interface AgencyNotification {
 
 export const NOTIFICATION_KIND_LABELS: Record<NotificationKind, string> = {
   upcoming_leave: "Upcoming leave",
+  leave_request: "Leave request",
   relieve_request: "Relieve request",
   attendance_alert: "Attendance",
   inventory_alert: "Inventory",

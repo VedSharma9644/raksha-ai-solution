@@ -2,7 +2,7 @@ import { ActionCard } from "../../../components/ActionCard";
 import { NotificationMenu } from "../../notifications";
 import { ProfileMenu } from "../../profile";
 import type { AgencyNotification } from "../../notifications";
-import type { DashboardActionId } from "../dashboardActions";
+import type { DashboardAction, DashboardActionId } from "../dashboardActions";
 import { DASHBOARD_ACTIONS } from "../dashboardActions";
 import "./AgencyDashboardScreen.css";
 
@@ -11,6 +11,8 @@ export interface AgencyDashboardScreenProps {
   onSelectNotification: (notificationId: string) => void;
   onMarkAllNotificationsRead?: () => void;
   onActionClick: (actionId: DashboardActionId) => void;
+  /** When set, only these actions are shown (module-gated). */
+  actions?: DashboardAction[];
 }
 
 export function AgencyDashboardScreen({
@@ -18,6 +20,7 @@ export function AgencyDashboardScreen({
   onSelectNotification,
   onMarkAllNotificationsRead,
   onActionClick,
+  actions = DASHBOARD_ACTIONS,
 }: AgencyDashboardScreenProps) {
   return (
     <main className="agency-dashboard">
@@ -54,15 +57,22 @@ export function AgencyDashboardScreen({
         className="agency-dashboard__actions"
         aria-label="Agency quick actions"
       >
-        {DASHBOARD_ACTIONS.map((action) => (
-          <ActionCard
-            key={action.id}
-            title={action.title}
-            description={action.description}
-            icon={action.iconLabel}
-            onClick={() => onActionClick(action.id)}
-          />
-        ))}
+        {actions.length === 0 ? (
+          <p className="agency-dashboard__support">
+            No modules are enabled for this agency yet. Ask Raksha Super Admin to
+            turn on the features included in your plan.
+          </p>
+        ) : (
+          actions.map((action) => (
+            <ActionCard
+              key={action.id}
+              title={action.title}
+              description={action.description}
+              icon={action.iconLabel}
+              onClick={() => onActionClick(action.id)}
+            />
+          ))
+        )}
       </section>
     </main>
   );

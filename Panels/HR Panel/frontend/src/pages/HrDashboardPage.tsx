@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
+import { useAuthContext } from "../features/authentication";
 import type { HrDashboardActionId } from "../features/dashboard";
-import { HrDashboardScreen } from "../features/dashboard";
-import type { HrNotification } from "../features/notifications";
-import { SAMPLE_HR_NOTIFICATIONS } from "../features/notifications";
+import { HR_DASHBOARD_ACTIONS, HrDashboardScreen } from "../features/dashboard";
+import { useEnabledModules } from "../features/modules/useEnabledModules";
+import { useAgencyNotifications } from "../features/notifications/useAgencyNotifications";
 
 const ACTION_ROUTES: Record<
   HrDashboardActionId,
@@ -15,43 +16,73 @@ const ACTION_ROUTES: Record<
   "manage-inventory": APP_ROUTES.manageInventory,
   "manage-leave": APP_ROUTES.manageLeave,
   "site-list": APP_ROUTES.siteList,
-  "attendance": APP_ROUTES.attendance,
+  attendance: APP_ROUTES.attendance,
 };
 
 export function HrDashboardPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<HrNotification[]>(
-    SAMPLE_HR_NOTIFICATIONS,
+  const { refreshModules } = useAuthContext();
+  const { isActionEnabled, isNotificationActionEnabled } = useEnabledModules();
+  const {
+    notifications,
+    markRead,
+    markAllRead,
+    getAction,
+  } = useAgencyNotifications();
+
+  useEffect(() => {
+    void refreshModules();
+    const onFocus = () => {
+      void refreshModules();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refreshModules]);
+
+  const visibleActions = useMemo(
+    () => HR_DASHBOARD_ACTIONS.filter((action) => isActionEnabled(action.id)),
+    [isActionEnabled],
   );
 
-  const sortedNotifications = useMemo(
+  const visibleNotifications = useMemo(
     () =>
-      [...notifications].sort(
-        (left, right) =>
-          new Date(right.createdAt).getTime() -
-          new Date(left.createdAt).getTime(),
+      notifications.filter((n) =>
+        isNotificationActionEnabled(getAction(n.id)),
       ),
-    [notifications],
+    [getAction, isNotificationActionEnabled, notifications],
   );
 
   return (
     <HrDashboardScreen
-      notifications={sortedNotifications}
+      actions={visibleActions}
+      notifications={visibleNotifications}
       onSelectNotification={(notificationId) => {
-        setNotifications((current) =>
-          current.map((notification) =>
-            notification.id === notificationId
-              ? { ...notification, isRead: true }
-              : notification,
-          ),
-        );
+        const action = getAction(notificationId);
+        markRead(notificationId);
+
+        if (!isNotificationActionEnabled(action)) {
+          return;
+        }
+
+        if (action === "attendance") {
+          navigate(APP_ROUTES.attendance);
+          return;
+        }
+        if (action === "inventory") {
+          navigate(APP_ROUTES.manageInventory);
+          return;
+        }
+        if (action === "leave") {
+          navigate(APP_ROUTES.manageLeave);
+        }
       }}
-      onMarkAllNotificationsRead={() => {
-        setNotifications((current) =>
-          current.map((notification) => ({ ...notification, isRead: true })),
-        );
+      onMarkAllNotificationsRead={markAllRead}
+      onActionClick={(actionId) => {
+        if (!isActionEnabled(actionId)) {
+          return;
+        }
+        navigate(ACTION_ROUTES[actionId]);
       }}
-      onActionClick={(actionId) => navigate(ACTION_ROUTES[actionId])}
     />
   );
 }

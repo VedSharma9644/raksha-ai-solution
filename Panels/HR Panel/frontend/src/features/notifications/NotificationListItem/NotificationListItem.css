@@ -50,14 +50,29 @@
   color: #0369a1;
 }
 
+.notification-list-item__kind--leave_request {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
 .notification-list-item__kind--inventory_alert {
   background: #ffedd5;
   color: #b45309;
 }
 
+.notification-list-item__kind--attendance_alert {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .notification-list-item__kind--guard_update {
   background: #dcfce7;
   color: #15803d;
+}
+
+.notification-list-item__kind--general {
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
 }
 
 .notification-list-item__title {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { ModuleProtectedRoute } from "../components/ModuleProtectedRoute";
 import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { EditGuardPage } from "../pages/EditGuardPage";
@@ -20,12 +21,11 @@ import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
 import { AttendancePage } from "../pages/AttendancePage";
 import { APP_ROUTES } from "./routePaths";
 
-// Redirects to login if not authenticated
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { agency, isLoading } = useAuthContext();
 
   if (isLoading) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   if (!agency) {
@@ -35,7 +35,6 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// Redirects to dashboard if already logged in (not mid login+verify)
 function GuestRoute({ children }: { children: ReactNode }) {
   const { agency, isLoading, isLoginPending } = useAuthContext();
 
@@ -50,10 +49,17 @@ function GuestRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function ModuleRoute({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <ModuleProtectedRoute>{children}</ModuleProtectedRoute>
+    </ProtectedRoute>
+  );
+}
+
 export function AppRouter() {
   return (
     <Routes>
-      {/* Guest-only: redirect to dashboard if already logged in */}
       <Route
         path={APP_ROUTES.login}
         element={
@@ -63,7 +69,6 @@ export function AppRouter() {
         }
       />
 
-      {/* Protected: redirect to login if not authenticated */}
       <Route
         path={APP_ROUTES.dashboard}
         element={
@@ -75,128 +80,125 @@ export function AppRouter() {
       <Route
         path={APP_ROUTES.formBuilder}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <FormBuilderPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.addGuard}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AddGuardPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.editGuard}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <EditGuardPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.addSite}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AddSitePage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.siteList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <SiteListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.editSite}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <EditSitePage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.assignGuards}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AssignGuardsPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.employeeList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <EmployeeListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
-      {/* HR Staff routes */}
       <Route
         path={APP_ROUTES.addHrStaff}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AddHrStaffPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.editHrStaff}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <EditHrStaffPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.hrList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <HrStaffListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
-
-      <Route path="*" element={<Navigate to={APP_ROUTES.login} replace />} />
-
-      {/* Inventory routes */}
       <Route
         path={APP_ROUTES.inventoryList}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <InventoryListPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.addInventoryItem}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AddInventoryItemPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.editInventoryItem}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <EditInventoryItemPage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
       <Route
         path={APP_ROUTES.attendance}
         element={
-          <ProtectedRoute>
+          <ModuleRoute>
             <AttendancePage />
-          </ProtectedRoute>
+          </ModuleRoute>
         }
       />
+
+      <Route path="*" element={<Navigate to={APP_ROUTES.login} replace />} />
     </Routes>
   );
 }

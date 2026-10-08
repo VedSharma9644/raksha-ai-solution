@@ -23,3 +23,5 @@ export {
   type SubmitLeaveRequestParams,
   type SubmitLeaveRequestResult,
 } from "./leaveService";
+
+export { listLeaveRequestsForAgency } from "./agencyLeave";

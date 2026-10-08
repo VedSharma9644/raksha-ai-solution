@@ -2,7 +2,7 @@ import { ActionCard } from "../../../components/ActionCard";
 import { NotificationMenu } from "../../notifications";
 import { ProfileMenu } from "../../profile";
 import type { HrNotification } from "../../notifications";
-import type { HrDashboardActionId } from "../dashboardActions";
+import type { HrDashboardAction, HrDashboardActionId } from "../dashboardActions";
 import { HR_DASHBOARD_ACTIONS } from "../dashboardActions";
 import "./HrDashboardScreen.css";
 
@@ -11,6 +11,8 @@ export interface HrDashboardScreenProps {
   onSelectNotification: (notificationId: string) => void;
   onMarkAllNotificationsRead?: () => void;
   onActionClick: (actionId: HrDashboardActionId) => void;
+  /** When set, only these actions are shown (module-gated). */
+  actions?: HrDashboardAction[];
 }
 
 export function HrDashboardScreen({
@@ -18,6 +20,7 @@ export function HrDashboardScreen({
   onSelectNotification,
   onMarkAllNotificationsRead,
   onActionClick,
+  actions = HR_DASHBOARD_ACTIONS,
 }: HrDashboardScreenProps) {
   return (
     <main className="hr-dashboard">
@@ -48,15 +51,22 @@ export function HrDashboardScreen({
       </section>
 
       <section className="hr-dashboard__actions" aria-label="HR quick actions">
-        {HR_DASHBOARD_ACTIONS.map((action) => (
-          <ActionCard
-            key={action.id}
-            title={action.title}
-            description={action.description}
-            icon={action.iconLabel}
-            onClick={() => onActionClick(action.id)}
-          />
-        ))}
+        {actions.length === 0 ? (
+          <p className="hr-dashboard__support">
+            No modules are enabled for this agency yet. Ask your Agency Admin or
+            Raksha Super Admin to enable the features in your plan.
+          </p>
+        ) : (
+          actions.map((action) => (
+            <ActionCard
+              key={action.id}
+              title={action.title}
+              description={action.description}
+              icon={action.iconLabel}
+              onClick={() => onActionClick(action.id)}
+            />
+          ))
+        )}
       </section>
     </main>
   );

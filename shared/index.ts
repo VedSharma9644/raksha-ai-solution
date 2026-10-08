@@ -57,3 +57,19 @@ export {
   saveAgencyModuleAccess,
   type AgencyModuleAccess,
 } from "./modules/agencyModuleAccess";
+
+export {
+  ADMIN_DASHBOARD_ACTION_MODULE,
+  ADMIN_ROUTE_MODULE,
+  HR_DASHBOARD_ACTION_MODULE,
+  HR_ROUTE_MODULE,
+  PLATFORM_MODULE_IDS,
+  isAdminDashboardActionEnabled,
+  isHrDashboardActionEnabled,
+  isPathModuleEnabled,
+  moduleForNotificationAction,
+  requiredModuleForAdminPath,
+  requiredModuleForHrPath,
+  resolveEnabledModules,
+  type PlatformModuleId,
+} from "./modules/panelModuleMap";
