@@ -6,7 +6,8 @@ export type HrDashboardActionId =
   | "manage-relief"
   | "site-list"
   | "attendance"
-  | "scheduling";
+  | "scheduling"
+  | "prospect-guards";
 
 export interface HrDashboardAction {
   id: HrDashboardActionId;
@@ -64,5 +65,11 @@ export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
     title: "Scheduling",
     description: "Assign guards to shifts and view weekly or monthly rosters per site.",
     iconLabel: "📅",
+  },
+  {
+    id: "prospect-guards",
+    title: "Prospect Guards",
+    description: "Track and manage prospective guard candidates through the hiring pipeline.",
+    iconLabel: "🛡️",
   },
 ];

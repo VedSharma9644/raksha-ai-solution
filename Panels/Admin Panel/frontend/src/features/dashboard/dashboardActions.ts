@@ -11,7 +11,8 @@ export type DashboardActionId =
   | "manage-leave"
   | "manage-relief"
   | "scheduling"
-  | "prospect-clients";
+  | "prospect-clients"
+  | "prospect-guards";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -99,5 +100,11 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     title: "Prospect Clients",
     description: "Track and manage prospective client leads through your sales pipeline.",
     iconLabel: "🤝",
+  },
+  {
+    id: "prospect-guards",
+    title: "Prospect Guards",
+    description: "Track and manage prospective guard candidates through your hiring pipeline.",
+    iconLabel: "🛡️",
   },
 ];

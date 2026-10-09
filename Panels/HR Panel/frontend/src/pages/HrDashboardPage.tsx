@@ -19,6 +19,7 @@ const ACTION_ROUTES: Record<
   "site-list": APP_ROUTES.siteList,
   attendance: APP_ROUTES.attendance,
   scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
+  "prospect-guards": APP_ROUTES.prospectGuards,
 };
 
 export function HrDashboardPage() {

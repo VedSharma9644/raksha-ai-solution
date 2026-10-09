@@ -13,6 +13,9 @@ export const APP_ROUTES = {
   attendance: "/attendance",
   // Scheduling
   scheduling: "/scheduling/:siteId",
+  // Prospect Guards
+  prospectGuards: "/prospect-guards",
+  prospectGuardDetail: "/prospect-guards/:id",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -27,4 +30,8 @@ export function assignGuardsPath(siteId: string): string {
 
 export function schedulingPath(siteId: string): string {
   return `/scheduling/${siteId}`;
+}
+
+export function prospectGuardDetailPath(guardId: string): string {
+  return `/prospect-guards/${guardId}`;
 }

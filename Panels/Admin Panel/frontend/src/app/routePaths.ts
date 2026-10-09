@@ -30,6 +30,9 @@ export const APP_ROUTES = {
   // Prospect Clients
   prospects: "/prospects",
   prospectDetail: "/prospects/:id",
+  // Prospect Guards
+  prospectGuards: "/prospect-guards",
+  prospectGuardDetail: "/prospect-guards/:id",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
@@ -67,4 +70,9 @@ export function schedulingPath(siteId: string): string {
 /** Build the prospect detail URL for a specific prospect */
 export function prospectDetailPath(prospectId: string): string {
   return `/prospects/${prospectId}`;
+}
+
+/** Build the prospect guard detail URL for a specific guard */
+export function prospectGuardDetailPath(guardId: string): string {
+  return `/prospect-guards/${guardId}`;
 }

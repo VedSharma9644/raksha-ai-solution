@@ -1,0 +1,187 @@
+.prospect-guard-list-screen__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  padding: 1rem 1.5rem 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 0;
+}
+
+.prospect-guard-list-screen__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-on-surface-variant);
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.prospect-guard-list-screen__tab:hover {
+  color: var(--color-on-surface);
+}
+
+.prospect-guard-list-screen__tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.prospect-guard-list-screen__tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-bold);
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
+}
+
+.prospect-guard-list-screen__tab--active .prospect-guard-list-screen__tab-count {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+}
+
+/* ── Search ─────────────────────────────────────────────────────────────────── */
+.prospect-guard-list-screen__search {
+  padding: 1rem 1.5rem 0;
+}
+
+/* ── Error ──────────────────────────────────────────────────────────────────── */
+.prospect-guard-list-screen__error {
+  margin: 1rem 1.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────────── */
+.prospect-guard-list-screen__loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  color: var(--color-on-surface-variant);
+}
+
+.prospect-guard-list-screen__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: guard-list-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes guard-list-spin { to { transform: rotate(360deg); } }
+
+/* ── Table wrapper ───────────────────────────────────────────────────────────── */
+.prospect-guard-list-screen__table-wrap {
+  overflow-x: auto;
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────────── */
+.prospect-guard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body);
+  color: var(--color-on-surface);
+}
+
+.prospect-guard-table thead th {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-on-surface-variant);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.prospect-guard-table tbody td {
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.prospect-guard-table__row--clickable {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.prospect-guard-table__row--clickable:hover {
+  background: var(--color-surface-muted);
+}
+
+.prospect-guard-table__name { font-weight: var(--font-weight-semibold); }
+.prospect-guard-table__sub  { font-size: var(--font-size-small); color: var(--color-on-surface-variant); margin-top: 1px; }
+.prospect-guard-table__phone { font-size: var(--font-size-small); color: var(--color-on-surface-variant); }
+
+.prospect-guard-table__followup { font-size: var(--font-size-small); }
+.prospect-guard-table__followup--overdue { color: var(--color-error); font-weight: var(--font-weight-semibold); }
+
+.prospect-guard-table__empty {
+  padding: 2.5rem 0.75rem;
+  text-align: center;
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-body);
+}
+
+/* ── Status badge ────────────────────────────────────────────────────────────── */
+.guard-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.guard-badge--applied          { background: color-mix(in srgb, #6366f1 12%, transparent); color: #6366f1; }
+.guard-badge--screening        { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #b45309; }
+.guard-badge--interview        { background: color-mix(in srgb, #3b82f6 12%, transparent); color: #1d4ed8; }
+.guard-badge--bgcheck          { background: color-mix(in srgb, #8b5cf6 12%, transparent); color: #7c3aed; }
+.guard-badge--hired            { background: color-mix(in srgb, #22c55e 12%, transparent); color: #16a34a; }
+.guard-badge--rejected         { background: color-mix(in srgb, #ef4444 12%, transparent); color: #dc2626; }
+
+/* ── Row actions ──────────────────────────────────────────────────────────────── */
+.prospect-guard-table__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.prospect-guard-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: none;
+  color: var(--color-on-surface-variant);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.prospect-guard-action-btn:hover { background: var(--color-surface-muted); color: var(--color-on-surface); }
+.prospect-guard-action-btn--delete:hover { background: var(--color-error-container); color: var(--color-error); }

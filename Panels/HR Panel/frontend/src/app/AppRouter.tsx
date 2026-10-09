@@ -13,6 +13,8 @@ import { SiteListPage } from "../pages/SiteListPage";
 import { AssignGuardsPage } from "../pages/AssignGuardsPage";
 import { AttendancePage } from "../pages/AttendancePage";
 import { SchedulingPage } from "../pages/SchedulingPage";
+import { ProspectGuardsPage } from "../pages/ProspectGuardsPage";
+import { ProspectGuardDetailPage } from "../pages/ProspectGuardDetailPage";
 import { LoginPage } from "../pages/LoginPage";
 import { APP_ROUTES } from "./routePaths";
 
@@ -149,6 +151,22 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <SchedulingPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.prospectGuards}
+        element={
+          <ModuleRoute>
+            <ProspectGuardsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.prospectGuardDetail}
+        element={
+          <ModuleRoute>
+            <ProspectGuardDetailPage />
           </ModuleRoute>
         }
       />
