@@ -4,6 +4,10 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { fetchTodayShift, type TodayShiftStatus } from '../api/guard-api';
 import { useGuardAppNavigation } from '../navigation/useGuardAppNavigation';
 import {
+  ROSTER_FOREGROUND_POLL_MS,
+  subscribeRosterSync,
+} from '../sync/rosterSync';
+import {
   dutyTypeLabel,
   formatCountdownLabel,
   formatDelayLabel,
@@ -37,6 +41,9 @@ export type GuardDutyAssignmentView = {
   punchedAt: string | null;
   punchInStatus: string | null;
   isNight: boolean;
+  dutySource: 'roster' | 'profile';
+  hasLaterReplacement: boolean;
+  assignmentId: string | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
 };
@@ -68,6 +75,12 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
   }, [refresh]);
 
   useEffect(() => {
+    return subscribeRosterSync(() => {
+      void refresh();
+    });
+  }, [refresh]);
+
+  useEffect(() => {
     const onState = (state: AppStateStatus) => {
       if (state === 'active') {
         void refresh();
@@ -77,7 +90,7 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
     const interval = setInterval(() => {
       void refresh();
       setTick((value) => value + 1);
-    }, 60_000);
+    }, ROSTER_FOREGROUND_POLL_MS);
     return () => {
       sub.remove();
       clearInterval(interval);
@@ -95,13 +108,17 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
     const shiftActive = today?.shiftActive ?? navShiftActive;
     const punchedAt = today?.punchedAt ?? null;
     const punchInStatus = today?.punchInStatus ?? null;
+    const hasLaterReplacement = Boolean(today?.hasLaterReplacement);
+    const dutySource = today?.dutySource === 'roster' ? 'roster' : 'profile';
     const delayedWaiting = !shiftActive && isWithinShiftAfterStart({ shiftFrom, shiftTo });
     const minutesLate = delayedWaiting
       ? minutesPastShiftStart({ shiftFrom, shiftTo })
       : 0;
 
     let statusBadge = 'ON DUTY SOON';
-    let statusText = 'Check-in Pending';
+    let statusText = hasLaterReplacement
+      ? 'New shift assigned today'
+      : 'Check-in Pending';
     let badgeTone: DutyBadgeTone = 'neutral';
     let countdownLabel = formatCountdownLabel({
       shiftFrom,
@@ -132,8 +149,17 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
         statusText = 'Did not check in';
         badgeTone = 'danger';
         countdownLabel = 'Shift ended';
+      } else if (hasLaterReplacement && countdown !== 'Shift ended') {
+        statusBadge = 'NEW SHIFT';
+        statusText = 'Replacement duty assigned';
+        badgeTone = 'warning';
       }
     }
+
+    const rosterLabel = today?.shiftLabel?.trim();
+    const shiftHeading = rosterLabel
+      ? rosterLabel.toUpperCase()
+      : todayShiftHeading(shiftFrom, shiftTo);
 
     return {
       siteName,
@@ -143,7 +169,7 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       timeRange: formatShiftTimeRange(shiftFrom, shiftTo),
       durationLabel: formatDurationLabel(shiftFrom, shiftTo),
       dutyType: dutyTypeLabel(shiftFrom, shiftTo),
-      shiftLabel: todayShiftHeading(shiftFrom, shiftTo),
+      shiftLabel: shiftHeading,
       todayBadge: formatTodayBadge(),
       statusBadge,
       statusText,
@@ -154,6 +180,9 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       punchedAt,
       punchInStatus,
       isNight: isNightDuty(shiftFrom, shiftTo),
+      dutySource,
+      hasLaterReplacement,
+      assignmentId: today?.assignmentId ?? null,
       isLoading,
       refresh,
     };

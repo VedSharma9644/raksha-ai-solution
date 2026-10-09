@@ -48,6 +48,15 @@ export const attendanceMonthCalendarOverviewStyles = StyleSheet.create({
   dayPresent: {
     backgroundColor: appColors.surfaceContainerHigh,
   },
+  dayHalf: {
+    backgroundColor: '#e8b86d',
+  },
+  dayMissed: {
+    backgroundColor: appColors.errorContainer,
+  },
+  dayUpcoming: {
+    backgroundColor: appColors.primaryFixed,
+  },
   dayToday: {
     backgroundColor: appColors.primary,
   },
@@ -63,6 +72,10 @@ export const attendanceMonthCalendarOverviewStyles = StyleSheet.create({
   },
   dayTextToday: {
     color: appColors.onPrimary,
+    fontFamily: 'PublicSans_700Bold',
+  },
+  dayTextMissed: {
+    color: appColors.onErrorContainer,
     fontFamily: 'PublicSans_700Bold',
   },
   legendRow: {

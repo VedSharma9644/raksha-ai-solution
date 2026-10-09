@@ -1,13 +1,26 @@
-export type AttendanceLogKind = 'onDuty' | 'present' | 'weeklyOff' | 'leave';
+export type AttendanceLogKind =
+  | 'onDuty'
+  | 'full'
+  | 'half'
+  | 'missed'
+  | 'upcoming'
+  | 'present'
+  | 'weeklyOff'
+  | 'leave';
 
-export type AttendanceFilterKey = 'all' | 'present' | 'weeklyOff';
+export type AttendanceFilterKey =
+  | 'all'
+  | 'present'
+  | 'missed'
+  | 'half'
+  | 'weeklyOff';
 
 export type AttendanceStatItem = {
   key: string;
   value: string;
   label: string;
   subtitle: string;
-  icon: 'check-circle' | 'schedule' | 'event-busy' | 'hotel';
+  icon: 'check-circle' | 'schedule' | 'event-busy' | 'hotel' | 'cancel';
 };
 
 export type AttendanceLogItem = {

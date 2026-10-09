@@ -1,22 +1,49 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { shiftDetailsDefaults } from '../../constants/shift-details-defaults';
+import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
+import { useGuardProfile } from '../../hooks/useGuardProfile';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { shiftAssignedPostCardStyles as styles } from '../../styles/shift-assigned-post-card.styles';
 
 export function ShiftAssignedPostCard() {
+  const duty = useGuardDutyAssignment();
+  const { profile } = useGuardProfile();
+  const { guardUser } = useGuardAppNavigation();
+
+  const siteName =
+    profile?.site.siteName ||
+    (duty.siteName !== 'Assigned site' ? duty.siteName : '') ||
+    guardUser?.siteName ||
+    'Assigned Site';
+  const postName =
+    profile?.site.postName ||
+    (duty.postName !== 'Assigned post' ? duty.postName : '') ||
+    guardUser?.postName ||
+    'Assigned Post';
+  const addressParts = [
+    profile?.site.address?.trim(),
+    profile?.site.city?.trim(),
+  ].filter(Boolean);
+  const siteAddress =
+    addressParts.length > 0 ? addressParts.join(', ') : 'Address not on file for this site';
+  const radius =
+    profile?.site.geofenceRadiusMeters && profile.site.geofenceRadiusMeters > 0
+      ? `Site geofence ${profile.site.geofenceRadiusMeters}m`
+      : 'Site geofence configured';
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <MaterialIcons name="location-city" size={24} color={appColors.primary} />
-          <Text style={styles.headerTitle}>{shiftDetailsDefaults.assignedPostTitle}</Text>
+          <Text style={styles.headerTitle}>Assigned Post</Text>
         </View>
         <View style={styles.perimeterBadge}>
           <MaterialIcons name="wifi-tethering" size={16} color={appColors.primary} />
-          <Text style={styles.perimeterText}>{shiftDetailsDefaults.perimeterSafeLabel}</Text>
+          <Text style={styles.perimeterText}>Live Site</Text>
         </View>
       </View>
 
@@ -28,39 +55,29 @@ export function ShiftAssignedPostCard() {
         <View style={styles.mapFooter}>
           <View style={styles.radiusRow}>
             <MaterialIcons name="radar" size={18} color={appColors.primaryFixed} />
-            <Text style={styles.radiusText}>{shiftDetailsDefaults.radiusLabel}</Text>
+            <Text style={styles.radiusText}>{radius}</Text>
           </View>
-          <Text style={styles.gpsTagged}>{shiftDetailsDefaults.gpsTaggedLabel}</Text>
+          <Text style={styles.gpsTagged}>GPS Tagged</Text>
         </View>
       </View>
 
       <View>
-        <Text style={styles.siteName}>{shiftDetailsDefaults.siteName}</Text>
-        <Text style={styles.siteAddress}>{shiftDetailsDefaults.siteAddress}</Text>
+        <Text style={styles.siteName}>{siteName}</Text>
+        <Text style={styles.siteAddress}>{siteAddress}</Text>
         <View style={styles.checkpointBox}>
-          <MaterialIcons name="door-front" size={20} color={appColors.primary} style={{ marginTop: 2 }} />
+          <MaterialIcons
+            name="door-front"
+            size={20}
+            color={appColors.primary}
+            style={{ marginTop: 2 }}
+          />
           <View style={{ flex: 1 }}>
-            <Text style={styles.checkpointTitle}>{shiftDetailsDefaults.checkpointTitle}</Text>
-            <Text style={styles.checkpointSubtitle}>{shiftDetailsDefaults.checkpointSubtitle}</Text>
+            <Text style={styles.checkpointTitle}>{postName}</Text>
+            <Text style={styles.checkpointSubtitle}>
+              Your assigned duty post for this shift
+            </Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.actions}>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryActionPressed]}
-          onPress={() => Alert.alert('Site Directions', 'Directions will open here soon.')}
-        >
-          <MaterialIcons name="map" size={22} color={appColors.primary} />
-          <Text style={styles.secondaryActionText}>{shiftDetailsDefaults.siteDirectionsLabel}</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryActionPressed]}
-          onPress={() => Alert.alert('Gate Intercom', 'Gate intercom call will start here soon.')}
-        >
-          <MaterialIcons name="call" size={22} color={appColors.primary} />
-          <Text style={styles.secondaryActionText}>{shiftDetailsDefaults.gateIntercomLabel}</Text>
-        </Pressable>
       </View>
     </View>
   );

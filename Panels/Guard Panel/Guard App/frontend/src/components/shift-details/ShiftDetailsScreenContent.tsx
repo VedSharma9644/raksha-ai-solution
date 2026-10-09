@@ -1,5 +1,4 @@
 import { ShiftAssignedPostCard } from './ShiftAssignedPostCard';
-import { ShiftChecklistCard } from './ShiftChecklistCard';
 import { ShiftCheckoutActions } from './ShiftCheckoutActions';
 import { ShiftFieldCommandCard } from './ShiftFieldCommandCard';
 import { ShiftGpsLiveBanner } from './ShiftGpsLiveBanner';
@@ -13,7 +12,6 @@ export function ShiftDetailsScreenContent() {
       <ShiftSummaryReferenceCard />
       <ShiftAssignedPostCard />
       <ShiftFieldCommandCard />
-      <ShiftChecklistCard />
       <ShiftReliefHandoverCard />
       <ShiftCheckoutActions />
     </>

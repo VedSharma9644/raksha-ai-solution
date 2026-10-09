@@ -36,6 +36,7 @@ export function MarkAttendanceHero() {
         const punched = new Date(today.punchedAt);
         setPunchedAtLabel(
           punched.toLocaleTimeString('en-IN', {
+            timeZone: 'Asia/Kolkata',
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,

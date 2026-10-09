@@ -8,10 +8,11 @@ import { attendanceMonthCalendarOverviewStyles as styles } from '../../styles/at
 const WEEK_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 const LEGEND = [
-  { key: 'present', label: 'Present', color: appColors.surfaceContainerHigh },
+  { key: 'full', label: 'Full', color: appColors.surfaceContainerHigh },
+  { key: 'half', label: 'Half', color: '#e8b86d' },
+  { key: 'missed', label: 'Missed', color: appColors.errorContainer },
+  { key: 'upcoming', label: 'Upcoming', color: appColors.primaryFixed },
   { key: 'today', label: 'Today', color: appColors.primary },
-  { key: 'off', label: 'Off', color: appColors.surfaceContainerLow },
-  { key: 'leave', label: 'Leave', color: appColors.outlineVariant },
 ] as const;
 
 type AttendanceMonthCalendarOverviewProps = {
@@ -23,15 +24,33 @@ function dayCircleStyle(status: string) {
   switch (status) {
     case 'today':
       return styles.dayToday;
+    case 'half':
+      return styles.dayHalf;
+    case 'missed':
+      return styles.dayMissed;
+    case 'upcoming':
+      return styles.dayUpcoming;
     case 'off':
       return styles.dayOff;
     case 'leave':
       return styles.dayLeave;
     case 'empty':
       return styles.dayOff;
+    case 'full':
+    case 'present':
     default:
       return styles.dayPresent;
   }
+}
+
+function dayTextStyle(status: string) {
+  if (status === 'today') {
+    return styles.dayTextToday;
+  }
+  if (status === 'missed') {
+    return styles.dayTextMissed;
+  }
+  return null;
 }
 
 export function AttendanceMonthCalendarOverview({
@@ -57,7 +76,7 @@ export function AttendanceMonthCalendarOverview({
         {calendarDays.map((item) => (
           <View key={item.day} style={styles.dayCell}>
             <View style={[styles.dayCircle, dayCircleStyle(item.status)]}>
-              <Text style={[styles.dayText, item.status === 'today' && styles.dayTextToday]}>
+              <Text style={[styles.dayText, dayTextStyle(item.status)]}>
                 {item.day}
               </Text>
             </View>

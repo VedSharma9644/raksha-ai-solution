@@ -6,6 +6,11 @@ import {
   guardProfileDefaults,
   type ProfileLanguage,
 } from '../../constants/guard-profile-defaults';
+import {
+  formatPhoneDisplay,
+  toTelHref,
+  useGuardProfile,
+} from '../../hooks/useGuardProfile';
 import { guardProfileSupportCardStyles as styles } from '../../styles/guard-profile-support-card.styles';
 import { appColors } from '../../theme';
 
@@ -22,21 +27,36 @@ export function GuardProfileSupportCard({
   onOpenSecurity,
   onLogoutPress,
 }: GuardProfileSupportCardProps) {
+  const { profile } = useGuardProfile();
+  const hrName = profile?.site.hrName?.trim() || 'Site HR';
+  const hrContact =
+    profile?.site.hrContact?.trim() || profile?.agencyPhone?.trim() || '';
+  const hrTel = toTelHref(hrContact);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{guardProfileDefaults.supportTitle}</Text>
 
       <Pressable
         style={({ pressed }) => [styles.helpline, pressed && styles.pressed]}
-        onPress={() => Linking.openURL(`tel:${guardProfileDefaults.helplineTel}`)}
+        onPress={() => {
+          if (hrTel) {
+            void Linking.openURL(`tel:${hrTel}`);
+          }
+        }}
+        disabled={!hrTel}
       >
         <View style={styles.helplineLeft}>
           <View style={styles.helplineIcon}>
             <MaterialIcons name="support-agent" size={22} color={appColors.onPrimary} />
           </View>
           <View>
-            <Text style={styles.helplineTitle}>{guardProfileDefaults.helplineTitle}</Text>
-            <Text style={styles.helplineSub}>{guardProfileDefaults.helplineSub}</Text>
+            <Text style={styles.helplineTitle}>Call {hrName}</Text>
+            <Text style={styles.helplineSub}>
+              {hrContact
+                ? formatPhoneDisplay(hrContact)
+                : 'HR phone not on file for this site'}
+            </Text>
           </View>
         </View>
         <MaterialIcons name="arrow-forward" size={24} color={appColors.onPrimary} />

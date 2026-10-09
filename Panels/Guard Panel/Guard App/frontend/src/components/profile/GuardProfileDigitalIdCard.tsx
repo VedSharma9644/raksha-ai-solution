@@ -2,8 +2,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { guardProfileDefaults } from '../../constants/guard-profile-defaults';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { guardProfileDigitalIdCardStyles as styles } from '../../styles/guard-profile-digital-id-card.styles';
 import { appColors } from '../../theme';
+import { GuardUserAvatar } from '../shared/GuardUserAvatar';
 import { GuardProfileAuditQr } from './GuardProfileAuditQr';
 
 type GuardProfileDigitalIdCardProps = {
@@ -11,14 +13,23 @@ type GuardProfileDigitalIdCardProps = {
   onDownload: () => void;
 };
 
-export function GuardProfileDigitalIdCard({ onOpenQr, onDownload }: GuardProfileDigitalIdCardProps) {
+export function GuardProfileDigitalIdCard({
+  onOpenQr,
+  onDownload,
+}: GuardProfileDigitalIdCardProps) {
+  const { guardUser } = useGuardAppNavigation();
+  const guardId = guardUser?.employeeCode?.trim() || '—';
+  const guardName = guardUser?.fullName?.trim() || 'Guard';
+  const guardRole = guardUser?.postName?.trim() || 'Security Officer';
+  const photoUri = guardUser?.profilePictureUrl?.trim() || '';
+
   return (
     <View style={styles.card}>
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
           <MaterialIcons name="verified" size={18} color={appColors.primaryFixed} />
           <Text style={styles.topBarLabel} numberOfLines={1}>
-            {guardProfileDefaults.verifiedBarLabel}
+            Verified Guard Profile
           </Text>
         </View>
         <View style={styles.activeChip}>
@@ -30,36 +41,38 @@ export function GuardProfileDigitalIdCard({ onOpenQr, onDownload }: GuardProfile
       <View style={styles.body}>
         <View style={styles.headerRow}>
           <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>{guardProfileDefaults.credentialEyebrow}</Text>
+            <Text style={styles.eyebrow}>Duty Credential</Text>
             <Text style={styles.cardTitle} numberOfLines={1}>
-              {guardProfileDefaults.idCardTitle}
+              Guard Digital ID
             </Text>
           </View>
           <View style={styles.idBadge}>
             <Text style={styles.idLabel}>{guardProfileDefaults.guardIdLabel}</Text>
-            <Text style={styles.idValue}>{guardProfileDefaults.guardId}</Text>
+            <Text style={styles.idValue}>{guardId}</Text>
           </View>
         </View>
 
         <View style={styles.identityRow}>
           <View style={styles.photoWrap}>
-            <Image source={{ uri: guardProfileDefaults.photoUri }} style={styles.photo} />
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.photo} />
+            ) : (
+              <View style={styles.photo}>
+                <GuardUserAvatar fullName={guardName} size={84} />
+              </View>
+            )}
             <View style={styles.gradeBar}>
-              <Text style={styles.gradeText}>{guardProfileDefaults.gradeLabel}</Text>
+              <Text style={styles.gradeText}>ON DUTY</Text>
             </View>
           </View>
           <View style={styles.identityCopy}>
             <Text style={styles.name} numberOfLines={1}>
-              {guardProfileDefaults.guardName}
+              {guardName}
             </Text>
             <Text style={styles.role} numberOfLines={1}>
-              {guardProfileDefaults.guardRole}
+              {guardRole}
             </Text>
             <View style={styles.chipsRow}>
-              <View style={styles.chip}>
-                <MaterialIcons name="bloodtype" size={15} color={appColors.error} />
-                <Text style={styles.chipText}>{guardProfileDefaults.bloodType}</Text>
-              </View>
               <View style={styles.chip}>
                 <MaterialIcons name="local-police" size={15} color={appColors.primary} />
                 <Text style={styles.chipText}>{guardProfileDefaults.verifiedChip}</Text>
@@ -72,12 +85,14 @@ export function GuardProfileDigitalIdCard({ onOpenQr, onDownload }: GuardProfile
           <View style={styles.qrCopy}>
             <View style={styles.qrTitleRow}>
               <MaterialIcons name="qr-code-scanner" size={18} color={appColors.primary} />
-              <Text style={styles.qrTitle}>{guardProfileDefaults.qrTitle}</Text>
+              <Text style={styles.qrTitle}>Duty ID Code</Text>
             </View>
-            <Text style={styles.qrHint}>{guardProfileDefaults.qrHint}</Text>
+            <Text style={styles.qrHint}>
+              Show this code for on-site identity checks (Guard ID {guardId})
+            </Text>
             <View style={styles.validRow}>
-              <MaterialIcons name="event-available" size={14} color={appColors.secondary} />
-              <Text style={styles.validText}>{guardProfileDefaults.qrValidTill}</Text>
+              <MaterialIcons name="badge" size={14} color={appColors.secondary} />
+              <Text style={styles.validText}>ID {guardId}</Text>
             </View>
           </View>
           <Pressable
@@ -113,8 +128,8 @@ export function GuardProfileDigitalIdCard({ onOpenQr, onDownload }: GuardProfile
       </View>
 
       <View style={styles.footerBar}>
-        <Text style={styles.footerText}>{guardProfileDefaults.certifiedFooter}</Text>
-        <Text style={styles.footerHash}>{guardProfileDefaults.hashFooter}</Text>
+        <Text style={styles.footerText}>RAKSHA GUARD ID</Text>
+        <Text style={styles.footerHash}>CODE: {guardId}</Text>
       </View>
     </View>
   );

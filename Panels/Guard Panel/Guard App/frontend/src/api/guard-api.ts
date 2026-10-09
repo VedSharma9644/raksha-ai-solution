@@ -45,6 +45,11 @@ export type TodayShiftStatus = {
   assignedSiteId?: string;
   shiftFrom?: string;
   shiftTo?: string;
+  shiftLabel?: string;
+  dutySource?: 'roster' | 'profile';
+  earlierShiftCount?: number;
+  hasLaterReplacement?: boolean;
+  assignmentId?: string | null;
 };
 
 export type GeofenceCheckResult = {
@@ -57,15 +62,27 @@ export type GeofenceCheckResult = {
 };
 
 export type AttendanceHistoryDayStatus =
-  | 'present'
+  | 'full'
+  | 'half'
+  | 'missed'
+  | 'upcoming'
   | 'today'
   | 'off'
   | 'leave'
+  | 'present'
   | 'empty';
 
 export type AttendanceHistoryLogDto = {
   id: string;
-  kind: 'onDuty' | 'present' | 'weeklyOff' | 'leave';
+  kind:
+    | 'onDuty'
+    | 'full'
+    | 'half'
+    | 'missed'
+    | 'upcoming'
+    | 'weeklyOff'
+    | 'leave'
+    | 'present';
   statusLabel: string;
   dateLabel: string;
   postLabel: string;
@@ -79,6 +96,7 @@ export type AttendanceHistoryLogDto = {
   footerTags: string[];
   punchedAtIso: string;
   dayOfMonth: number;
+  dutyDate?: string;
   selfieUrl?: string;
 };
 
@@ -95,6 +113,8 @@ export type AttendanceHistoryResponse = {
     totalHours: number;
     leaveDays: number;
     weeklyOffDays: number;
+    missedDays?: number;
+    halfDays?: number;
   };
   calendarDays: Array<{ day: number; status: AttendanceHistoryDayStatus }>;
   leadingEmpty: number;
@@ -103,7 +123,42 @@ export type AttendanceHistoryResponse = {
     all: number;
     present: number;
     weeklyOff: number;
+    missed?: number;
+    half?: number;
   };
+};
+
+export type GuardScheduleDutyStatus =
+  | 'coming'
+  | 'on_duty'
+  | 'delayed'
+  | 'completed'
+  | 'missed'
+  | 'scheduled'
+  | 'rest';
+
+export type GuardScheduleShiftDto = {
+  id: string;
+  dutyDate: string;
+  dayLabel: string;
+  siteName: string;
+  postName: string;
+  shiftFrom: string;
+  shiftTo: string;
+  timeLabel: string;
+  kind: 'confirmed' | 'night' | 'rest';
+  statusLabel: string;
+  dutyStatus?: GuardScheduleDutyStatus;
+  isToday: boolean;
+  isTomorrow: boolean;
+  nightAllowanceLabel?: string;
+};
+
+export type GuardScheduleResponse = {
+  shifts: GuardScheduleShiftDto[];
+  restDays: GuardScheduleShiftDto[];
+  from: string;
+  days: number;
 };
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -166,15 +221,140 @@ export async function checkGeofence(
   return parseJson(response);
 }
 
-export async function punchInAttendance(
+export type SelfieUploadTicket = {
+  uploadUrl: string;
+  storagePath: string;
+  selfieUrl: string;
+  contentType: string;
+  expiresAt: string;
+};
+
+export type PunchSelfieParams = {
+  lat: number;
+  lng: number;
+  accuracyMeters?: number;
+  /** Preferred after signed-URL upload */
+  selfieStoragePath?: string;
+  selfieUrl?: string;
+  /** Legacy fallback when signed URL path fails */
+  selfieBase64?: string;
+};
+
+async function createSelfieUploadTicket(
   token: string,
+  purpose: 'punch_in_selfie' | 'punch_out_selfie',
+): Promise<SelfieUploadTicket> {
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/attendance/selfie-upload-url`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ purpose }),
+    },
+  );
+  return parseJson(response);
+}
+
+/** Decode already-compressed selfie base64 into PUT body bytes (avoids Response.blob()). */
+function selfieBase64ToBytes(selfieBase64: string): Uint8Array {
+  const cleaned = selfieBase64.replace(/^data:image\/\w+;base64,/, '');
+  if (typeof globalThis.atob !== 'function') {
+    throw new Error('Base64 decode unavailable on this device.');
+  }
+  const binary = globalThis.atob(cleaned);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Compress/camera JPEG → Storage via signed URL → punch with path.
+ * Falls back to base64 JSON if signed upload is unavailable.
+ */
+export async function punchWithSelfieUpload(
+  token: string,
+  mode: 'punch_in' | 'punch_out',
   params: {
     lat: number;
     lng: number;
     accuracyMeters?: number;
+    selfieUri: string;
     selfieBase64: string;
   },
 ): Promise<PunchInResult> {
+  const purpose =
+    mode === 'punch_out' ? 'punch_out_selfie' : 'punch_in_selfie';
+  const endpoint =
+    mode === 'punch_out'
+      ? `${guardApiConfig.baseUrl}/api/attendance/punch-out`
+      : `${guardApiConfig.baseUrl}/api/attendance/punch-in`;
+
+  let storagePath: string | undefined;
+  let selfieUrl: string | undefined;
+
+  try {
+    const ticket = await createSelfieUploadTicket(token, purpose);
+    // Upload bytes from the compressed base64 we already have — no Response.blob().
+    const jpegBytes = selfieBase64ToBytes(params.selfieBase64);
+    const putRes = await fetch(ticket.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': ticket.contentType || 'image/jpeg' },
+      body: jpegBytes,
+    });
+    if (!putRes.ok) {
+      throw new Error(`Selfie upload failed (${putRes.status})`);
+    }
+    storagePath = ticket.storagePath;
+    selfieUrl = ticket.selfieUrl;
+  } catch {
+    // Keep punch working on older builds / signed-URL outages.
+    storagePath = undefined;
+    selfieUrl = undefined;
+  }
+
+  const body: PunchSelfieParams = {
+    lat: params.lat,
+    lng: params.lng,
+    accuracyMeters: params.accuracyMeters,
+  };
+  if (storagePath) {
+    body.selfieStoragePath = storagePath;
+    if (selfieUrl) {
+      body.selfieUrl = selfieUrl;
+    }
+  } else {
+    body.selfieBase64 = params.selfieBase64;
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  return parseJson(response);
+}
+
+export async function punchInAttendance(
+  token: string,
+  params: PunchSelfieParams & { selfieBase64?: string; selfieUri?: string },
+): Promise<PunchInResult> {
+  if (params.selfieUri && params.selfieBase64) {
+    return punchWithSelfieUpload(token, 'punch_in', {
+      lat: params.lat,
+      lng: params.lng,
+      accuracyMeters: params.accuracyMeters,
+      selfieUri: params.selfieUri,
+      selfieBase64: params.selfieBase64,
+    });
+  }
   const response = await fetch(`${guardApiConfig.baseUrl}/api/attendance/punch-in`, {
     method: 'POST',
     headers: {
@@ -188,13 +368,17 @@ export async function punchInAttendance(
 
 export async function punchOutAttendance(
   token: string,
-  params: {
-    lat: number;
-    lng: number;
-    accuracyMeters?: number;
-    selfieBase64: string;
-  },
+  params: PunchSelfieParams & { selfieBase64?: string; selfieUri?: string },
 ): Promise<PunchInResult> {
+  if (params.selfieUri && params.selfieBase64) {
+    return punchWithSelfieUpload(token, 'punch_out', {
+      lat: params.lat,
+      lng: params.lng,
+      accuracyMeters: params.accuracyMeters,
+      selfieUri: params.selfieUri,
+      selfieBase64: params.selfieBase64,
+    });
+  }
   const response = await fetch(`${guardApiConfig.baseUrl}/api/attendance/punch-out`, {
     method: 'POST',
     headers: {
@@ -215,6 +399,57 @@ export async function fetchTodayShift(token: string): Promise<TodayShiftStatus> 
   return parseJson(response);
 }
 
+export type GuardProfileGearItem = {
+  id: string;
+  itemName: string;
+  category: string;
+  unit: string;
+  quantity: number;
+};
+
+export type GuardProfileResponse = {
+  guardId: string;
+  employeeCode: string;
+  fullName: string;
+  postName: string;
+  profilePictureUrl: string;
+  agencyId: string;
+  agencyName: string;
+  agencyPhone: string;
+  site: {
+    id: string;
+    siteName: string;
+    address: string;
+    city: string;
+    postName: string;
+    hrName: string;
+    hrContact: string;
+    siteSupervisor: string;
+    geofenceRadiusMeters: number | null;
+  };
+  shiftFrom: string;
+  shiftTo: string;
+  shiftLabel: string;
+  dutySource: 'roster' | 'profile';
+  esiNumber: string;
+  pfNumber: string;
+  hasPoliceVerification: boolean;
+  hasCharacterCertificate: boolean;
+  aadhaarLinked: boolean;
+  gear: GuardProfileGearItem[];
+};
+
+export async function fetchGuardProfile(
+  token: string,
+): Promise<GuardProfileResponse> {
+  const response = await fetch(`${guardApiConfig.baseUrl}/api/profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return parseJson(response);
+}
+
 export async function fetchAttendanceHistory(
   token: string,
   year: number,
@@ -226,6 +461,22 @@ export async function fetchAttendanceHistory(
   });
   const response = await fetch(
     `${guardApiConfig.baseUrl}/api/attendance/history?${query.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return parseJson(response);
+}
+
+export async function fetchGuardSchedule(
+  token: string,
+  days = 14,
+): Promise<GuardScheduleResponse> {
+  const query = new URLSearchParams({ days: String(days) });
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/schedule/upcoming?${query.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

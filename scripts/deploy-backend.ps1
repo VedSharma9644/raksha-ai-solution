@@ -154,7 +154,9 @@ if ($Panel -eq "guard") {
     "GUARD_DEMO_ID=$(if ($env:GUARD_DEMO_ID) { $env:GUARD_DEMO_ID } else { 'RKS-8842' })",
     "GUARD_DEMO_PASSWORD=$(if ($env:GUARD_DEMO_PASSWORD) { $env:GUARD_DEMO_PASSWORD } else { 'demo1234' })",
     "GUARD_DEMO_PHONE=$(if ($env:GUARD_DEMO_PHONE) { $env:GUARD_DEMO_PHONE } else { '9876543210' })",
-    "GUARD_OTP_DEBUG=$(if ($env:GUARD_OTP_DEBUG) { $env:GUARD_OTP_DEBUG } else { 'false' })"
+    "GUARD_OTP_DEBUG=$(if ($env:GUARD_OTP_DEBUG) { $env:GUARD_OTP_DEBUG } else { 'false' })",
+    "SELFIE_UPLOAD_CONCURRENCY=$(if ($env:SELFIE_UPLOAD_CONCURRENCY) { $env:SELFIE_UPLOAD_CONCURRENCY } else { '20' })",
+    "LOAD_TEST_ALLOW_MULTI_PUNCH=$(if ($env:LOAD_TEST_ALLOW_MULTI_PUNCH) { $env:LOAD_TEST_ALLOW_MULTI_PUNCH } else { 'false' })"
   )
   if ($env:GUARD_DEMO_SITE_ID) {
     $envVars += "GUARD_DEMO_SITE_ID=$($env:GUARD_DEMO_SITE_ID)"
@@ -176,7 +178,21 @@ $envYaml = ($envVars | ForEach-Object {
 }) -join "`n"
 [System.IO.File]::WriteAllText($envFile, $envYaml + "`n", $utf8NoBom)
 
-Write-Host "Deploying Cloud Run service $Service ..."
+# Guard morning-rush: warm instance, 2 CPU, higher concurrency for signed-URL + light JSON
+$Memory = "512Mi"
+$Cpu = "1"
+$MinInstances = 0
+$MaxInstances = 5
+$Concurrency = 80
+if ($Panel -eq "guard") {
+  $Memory = "1Gi"
+  $Cpu = "2"
+  $MinInstances = 1
+  $MaxInstances = 20
+  $Concurrency = 80
+}
+
+Write-Host "Deploying Cloud Run service $Service (memory=$Memory cpu=$Cpu min=$MinInstances max=$MaxInstances concurrency=$Concurrency) ..."
 gcloud run deploy $Service `
   --project=$ProjectId `
   --image=$Image `
@@ -184,10 +200,11 @@ gcloud run deploy $Service `
   --platform=managed `
   --allow-unauthenticated `
   --port=8080 `
-  --memory=512Mi `
-  --cpu=1 `
-  --min-instances=0 `
-  --max-instances=5 `
+  --memory=$Memory `
+  --cpu=$Cpu `
+  --min-instances=$MinInstances `
+  --max-instances=$MaxInstances `
+  --concurrency=$Concurrency `
   --env-vars-file=$envFile
 if ($LASTEXITCODE -ne 0) { throw "Cloud Run deploy failed" }
 

@@ -14,6 +14,7 @@ import { patrolSessionDefaults } from '../../constants/patrol-session-defaults';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { patrolCameraViewportStyles as styles } from '../../styles/patrol-camera-viewport.styles';
 import { appColors } from '../../theme';
+import { compressAttendanceSelfie } from '../../utils/compress-attendance-selfie';
 import { PatrolFaceAlignmentGuide } from './PatrolFaceAlignmentGuide';
 import { PatrolLiveStatusBadges } from './PatrolLiveStatusBadges';
 
@@ -82,22 +83,24 @@ export function PatrolCameraViewport() {
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.65,
-        base64: true,
+        quality: 0.7,
+        base64: false,
         exif: false,
         shutterSound: false,
       });
 
-      if (!photo?.base64) {
+      if (!photo?.uri) {
         throw new Error('Could not capture selfie. Please try again.');
       }
 
+      const compressed = await compressAttendanceSelfie(photo.uri);
       const { lat, lng, accuracyMeters } = lastKnownLocation;
       const payload = {
         lat,
         lng,
         accuracyMeters,
-        selfieBase64: photo.base64,
+        selfieUri: compressed.uri,
+        selfieBase64: compressed.base64,
       };
       const result = isPunchOut
         ? await punchOutAttendance(authToken, payload)

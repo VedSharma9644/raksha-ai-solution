@@ -3,10 +3,42 @@ import * as Linking from 'expo-linking';
 import { Pressable, Text, View } from 'react-native';
 
 import { guardProfileDefaults } from '../../constants/guard-profile-defaults';
+import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
+import {
+  formatPhoneDisplay,
+  toTelHref,
+  useGuardProfile,
+} from '../../hooks/useGuardProfile';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { guardProfileSectionCardStyles as styles } from '../../styles/guard-profile-section-card.styles';
 import { appColors } from '../../theme';
+import { formatShiftTimeRange } from '../../utils/shift-display';
 
 export function GuardProfileEmployerCard() {
+  const { guardUser } = useGuardAppNavigation();
+  const duty = useGuardDutyAssignment();
+  const { profile } = useGuardProfile();
+
+  const siteName =
+    profile?.site.siteName ||
+    (duty.siteName !== 'Assigned site' ? duty.siteName : '') ||
+    guardUser?.siteName?.trim() ||
+    'Assigned Site';
+  const sitePost =
+    profile?.site.postName ||
+    (duty.postName !== 'Assigned post' ? duty.postName : '') ||
+    guardUser?.postName?.trim() ||
+    'Assigned Post';
+  const shiftFrom = profile?.shiftFrom || duty.shiftFrom || guardUser?.shiftFrom || '08:00';
+  const shiftTo = profile?.shiftTo || duty.shiftTo || guardUser?.shiftTo || '20:00';
+  const shiftTime = formatShiftTimeRange(shiftFrom, shiftTo);
+  const shiftRoster = duty.isNight ? 'Night Roster' : 'Day Roster';
+
+  const agencyName = profile?.agencyName?.trim() || 'Security Agency';
+  const hrName = profile?.site.hrName?.trim() || '';
+  const hrContact = profile?.site.hrContact?.trim() || '';
+  const hrTel = toTelHref(hrContact);
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
@@ -24,10 +56,10 @@ export function GuardProfileEmployerCard() {
       <View style={styles.stack}>
         <View style={styles.infoBlock}>
           <Text style={styles.fieldLabel}>{guardProfileDefaults.agencyLabel}</Text>
-          <Text style={styles.fieldValue}>{guardProfileDefaults.agencyName}</Text>
+          <Text style={styles.fieldValue}>{agencyName}</Text>
           <Text style={styles.fieldMeta}>
-            PSARA License:{' '}
-            <Text style={styles.mono}>#DL-PSARA-2019-8812</Text>
+            Agency ID:{' '}
+            <Text style={styles.mono}>{guardUser?.agencyId?.trim() || '—'}</Text>
           </Text>
         </View>
 
@@ -37,8 +69,8 @@ export function GuardProfileEmployerCard() {
           </View>
           <View style={styles.infoCopy}>
             <Text style={styles.fieldLabel}>{guardProfileDefaults.siteLabel}</Text>
-            <Text style={styles.fieldValueLg}>{guardProfileDefaults.siteName}</Text>
-            <Text style={styles.fieldMeta14}>{guardProfileDefaults.sitePost}</Text>
+            <Text style={styles.fieldValueLg}>{siteName}</Text>
+            <Text style={styles.fieldMeta14}>{sitePost}</Text>
           </View>
         </View>
 
@@ -49,32 +81,40 @@ export function GuardProfileEmployerCard() {
           <View style={styles.infoCopy}>
             <Text style={styles.fieldLabel}>{guardProfileDefaults.shiftLabel}</Text>
             <Text style={styles.fieldValueLg} numberOfLines={1}>
-              {guardProfileDefaults.shiftTime}
+              {shiftTime}
             </Text>
           </View>
           <View style={styles.rosterChip}>
-            <Text style={styles.rosterChipText}>{guardProfileDefaults.shiftRoster}</Text>
+            <Text style={styles.rosterChipText}>{shiftRoster}</Text>
           </View>
         </View>
 
         <View style={styles.infoRow}>
           <View style={styles.infoIconCircle}>
-            <MaterialIcons name="supervisor-account" size={22} color={appColors.onSecondaryContainer} />
+            <MaterialIcons
+              name="badge"
+              size={22}
+              color={appColors.onSecondaryContainer}
+            />
           </View>
           <View style={styles.infoCopy}>
-            <Text style={styles.fieldLabel}>{guardProfileDefaults.supervisorLabel}</Text>
+            <Text style={styles.fieldLabel}>Site HR Contact</Text>
             <Text style={styles.fieldValueLg} numberOfLines={1}>
-              {guardProfileDefaults.supervisorName}
+              {hrName || 'Not on file'}
             </Text>
-            <Text style={styles.fieldMeta}>{guardProfileDefaults.supervisorMeta}</Text>
+            <Text style={styles.fieldMeta}>
+              {hrContact ? formatPhoneDisplay(hrContact) : 'Add HR details on the site'}
+            </Text>
           </View>
-          <Pressable
-            accessibilityLabel="Call Supervisor Amit Singh"
-            style={({ pressed }) => [styles.callButton, pressed && styles.pressed]}
-            onPress={() => Linking.openURL(`tel:${guardProfileDefaults.supervisorTel}`)}
-          >
-            <MaterialIcons name="call" size={22} color={appColors.onPrimary} />
-          </Pressable>
+          {hrTel ? (
+            <Pressable
+              accessibilityLabel="Call Site HR"
+              style={({ pressed }) => [styles.callButton, pressed && styles.pressed]}
+              onPress={() => Linking.openURL(`tel:${hrTel}`)}
+            >
+              <MaterialIcons name="call" size={22} color={appColors.onPrimary} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </View>

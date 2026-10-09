@@ -24,6 +24,7 @@ export {
   notifyLeaveDecision,
   notifyReliefAssignment,
   notifyReliefDecision,
+  notifyRosterUpdate,
 } from "./notificationService";
 
 export { sendExpoPushMessages } from "./expoPush";

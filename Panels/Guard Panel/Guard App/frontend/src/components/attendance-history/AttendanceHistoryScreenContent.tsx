@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  AppState,
+  Pressable,
+  Text,
+  View,
+  type AppStateStatus,
+} from 'react-native';
 
 import {
   fetchAttendanceHistory,
@@ -47,6 +54,18 @@ export function AttendanceHistoryScreenContent() {
 
   useEffect(() => {
     void loadHistory();
+  }, [loadHistory]);
+
+  useEffect(() => {
+    const onState = (state: AppStateStatus) => {
+      if (state === 'active') {
+        void loadHistory();
+      }
+    };
+    const sub = AppState.addEventListener('change', onState);
+    return () => {
+      sub.remove();
+    };
   }, [loadHistory]);
 
   const shiftMonth = (delta: number) => {
@@ -104,14 +123,14 @@ export function AttendanceHistoryScreenContent() {
       <AttendanceStatsGrid
         presentDays={history?.stats.presentDays ?? 0}
         totalHours={history?.stats.totalHours ?? 0}
-        leaveDays={history?.stats.leaveDays ?? 0}
-        weeklyOffDays={history?.stats.weeklyOffDays ?? 0}
+        missedDays={history?.stats.missedDays ?? 0}
+        halfDays={history?.stats.halfDays ?? 0}
       />
       <AttendancePunctualityBanner
         title={history?.punctualityTitle ?? 'No records yet'}
         subtitle={
           history?.punctualitySubtitle ??
-          'Punch in at your site to build this month’s history.'
+          'Roster, punches, handovers and missed shifts appear here.'
         }
       />
       <AttendanceMonthCalendarOverview
@@ -120,7 +139,15 @@ export function AttendanceHistoryScreenContent() {
       />
       <AttendanceHistoryLogSection
         logs={history?.logs ?? []}
-        filterCounts={history?.filterCounts ?? { all: 0, present: 0, weeklyOff: 0 }}
+        filterCounts={
+          history?.filterCounts ?? {
+            all: 0,
+            present: 0,
+            weeklyOff: 0,
+            missed: 0,
+            half: 0,
+          }
+        }
       />
       <AttendanceDisputeHelpCard />
     </View>

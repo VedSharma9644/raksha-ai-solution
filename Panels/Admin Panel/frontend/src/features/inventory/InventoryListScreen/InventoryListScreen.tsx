@@ -37,7 +37,6 @@ export function InventoryListScreen({
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return items.filter((item) => {
-      const availableStock = item.totalStock - (item.assignedStock ?? 0);
       const matchesQuery =
         !q ||
         item.name.toLowerCase().includes(q) ||

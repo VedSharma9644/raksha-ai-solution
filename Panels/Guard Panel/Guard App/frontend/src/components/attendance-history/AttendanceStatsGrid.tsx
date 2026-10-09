@@ -7,8 +7,8 @@ import { StatSummaryTile } from '../shared/StatSummaryTile';
 type AttendanceStatsGridProps = {
   presentDays: number;
   totalHours: number;
-  leaveDays: number;
-  weeklyOffDays: number;
+  missedDays: number;
+  halfDays: number;
 };
 
 function pad2(value: number): string {
@@ -18,37 +18,37 @@ function pad2(value: number): string {
 export function AttendanceStatsGrid({
   presentDays,
   totalHours,
-  leaveDays,
-  weeklyOffDays,
+  missedDays,
+  halfDays,
 }: AttendanceStatsGridProps) {
   const stats: AttendanceStatItem[] = [
     {
       key: 'present',
       value: pad2(presentDays),
-      label: 'Present Days',
-      subtitle: 'Verified punch-ins',
+      label: 'Present',
+      subtitle: 'Full + half + on duty',
       icon: 'check-circle',
     },
     {
       key: 'hours',
       value: String(totalHours),
-      label: 'Est. Hours',
-      subtitle: 'From shift length',
+      label: 'Hours',
+      subtitle: 'From punch duration',
       icon: 'schedule',
     },
     {
-      key: 'leave',
-      value: pad2(leaveDays),
-      label: 'Leave Taken',
-      subtitle: 'Approved leave',
+      key: 'half',
+      value: pad2(halfDays),
+      label: 'Half shifts',
+      subtitle: 'Handover / incomplete',
       icon: 'event-busy',
     },
     {
-      key: 'off',
-      value: pad2(weeklyOffDays),
-      label: 'Weekly Off',
-      subtitle: 'Roster rest days',
-      icon: 'hotel',
+      key: 'missed',
+      value: pad2(missedDays),
+      label: 'Missed',
+      subtitle: 'No punch-in',
+      icon: 'cancel',
     },
   ];
 

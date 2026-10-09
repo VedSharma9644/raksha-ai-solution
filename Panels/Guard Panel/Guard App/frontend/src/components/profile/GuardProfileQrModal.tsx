@@ -3,6 +3,8 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { guardProfileDefaults } from '../../constants/guard-profile-defaults';
+import { useGuardProfile } from '../../hooks/useGuardProfile';
+import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { guardProfileModalsStyles as styles } from '../../styles/guard-profile-modals.styles';
 import { appColors, appSpacing } from '../../theme';
 import { GuardProfileAuditQr } from './GuardProfileAuditQr';
@@ -14,6 +16,20 @@ type GuardProfileQrModalProps = {
 
 export function GuardProfileQrModal({ visible, onClose }: GuardProfileQrModalProps) {
   const insets = useSafeAreaInsets();
+  const { guardUser } = useGuardAppNavigation();
+  const { profile } = useGuardProfile();
+  const guardName =
+    profile?.fullName?.trim() || guardUser?.fullName?.trim() || 'Guard';
+  const guardId =
+    profile?.employeeCode?.trim() || guardUser?.employeeCode?.trim() || '—';
+  const siteLine =
+    [profile?.agencyName?.trim(), profile?.site.siteName?.trim(), profile?.site.postName?.trim()]
+      .filter(Boolean)
+      .join(' • ') ||
+    [guardUser?.siteName?.trim(), guardUser?.postName?.trim()]
+      .filter(Boolean)
+      .join(' • ') ||
+    'Assigned Site';
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -22,7 +38,7 @@ export function GuardProfileQrModal({ visible, onClose }: GuardProfileQrModalPro
           <View style={styles.sheetHeader}>
             <View style={styles.sheetTitleRow}>
               <MaterialIcons name="verified" size={26} color={appColors.primary} />
-              <Text style={styles.sheetTitle}>{guardProfileDefaults.auditModalTitle}</Text>
+              <Text style={styles.sheetTitle}>Guard ID Badge</Text>
             </View>
             <Pressable
               accessibilityLabel="Close Inspection Modal"
@@ -37,14 +53,12 @@ export function GuardProfileQrModal({ visible, onClose }: GuardProfileQrModalPro
             <View style={styles.qrFrame}>
               <GuardProfileAuditQr size={224} />
             </View>
-            <Text style={styles.auditName}>{guardProfileDefaults.guardName}</Text>
-            <Text style={styles.auditId}>
-              {`ID: ${guardProfileDefaults.guardId} • ${guardProfileDefaults.gradeLabel}`}
-            </Text>
-            <Text style={styles.auditAgency}>{guardProfileDefaults.auditAgencyLine}</Text>
+            <Text style={styles.auditName}>{guardName}</Text>
+            <Text style={styles.auditId}>{`ID: ${guardId}`}</Text>
+            <Text style={styles.auditAgency}>{siteLine}</Text>
             <View style={styles.verifiedPill}>
               <View style={styles.verifiedDot} />
-              <Text style={styles.verifiedText}>{guardProfileDefaults.auditVerified}</Text>
+              <Text style={styles.verifiedText}>On-duty identity card</Text>
             </View>
           </View>
 

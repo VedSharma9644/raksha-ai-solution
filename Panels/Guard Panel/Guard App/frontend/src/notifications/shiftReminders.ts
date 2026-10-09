@@ -68,25 +68,15 @@ export async function rescheduleShiftReminders(params: {
   const site = params.siteName?.trim() || 'your site';
   const plans: ShiftReminderPlan[] = [];
 
+  // Early login opens 30 minutes before shift — spreads the morning API rush.
   const startMinus30 = minutesUntil(new Date(start.getTime() - 30 * 60_000), now);
   if (startMinus30 > 0 && !params.shiftActive) {
     plans.push({
-      id: `${REMINDER_PREFIX}start-soon`,
-      type: 'shift_start_reminder',
-      title: 'Shift starting soon',
-      body: `Your duty at ${site} starts in 30 minutes (${params.shiftFrom}).`,
-      minutesFromNow: startMinus30,
-    });
-  }
-
-  const loginAt = minutesUntil(start, now);
-  if (loginAt > 0 && !params.shiftActive) {
-    plans.push({
       id: `${REMINDER_PREFIX}login`,
       type: 'login_reminder',
-      title: 'Punch-in reminder',
-      body: `Please punch in for your ${params.shiftFrom} shift at ${site}.`,
-      minutesFromNow: loginAt,
+      title: 'Early login open',
+      body: `Your shift at ${site} starts in 30 minutes (${params.shiftFrom}). Log in now — punch in when you arrive.`,
+      minutesFromNow: startMinus30,
     });
   }
 

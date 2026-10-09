@@ -8,7 +8,8 @@
     "dev": "tsx src/index.ts",
     "seed": "tsx src/scripts/seedAgency.ts",
     "build": "node scripts/build.mjs",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test": "vitest run --config ../../../vitest.config.ts"
   },
   "dependencies": {
     "@raskha/attendance": "1.0.0",

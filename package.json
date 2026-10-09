@@ -14,13 +14,18 @@
         "Panels/Guard Panel/guard app backend"
     ],
     "scripts": {
-        "dev": "concurrently --names \"ADMIN-BE,ADMIN-FE,HR-BE,HR-FE,SA-BE,SA-FE\" --prefix-colors \"bgRed.bold,bgBlue.bold,bgCyan.bold,bgGreen.bold,bgMagenta.bold,bgYellow.bold\" \"npm run dev --prefix \\\"Panels/Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Admin Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/frontend\\\"\""
+        "dev": "concurrently --names \"ADMIN-BE,ADMIN-FE,HR-BE,HR-FE,SA-BE,SA-FE\" --prefix-colors \"bgRed.bold,bgBlue.bold,bgCyan.bold,bgGreen.bold,bgMagenta.bold,bgYellow.bold\" \"npm run dev --prefix \\\"Panels/Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Admin Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/frontend\\\"\"",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "devDependencies": {
         "@types/express": "^5.0.6",
         "@types/node": "^26.6.4",
+        "@types/supertest": "^6.0.3",
         "concurrently": "^10.0.5",
-        "typescript": "^7.0.2"
+        "supertest": "^7.1.4",
+        "typescript": "^7.0.2",
+        "vitest": "^3.2.4"
     },
     "dependencies": {
         "dotenv": "^18.0.5",

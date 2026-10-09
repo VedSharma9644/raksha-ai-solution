@@ -4,3 +4,10 @@
 
 node_modules/
 dist/
+.firebase/
+
+# Generated load-test fixtures (run: node scripts/load/generate-fixtures.mjs)
+scripts/load/selfie.fixture.jpg
+scripts/load/selfie.fixture.b64
+scripts/load/guards.fixture.json
+scripts/load/report-*.json

@@ -10,31 +10,39 @@ type AttendanceDailyLogCardProps = {
 };
 
 function statusStyles(kind: AttendanceHistoryLogDto['kind']) {
-  if (kind === 'onDuty') {
-    return {
-      badge: styles.statusOnDuty,
-      text: styles.statusTextOnDuty,
-    };
+  switch (kind) {
+    case 'onDuty':
+      return { badge: styles.statusOnDuty, text: styles.statusTextOnDuty };
+    case 'half':
+      return { badge: styles.statusHalf, text: styles.statusTextHalf };
+    case 'missed':
+      return { badge: styles.statusMissed, text: styles.statusTextMissed };
+    case 'upcoming':
+      return { badge: styles.statusUpcoming, text: styles.statusTextUpcoming };
+    case 'weeklyOff':
+    case 'leave':
+      return { badge: styles.statusOff, text: styles.statusTextOff };
+    case 'full':
+    case 'present':
+    default:
+      return { badge: styles.statusPresent, text: styles.statusTextPresent };
   }
-  if (kind === 'weeklyOff' || kind === 'leave') {
-    return {
-      badge: styles.statusOff,
-      text: styles.statusTextOff,
-    };
-  }
-  return {
-    badge: styles.statusPresent,
-    text: styles.statusTextPresent,
-  };
 }
 
 export function AttendanceDailyLogCard({ item }: AttendanceDailyLogCardProps) {
   const status = statusStyles(item.kind);
   const isOff = item.kind === 'weeklyOff' || item.kind === 'leave';
+  const isMissed = item.kind === 'missed';
   const hasDetails = Boolean(item.detailPrimaryValue);
 
   return (
-    <View style={[styles.card, isOff && styles.cardOff]}>
+    <View
+      style={[
+        styles.card,
+        isOff && styles.cardOff,
+        isMissed && styles.cardMissed,
+      ]}
+    >
       <View style={styles.headerRow}>
         <View style={[styles.statusBadge, status.badge]}>
           <Text style={[styles.statusText, status.text]}>{item.statusLabel}</Text>
@@ -43,7 +51,11 @@ export function AttendanceDailyLogCard({ item }: AttendanceDailyLogCardProps) {
       </View>
 
       <View style={styles.postRow}>
-        <MaterialIcons name={item.postIcon} size={20} color={appColors.primary} />
+        <MaterialIcons
+          name={item.postIcon}
+          size={20}
+          color={isMissed ? appColors.error : appColors.primary}
+        />
         <Text style={styles.postLabel}>{item.postLabel}</Text>
       </View>
 

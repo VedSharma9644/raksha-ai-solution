@@ -246,9 +246,15 @@ export async function decideLeaveRequest(
     };
   }
 
+  if (!remark) {
+    throw Object.assign(new Error("A rejection remark is required."), {
+      statusCode: 400,
+    });
+  }
+
   await ref.update({
     status: "rejected",
-    rejectionRemark: remark || "Not approved by supervisor.",
+    rejectionRemark: remark,
     supervisorName: decidedByName,
     updatedAt: now,
     decidedAt: now,

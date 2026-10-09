@@ -92,7 +92,7 @@ export function createAuthRoutes(): Router {
         return;
       }
 
-      const token = createSession(guard);
+      const token = await createSession(guard);
       res.json(sessionPayload(token, guard));
     } catch (error: unknown) {
       const err = error as { message?: string };
@@ -162,7 +162,7 @@ export function createAuthRoutes(): Router {
         demoMode: isDemoMode(),
       });
 
-      const token = createSession(guard);
+      const token = await createSession(guard);
       res.json(sessionPayload(token, guard));
     } catch (error: unknown) {
       const err = error as { message?: string };

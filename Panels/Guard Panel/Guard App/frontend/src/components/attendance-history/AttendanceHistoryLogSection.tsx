@@ -10,7 +10,13 @@ import { AttendanceLogFilterTabs } from './AttendanceLogFilterTabs';
 
 type AttendanceHistoryLogSectionProps = {
   logs: AttendanceHistoryLogDto[];
-  filterCounts: { all: number; present: number; weeklyOff: number };
+  filterCounts: {
+    all: number;
+    present: number;
+    weeklyOff: number;
+    missed?: number;
+    half?: number;
+  };
 };
 
 export function AttendanceHistoryLogSection({
@@ -21,18 +27,32 @@ export function AttendanceHistoryLogSection({
 
   const filteredLogs = useMemo(() => {
     if (activeFilter === 'present') {
-      return logs.filter((item) => item.kind === 'present' || item.kind === 'onDuty');
+      return logs.filter((item) =>
+        ['present', 'full', 'half', 'onDuty'].includes(item.kind),
+      );
+    }
+    if (activeFilter === 'missed') {
+      return logs.filter((item) => item.kind === 'missed');
+    }
+    if (activeFilter === 'half') {
+      return logs.filter((item) => item.kind === 'half');
     }
     if (activeFilter === 'weeklyOff') {
-      return logs.filter((item) => item.kind === 'weeklyOff');
+      return logs.filter(
+        (item) => item.kind === 'weeklyOff' || item.kind === 'leave',
+      );
     }
     return logs;
   }, [activeFilter, logs]);
 
   const tabs = [
-    { key: 'all' as const, label: `All Days (${filterCounts.all})` },
+    { key: 'all' as const, label: `All (${filterCounts.all})` },
     { key: 'present' as const, label: `Present (${filterCounts.present})` },
-    { key: 'weeklyOff' as const, label: 'Weekly Off' },
+    {
+      key: 'missed' as const,
+      label: `Missed (${filterCounts.missed ?? 0})`,
+    },
+    { key: 'half' as const, label: `Half (${filterCounts.half ?? 0})` },
   ];
 
   return (
@@ -54,7 +74,9 @@ export function AttendanceHistoryLogSection({
           No attendance logs for this filter in the selected month.
         </Text>
       ) : (
-        filteredLogs.map((item) => <AttendanceDailyLogCard key={item.id} item={item} />)
+        filteredLogs.map((item) => (
+          <AttendanceDailyLogCard key={item.id} item={item} />
+        ))
       )}
     </View>
   );

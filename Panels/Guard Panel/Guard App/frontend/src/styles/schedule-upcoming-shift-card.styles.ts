@@ -34,6 +34,22 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     minWidth: 0,
     flexWrap: 'wrap',
   },
+  todayCard: {
+    borderWidth: 1.5,
+    borderColor: appColors.primaryFixedDim,
+  },
+  todayBadge: {
+    backgroundColor: appColors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: appRadii.full,
+    flexShrink: 0,
+  },
+  todayText: {
+    ...appTypography.labelLg,
+    color: appColors.onPrimary,
+    fontFamily: 'PublicSans_700Bold',
+  },
   tomorrowBadge: {
     backgroundColor: appColors.primaryFixed,
     paddingHorizontal: 10,
@@ -71,6 +87,21 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     borderRadius: appRadii.full,
     paddingHorizontal: 10,
   },
+  statusBadgeComing: {
+    backgroundColor: 'rgba(30, 94, 99, 0.12)',
+  },
+  statusBadgeOnDuty: {
+    backgroundColor: 'rgba(6, 95, 70, 0.14)',
+  },
+  statusBadgeDelayed: {
+    backgroundColor: appColors.errorContainer,
+  },
+  statusBadgeCompleted: {
+    backgroundColor: appColors.surfaceContainerLow,
+  },
+  statusBadgeMissed: {
+    backgroundColor: appColors.errorContainer,
+  },
   statusText: {
     ...appTypography.labelLg,
     color: appColors.primary,
@@ -78,6 +109,21 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
   },
   statusTextNight: {
     color: appColors.onSurface,
+  },
+  statusTextComing: {
+    color: appColors.primaryContainer,
+  },
+  statusTextOnDuty: {
+    color: '#065f46',
+  },
+  statusTextDelayed: {
+    color: appColors.error,
+  },
+  statusTextCompleted: {
+    color: appColors.primary,
+  },
+  statusTextMissed: {
+    color: appColors.error,
   },
   siteBlock: {
     flexDirection: 'row',

@@ -1,10 +1,14 @@
-import { useState } from 'react';
-
 import type { WeekSegmentKey } from '../shared/WeekSegmentTabs';
 import { WeekSegmentTabs } from '../shared/WeekSegmentTabs';
 
-export function ScheduleWeekFilterTabs() {
-  const [activeWeek, setActiveWeek] = useState<WeekSegmentKey>('thisWeek');
+type ScheduleWeekFilterTabsProps = {
+  activeWeek: WeekSegmentKey;
+  onChange: (key: WeekSegmentKey) => void;
+};
 
-  return <WeekSegmentTabs activeKey={activeWeek} onChange={setActiveWeek} />;
+export function ScheduleWeekFilterTabs({
+  activeWeek,
+  onChange,
+}: ScheduleWeekFilterTabsProps) {
+  return <WeekSegmentTabs activeKey={activeWeek} onChange={onChange} />;
 }

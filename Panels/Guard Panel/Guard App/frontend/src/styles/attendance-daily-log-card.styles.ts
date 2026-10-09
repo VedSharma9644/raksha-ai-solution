@@ -17,6 +17,10 @@ export const attendanceDailyLogCardStyles = StyleSheet.create({
   cardOff: {
     backgroundColor: appColors.surfaceContainerLow,
   },
+  cardMissed: {
+    borderWidth: 1,
+    borderColor: appColors.errorContainer,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -34,6 +38,15 @@ export const attendanceDailyLogCardStyles = StyleSheet.create({
   statusPresent: {
     backgroundColor: appColors.surfaceContainerHigh,
   },
+  statusHalf: {
+    backgroundColor: '#f3d5a0',
+  },
+  statusMissed: {
+    backgroundColor: appColors.errorContainer,
+  },
+  statusUpcoming: {
+    backgroundColor: appColors.primaryFixed,
+  },
   statusOff: {
     backgroundColor: appColors.surfaceContainerHighest,
   },
@@ -47,6 +60,15 @@ export const attendanceDailyLogCardStyles = StyleSheet.create({
   },
   statusTextPresent: {
     color: appColors.primary,
+  },
+  statusTextHalf: {
+    color: '#5c3b00',
+  },
+  statusTextMissed: {
+    color: appColors.onErrorContainer,
+  },
+  statusTextUpcoming: {
+    color: appColors.onPrimaryFixed,
   },
   statusTextOff: {
     color: appColors.secondary,

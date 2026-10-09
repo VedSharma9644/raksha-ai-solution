@@ -242,6 +242,10 @@ export function getDemoGuardContext(): AuthenticatedGuardContext {
 /**
  * Authenticate with mobile / employeeCode / email + password.
  * Password is verified against Firebase Auth (set by HR/Admin).
+ *
+ * Order:
+ * 1) Prefer a real Firestore guard (never override with demo identity).
+ * 2) Only if no real guard matches, allow the demo credentials shortcut.
  */
 export async function authenticateGuard(
   params: AuthenticateGuardParams
@@ -254,6 +258,26 @@ export async function authenticateGuard(
     return null;
   }
 
+  try {
+    const guard = await findGuardByIdentifier(identifier);
+    if (guard) {
+      const email = await resolveLoginEmail(guard);
+      if (!email) {
+        // Real guard exists but has no Auth email — do not silently map to demo.
+        return null;
+      }
+
+      const authResult = await verifyFirebaseEmailPassword(email, password);
+      if (!authResult.ok) {
+        return null;
+      }
+
+      return withResolvedSiteName(toContext(guard));
+    }
+  } catch {
+    // Fall through to demo only when no real guard was resolved.
+  }
+
   if (demoMode) {
     const matched = demoContext(identifier, password);
     if (matched) {
@@ -261,28 +285,5 @@ export async function authenticateGuard(
     }
   }
 
-  try {
-    const guard = await findGuardByIdentifier(identifier);
-    if (!guard) {
-      const fallback = demoMode ? demoContext(identifier, password) : null;
-      return fallback ? withResolvedSiteName(fallback) : null;
-    }
-
-    const email = await resolveLoginEmail(guard);
-    if (!email) {
-      const fallback = demoMode ? demoContext(identifier, password) : null;
-      return fallback ? withResolvedSiteName(fallback) : null;
-    }
-
-    const authResult = await verifyFirebaseEmailPassword(email, password);
-    if (!authResult.ok) {
-      const fallback = demoMode ? demoContext(identifier, password) : null;
-      return fallback ? withResolvedSiteName(fallback) : null;
-    }
-
-    return withResolvedSiteName(toContext(guard));
-  } catch {
-    const fallback = demoMode ? demoContext(identifier, password) : null;
-    return fallback ? withResolvedSiteName(fallback) : null;
-  }
+  return null;
 }

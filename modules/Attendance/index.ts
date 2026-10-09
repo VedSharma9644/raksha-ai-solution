@@ -58,14 +58,37 @@ export {
   markPunchIn,
   markPunchOut,
   listAttendanceHistory,
+  listGuardUpcomingSchedule,
+  resolveTodayDuty,
   evaluatePunchInPunctuality,
+  createSelfieUploadUrl,
+  toDutyDateKey,
   type MarkPunchInParams,
   type MarkPunchOutParams,
   type OpenPunchInRecord,
   type AttendanceHistoryResponse,
   type AttendanceHistoryLogDto,
+  type AttendanceHistoryLogKind,
   type AttendanceHistoryDayStatus,
+  type GuardScheduleResponse,
+  type GuardScheduleShiftDto,
+  type TodayDutyResolution,
 } from "./attendanceService";
+
+export type { GuardScheduleDutyStatus } from "./guardSchedule";
+
+export {
+  getGuardProfile,
+  toTelHref,
+  type GuardProfileDto,
+  type GuardProfileGearItem,
+} from "./guardProfile";
+
+export {
+  withSelfieUploadSlot,
+  getSelfieUploadQueueStats,
+  resetSelfieUploadQueueForTests,
+} from "./uploadQueue";
 
 export {
   listAgencyAttendanceForDate,

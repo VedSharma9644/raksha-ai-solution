@@ -59,7 +59,9 @@ export function GuardProfileScreenContent() {
     <View style={styles.content}>
       <GuardProfileDigitalIdCard
         onOpenQr={() => setQrVisible(true)}
-        onDownload={() => showToast(guardProfileDefaults.toastDownload)}
+        onDownload={() =>
+          showToast('PDF export will be available soon.')
+        }
       />
       <GuardProfileEmployerCard />
       <GuardProfileComplianceCard />

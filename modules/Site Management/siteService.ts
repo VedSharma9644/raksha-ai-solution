@@ -10,9 +10,80 @@ import {
   query,
   where,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { SITES_COLLECTION } from "./site";
 import type { Site, SiteStatus, SiteType, SiteShiftConfig } from "./site";
+
+const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
+
+/**
+ * Keep roster assignment snapshots in sync when site shift slots change
+ * (times / labels). Guard app also hydrates live on read — this keeps Admin/HR
+ * roster UIs accurate too.
+ */
+async function syncAssignmentsToShiftConfig(
+  db: Firestore,
+  siteId: string,
+  shiftConfig: SiteShiftConfig | null | undefined
+): Promise<void> {
+  if (!shiftConfig?.shifts?.length) {
+    return;
+  }
+  const byId = new Map(shiftConfig.shifts.map((s) => [s.id, s]));
+  const snap = await getDocs(
+    query(
+      collection(db, SHIFT_ASSIGNMENTS_COLLECTION),
+      where("siteId", "==", siteId)
+    )
+  );
+  if (snap.empty) {
+    return;
+  }
+
+  let batch = writeBatch(db);
+  let ops = 0;
+  const commitIfNeeded = async (force = false) => {
+    if (ops === 0) {
+      return;
+    }
+    if (!force && ops < 400) {
+      return;
+    }
+    await batch.commit();
+    batch = writeBatch(db);
+    ops = 0;
+  };
+
+  for (const d of snap.docs) {
+    const data = d.data() as {
+      shiftId?: string;
+      shiftLabel?: string;
+      shiftStartTime?: string;
+      shiftEndTime?: string;
+    };
+    const live = data.shiftId ? byId.get(data.shiftId) : undefined;
+    if (!live) {
+      continue;
+    }
+    if (
+      data.shiftLabel === live.label &&
+      data.shiftStartTime === live.startTime &&
+      data.shiftEndTime === live.endTime
+    ) {
+      continue;
+    }
+    batch.update(d.ref, {
+      shiftLabel: live.label,
+      shiftStartTime: live.startTime,
+      shiftEndTime: live.endTime,
+      updatedAt: serverTimestamp(),
+    });
+    ops += 1;
+    await commitIfNeeded();
+  }
+  await commitIfNeeded(true);
+}
 
 export interface AddSiteParams {
   agencyId: string;
@@ -106,6 +177,10 @@ export async function updateSite(
 ): Promise<void> {
   const ref = doc(db, SITES_COLLECTION, siteId);
   await updateDoc(ref, { ...updates, updatedAt: serverTimestamp() });
+
+  if (Object.prototype.hasOwnProperty.call(updates, "shiftConfig")) {
+    await syncAssignmentsToShiftConfig(db, siteId, updates.shiftConfig);
+  }
 }
 
 export async function deleteSite(

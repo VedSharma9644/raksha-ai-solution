@@ -43,7 +43,7 @@ export function EditInventoryItemScreen({
           actions={
             <Button
               type="button"
-              variant="danger"
+              variant="secondary"
               onClick={onDelete}
               disabled={isDeleting || isSubmitting}
             >

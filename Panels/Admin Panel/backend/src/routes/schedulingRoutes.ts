@@ -1,9 +1,23 @@
 import { Router, type Response } from "express";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { notifyRosterUpdate } from "@raskha/notifications";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
 
 // Inline the collection name — avoids importing firebase/firestore in Node.js context
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
+
+async function siteDisplayName(
+  adminDb: ReturnType<typeof getFirestore>,
+  siteId: string
+): Promise<string> {
+  try {
+    const snap = await adminDb.collection("sites").doc(siteId).get();
+    const name = (snap.data() as { siteName?: string } | undefined)?.siteName;
+    return typeof name === "string" && name.trim() ? name.trim() : "Assigned Site";
+  } catch {
+    return "Assigned Site";
+  }
+}
 
 export function createSchedulingRoutes(): Router {
   const router = Router();
@@ -29,7 +43,37 @@ export function createSchedulingRoutes(): Router {
         .where("agencyId", "==", agencyId)
         .get();
 
-      const assignments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const siteDoc = await adminDb.collection("sites").doc(siteId).get();
+      const siteData = siteDoc.data() as
+        | {
+            shiftConfig?: {
+              shifts?: Array<{
+                id: string;
+                label?: string;
+                startTime?: string;
+                endTime?: string;
+              }>;
+            };
+          }
+        | undefined;
+      const liveById = new Map(
+        (siteData?.shiftConfig?.shifts ?? []).map((s) => [s.id, s])
+      );
+
+      const assignments = snap.docs.map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        const live = liveById.get(String(data.shiftId ?? ""));
+        if (!live) {
+          return { id: d.id, ...data };
+        }
+        return {
+          id: d.id,
+          ...data,
+          shiftLabel: live.label || data.shiftLabel,
+          shiftStartTime: live.startTime || data.shiftStartTime,
+          shiftEndTime: live.endTime || data.shiftEndTime,
+        };
+      });
       res.json(assignments);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -67,8 +111,16 @@ export function createSchedulingRoutes(): Router {
       if (siteData.agencyId !== agencyId) {
         res.status(403).json({ error: "Forbidden." }); return;
       }
-      // Find the shift definition
-      const shiftConfig = siteData.shiftConfig as { shifts?: Array<{ id: string; requiredGuards: number }> } | null | undefined;
+      // Find the shift definition — live site times are source of truth
+      const shiftConfig = siteData.shiftConfig as {
+        shifts?: Array<{
+          id: string;
+          label?: string;
+          startTime?: string;
+          endTime?: string;
+          requiredGuards: number;
+        }>;
+      } | null | undefined;
       const shiftDef = shiftConfig?.shifts?.find((s) => s.id === String(shiftId));
       if (!shiftDef) {
         res.status(400).json({ error: "Shift not found on this site." }); return;
@@ -90,8 +142,10 @@ export function createSchedulingRoutes(): Router {
       const data = {
         agencyId,
         siteId, guardId, guardName: guardName ?? "",
-        shiftId, shiftLabel: shiftLabel ?? "",
-        shiftStartTime: shiftStartTime ?? "", shiftEndTime: shiftEndTime ?? "",
+        shiftId,
+        shiftLabel: shiftDef.label || String(shiftLabel ?? "Duty"),
+        shiftStartTime: shiftDef.startTime || String(shiftStartTime ?? "08:00"),
+        shiftEndTime: shiftDef.endTime || String(shiftEndTime ?? "20:00"),
         recurringDays,
         effectiveFrom,
         effectiveTo: effectiveTo ?? null,
@@ -100,6 +154,19 @@ export function createSchedulingRoutes(): Router {
       };
 
       const ref = await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).add(data);
+      const siteName = String(
+        (siteData.siteName as string | undefined) ?? "Assigned Site"
+      );
+      void notifyRosterUpdate({
+        guardId: String(guardId),
+        agencyId,
+        action: "assigned",
+        siteName,
+        shiftLabel: String(data.shiftLabel),
+        shiftStartTime: String(data.shiftStartTime),
+        shiftEndTime: String(data.shiftEndTime),
+      }).catch(() => undefined);
+
       res.status(201).json({ id: ref.id, ...data });
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -123,8 +190,75 @@ export function createSchedulingRoutes(): Router {
         return;
       }
 
-      const updates = { ...req.body, updatedAt: FieldValue.serverTimestamp() };
+      const current = doc.data() as {
+        siteId?: string;
+        shiftId?: string;
+        guardId?: string;
+        shiftLabel?: string;
+        shiftStartTime?: string;
+        shiftEndTime?: string;
+      };
+      const body = req.body as Record<string, unknown>;
+      const nextShiftId = String(body.shiftId ?? current.shiftId ?? "");
+      const nextSiteId = String(current.siteId ?? "");
+
+      // Re-read live site shift so PATCH cannot leave stale times/labels.
+      let liveLabel: string | undefined;
+      let liveStart: string | undefined;
+      let liveEnd: string | undefined;
+      if (nextSiteId && nextShiftId) {
+        const siteDoc = await adminDb.collection("sites").doc(nextSiteId).get();
+        const siteData = siteDoc.data() as
+          | {
+              shiftConfig?: {
+                shifts?: Array<{
+                  id: string;
+                  label?: string;
+                  startTime?: string;
+                  endTime?: string;
+                }>;
+              };
+            }
+          | undefined;
+        const live = siteData?.shiftConfig?.shifts?.find(
+          (s) => s.id === nextShiftId
+        );
+        if (live) {
+          liveLabel = live.label;
+          liveStart = live.startTime;
+          liveEnd = live.endTime;
+        }
+      }
+
+      const updates = {
+        ...body,
+        ...(liveLabel ? { shiftLabel: liveLabel } : {}),
+        ...(liveStart ? { shiftStartTime: liveStart } : {}),
+        ...(liveEnd ? { shiftEndTime: liveEnd } : {}),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
       await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).update(updates);
+
+      const guardId = String(current.guardId ?? "");
+      if (guardId) {
+        const siteName = await siteDisplayName(adminDb, nextSiteId);
+        void notifyRosterUpdate({
+          guardId,
+          agencyId,
+          action: "updated",
+          siteName,
+          shiftLabel: String(
+            liveLabel ?? body.shiftLabel ?? current.shiftLabel ?? "Duty"
+          ),
+          shiftStartTime: String(
+            liveStart ?? body.shiftStartTime ?? current.shiftStartTime ?? ""
+          ),
+          shiftEndTime: String(
+            liveEnd ?? body.shiftEndTime ?? current.shiftEndTime ?? ""
+          ),
+        }).catch(() => undefined);
+      }
+
       res.json({ success: true });
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -148,7 +282,31 @@ export function createSchedulingRoutes(): Router {
         return;
       }
 
+      const prior = doc.data() as {
+        guardId?: string;
+        siteId?: string;
+        shiftLabel?: string;
+        shiftStartTime?: string;
+        shiftEndTime?: string;
+      };
       await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).delete();
+
+      if (prior.guardId) {
+        const siteName = await siteDisplayName(
+          adminDb,
+          String(prior.siteId ?? "")
+        );
+        void notifyRosterUpdate({
+          guardId: String(prior.guardId),
+          agencyId,
+          action: "removed",
+          siteName,
+          shiftLabel: String(prior.shiftLabel ?? "Duty"),
+          shiftStartTime: String(prior.shiftStartTime ?? ""),
+          shiftEndTime: String(prior.shiftEndTime ?? ""),
+        }).catch(() => undefined);
+      }
+
       res.json({ success: true });
     } catch (err: unknown) {
       const e = err as { message?: string };

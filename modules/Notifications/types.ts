@@ -7,6 +7,7 @@ export type GuardNotificationType =
   | "leave_decision"
   | "relief_decision"
   | "relief_assignment"
+  | "roster_update"
   | "shift_start_reminder"
   | "login_reminder"
   | "shift_end_reminder"

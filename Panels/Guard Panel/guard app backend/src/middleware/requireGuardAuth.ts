@@ -9,25 +9,34 @@ export type AuthedRequest = Request & {
   guard?: AuthenticatedGuardContext;
 };
 
-export function requireGuardAuth(
+export async function requireGuardAuth(
   req: AuthedRequest,
   res: Response,
   next: NextFunction
-): void {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid Authorization header." });
-    return;
-  }
+): Promise<void> {
+  try {
+    const header = req.headers.authorization;
+    if (!header?.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Missing or invalid Authorization header." });
+      return;
+    }
 
-  const token = header.slice("Bearer ".length).trim();
-  const session = getSession(token);
-  if (!session) {
-    res.status(401).json({ error: "Session expired or invalid. Please log in again." });
-    return;
-  }
+    const token = header.slice("Bearer ".length).trim();
+    const session = await getSession(token);
+    if (!session) {
+      res
+        .status(401)
+        .json({ error: "Session expired or invalid. Please log in again." });
+      return;
+    }
 
-  req.guardToken = token;
-  req.guard = session.guard;
-  next();
+    req.guardToken = token;
+    req.guard = session.guard;
+    next();
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    res.status(401).json({
+      error: err.message ?? "Session expired or invalid. Please log in again.",
+    });
+  }
 }

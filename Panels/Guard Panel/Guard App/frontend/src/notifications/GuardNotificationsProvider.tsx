@@ -18,6 +18,7 @@ import {
   type GuardNotificationDto,
 } from '../api/guard-api';
 import { useGuardAppNavigation } from '../navigation/useGuardAppNavigation';
+import { requestRosterSync } from '../sync/rosterSync';
 import {
   addNotificationReceivedListener,
   addNotificationResponseReceivedListener,
@@ -77,6 +78,11 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
         type === 'sign_out_reminder'
       ) {
         openShiftDetails();
+        return;
+      }
+      if (type === 'roster_update' || data?.refresh === 'roster') {
+        requestRosterSync('push:roster_update');
+        goHome();
         return;
       }
       if (screen === 'home') {
@@ -235,7 +241,14 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
 
   // Foreground + tap handlers (local emitter APIs — safe in Expo Go)
   useEffect(() => {
-    const received = addNotificationReceivedListener(() => {
+    const received = addNotificationReceivedListener((event) => {
+      const data = event.notification.request.content.data as
+        | Record<string, unknown>
+        | undefined;
+      const type = typeof data?.type === 'string' ? data.type : '';
+      if (type === 'roster_update' || data?.refresh === 'roster') {
+        requestRosterSync('push:roster_update');
+      }
       void refresh();
     });
     const response = addNotificationResponseReceivedListener((event) => {

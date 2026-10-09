@@ -278,3 +278,50 @@ export async function notifyReliefAssignment(params: {
     },
   });
 }
+
+/**
+ * Push + inbox when Admin/HR creates, updates, or removes a shift assignment.
+ * Guard app treats this as an immediate roster refresh signal.
+ */
+export async function notifyRosterUpdate(params: {
+  guardId: string;
+  agencyId: string;
+  action: "assigned" | "updated" | "removed";
+  siteName?: string;
+  shiftLabel?: string;
+  shiftStartTime?: string;
+  shiftEndTime?: string;
+}): Promise<void> {
+  const site = params.siteName?.trim() || "your site";
+  const shift = params.shiftLabel?.trim() || "duty";
+  const window =
+    params.shiftStartTime && params.shiftEndTime
+      ? ` (${params.shiftStartTime}–${params.shiftEndTime})`
+      : "";
+
+  let title = "Roster updated";
+  let body = `Your duty assignment at ${site} was updated.`;
+  if (params.action === "assigned") {
+    title = "New shift assigned";
+    body = `You were assigned ${shift}${window} at ${site}.`;
+  } else if (params.action === "removed") {
+    title = "Shift removed";
+    body = `Your ${shift} assignment at ${site} was removed.`;
+  } else {
+    body = `Your ${shift}${window} at ${site} was updated.`;
+  }
+
+  await notifyGuard({
+    guardId: params.guardId,
+    agencyId: params.agencyId,
+    type: "roster_update",
+    title,
+    body,
+    data: {
+      screen: "home",
+      type: "roster_update",
+      action: params.action,
+      refresh: "roster",
+    },
+  });
+}

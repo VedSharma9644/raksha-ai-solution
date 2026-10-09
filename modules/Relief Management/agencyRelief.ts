@@ -207,9 +207,15 @@ export async function decideReliefRequest(
   const dutyDate = String(data.dutyDate ?? "");
 
   if (params.decision === "rejected") {
+    if (!remark) {
+      throw Object.assign(
+        new Error("A rejection remark is required."),
+        { statusCode: 400 }
+      );
+    }
     await ref.update({
       status: "rejected",
-      rejectionRemark: remark || "Not approved by Admin/HR.",
+      rejectionRemark: remark,
       decidedByName,
       updatedAt: now,
       decidedAt: now,
