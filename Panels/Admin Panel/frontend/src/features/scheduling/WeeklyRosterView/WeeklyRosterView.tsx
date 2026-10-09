@@ -135,11 +135,16 @@ export function WeeklyRosterView({
                         type="button"
                         className="weekly-roster__avatar-btn"
                         style={{ background: colorFromString(a.guardId) }}
-                        title={a.guardName}
+                        title={
+                          a.shiftLocked
+                            ? `${a.guardName} — on duty today (today’s shift protected)`
+                            : a.guardName
+                        }
                         disabled={!canEdit}
                         onClick={() => canEdit && onEditAssignment(a)}
                       >
                         {initials(a.guardName)}
+                        {a.shiftLocked ? "*" : ""}
                       </button>
                     ))}
                   </div>

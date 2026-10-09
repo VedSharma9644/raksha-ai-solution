@@ -175,8 +175,10 @@ export function MarkAttendanceHero() {
         )}
       </View>
 
-      <Text style={styles.title}>{isEndShift ? 'END SHIFT' : 'MARK ATTENDANCE'}</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, isEndShift && styles.titleOnDuty]}>
+        {isEndShift ? 'END SHIFT' : 'MARK ATTENDANCE'}
+      </Text>
+      <Text style={[styles.subtitle, isEndShift && styles.subtitleOnDuty]}>
         {isEndShift
           ? punchedAtLabel
             ? `On duty since ${punchedAtLabel}. Verify site GPS and capture a selfie to end your shift.`
@@ -190,9 +192,9 @@ export function MarkAttendanceHero() {
         <MaterialIcons
           name={cameraUnlocked || isEndShift ? 'lock-open' : 'lock'}
           size={18}
-          color={appColors.onPrimaryContainer}
+          color={isEndShift ? '#FFFFFF' : appColors.onPrimaryContainer}
         />
-        <Text style={styles.lockText}>
+        <Text style={[styles.lockText, isEndShift && styles.lockTextOnDuty]}>
           {isEndShift
             ? cameraUnlocked
               ? 'Geofence Passed • Capture selfie to end shift'

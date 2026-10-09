@@ -7,6 +7,7 @@ import {
   DEMO_GUARD_PASSWORD,
   type AuthenticatedGuardContext,
 } from "./attendance";
+import { getTodayOpenPunchIn } from "./attendanceService";
 import { verifyFirebaseEmailPassword } from "./firebasePasswordAuth";
 import {
   isValidIndianMobile,
@@ -14,6 +15,7 @@ import {
   phoneLookupVariants,
 } from "./phone";
 import { getSiteGeofenceById } from "./siteLookup";
+import { resolveTodayDuty } from "./todayDuty";
 
 export type AuthenticateGuardParams = {
   /** Mobile number, employee / Guard ID, or email */
@@ -57,6 +59,39 @@ async function withResolvedSiteName(
     return { ...ctx, siteName: site.siteName };
   } catch {
     return ctx;
+  }
+}
+
+/**
+ * Overlay today's live roster (site.shiftConfig) onto the session context so
+ * login / session never expose stale guards.shiftFrom/shiftTo profile fields.
+ */
+async function withLiveRosterDuty(
+  ctx: AuthenticatedGuardContext
+): Promise<AuthenticatedGuardContext> {
+  const withSite = await withResolvedSiteName(ctx);
+  try {
+    const open = await getTodayOpenPunchIn(withSite.guardId);
+    const duty = await resolveTodayDuty({
+      guardId: withSite.guardId,
+      agencyId: withSite.agencyId,
+      profileShiftFrom: withSite.shiftFrom,
+      profileShiftTo: withSite.shiftTo,
+      profileSiteId: withSite.assignedSiteId,
+      profileSiteName: withSite.siteName,
+      profilePostName: withSite.postName,
+      hasOpenPunch: Boolean(open),
+    });
+    return {
+      ...withSite,
+      assignedSiteId: duty.siteId || withSite.assignedSiteId,
+      siteName: duty.siteName || withSite.siteName,
+      postName: duty.postName || withSite.postName,
+      shiftFrom: duty.shiftFrom,
+      shiftTo: duty.shiftTo,
+    };
+  } catch {
+    return withSite;
   }
 }
 
@@ -215,7 +250,7 @@ export async function getGuardContextById(
   if (!snap.exists) {
     return null;
   }
-  return withResolvedSiteName(
+  return withLiveRosterDuty(
     toContext({
       id: snap.id,
       ...(snap.data() as Omit<GuardDoc, "id">),
@@ -272,7 +307,7 @@ export async function authenticateGuard(
         return null;
       }
 
-      return withResolvedSiteName(toContext(guard));
+      return withLiveRosterDuty(toContext(guard));
     }
   } catch {
     // Fall through to demo only when no real guard was resolved.
@@ -281,7 +316,7 @@ export async function authenticateGuard(
   if (demoMode) {
     const matched = demoContext(identifier, password);
     if (matched) {
-      return withResolvedSiteName(matched);
+      return withLiveRosterDuty(matched);
     }
   }
 

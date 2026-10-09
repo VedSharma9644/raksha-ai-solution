@@ -1,10 +1,56 @@
 import { Router, type Response } from "express";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getTodayOpenPunchIn } from "@raskha/attendance";
+import { GUARDS_COLLECTION } from "@raskha/guard-management";
 import { notifyRosterUpdate } from "@raskha/notifications";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
 
-// Inline the collection name — avoids importing firebase/firestore in Node.js context
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
+
+type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+const JS_TO_DOW: DayOfWeek[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+const TODAY_SHIFT_LOCKED_DELETE =
+  "This guard has already punched in for today's shift. You cannot remove the assignment while they are on duty — set an end date after today instead, or wait until they punch out.";
+
+const TODAY_SHIFT_LOCKED_CHANGE =
+  "This guard has already punched in for today's shift. You can still edit future dates, but today's shift (slot / days covering today) cannot be changed until they punch out.";
+
+function todayDutyDateKey(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function weekdayFromDutyDate(dutyDate: string): DayOfWeek {
+  const [y, m, d] = dutyDate.split("-").map(Number);
+  const utc = new Date(Date.UTC(y, m - 1, d, 6, 30));
+  return JS_TO_DOW[utc.getUTCDay()] ?? "mon";
+}
+
+function assignmentCoversDutyDate(params: {
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  recurringDays?: unknown;
+  dutyDate: string;
+}): boolean {
+  const from = String(params.effectiveFrom ?? "").trim();
+  const to = params.effectiveTo ? String(params.effectiveTo).trim() : "";
+  if (!from || params.dutyDate < from) {
+    return false;
+  }
+  if (to && params.dutyDate > to) {
+    return false;
+  }
+  const days = Array.isArray(params.recurringDays)
+    ? params.recurringDays.filter((d): d is string => typeof d === "string")
+    : [];
+  return days.includes(weekdayFromDutyDate(params.dutyDate));
+}
 
 async function siteDisplayName(
   adminDb: ReturnType<typeof getFirestore>,
@@ -19,6 +65,93 @@ async function siteDisplayName(
   }
 }
 
+/**
+ * True only when the guard is punched in AND this assignment covers today.
+ * Future-only assignments stay fully editable.
+ */
+async function isTodayShiftInProgress(params: {
+  guardId: string;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  recurringDays?: unknown;
+}): Promise<boolean> {
+  if (!params.guardId.trim()) {
+    return false;
+  }
+  const open = await getTodayOpenPunchIn(params.guardId).catch(() => null);
+  if (!open) {
+    return false;
+  }
+  return assignmentCoversDutyDate({
+    effectiveFrom: params.effectiveFrom,
+    effectiveTo: params.effectiveTo,
+    recurringDays: params.recurringDays,
+    dutyDate: todayDutyDateKey(),
+  });
+}
+
+/** Block PATCH only when the change would alter today's in-progress duty. */
+function todayDutyChangeBlocked(params: {
+  current: {
+    shiftId?: string;
+    effectiveFrom?: string | null;
+    effectiveTo?: string | null;
+    recurringDays?: unknown;
+  };
+  next: {
+    shiftId: string;
+    effectiveFrom: string;
+    effectiveTo: string | null;
+    recurringDays: unknown;
+  };
+}): string | null {
+  const dutyDate = todayDutyDateKey();
+  const stillCoversToday = assignmentCoversDutyDate({
+    effectiveFrom: params.next.effectiveFrom,
+    effectiveTo: params.next.effectiveTo,
+    recurringDays: params.next.recurringDays,
+    dutyDate,
+  });
+
+  if (!stillCoversToday) {
+    return TODAY_SHIFT_LOCKED_CHANGE;
+  }
+
+  if (params.next.shiftId !== String(params.current.shiftId ?? "")) {
+    return TODAY_SHIFT_LOCKED_CHANGE;
+  }
+
+  return null;
+}
+
+/** Keep guards.* profile times/site aligned with the live roster assignment. */
+async function syncGuardProfileFromAssignment(params: {
+  guardId: string;
+  siteId: string;
+  shiftStartTime: string;
+  shiftEndTime: string;
+  shiftLabel: string;
+}): Promise<void> {
+  const { guardId, siteId, shiftStartTime, shiftEndTime, shiftLabel } = params;
+  if (!guardId.trim()) {
+    return;
+  }
+  await getFirestore()
+    .collection(GUARDS_COLLECTION)
+    .doc(guardId)
+    .set(
+      {
+        assignedSiteId: siteId,
+        shiftFrom: shiftStartTime,
+        shiftTo: shiftEndTime,
+        post: shiftLabel,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    )
+    .catch(() => undefined);
+}
+
 export function createSchedulingRoutes(): Router {
   const router = Router();
 
@@ -28,7 +161,10 @@ export function createSchedulingRoutes(): Router {
   router.get("/", async (req: AgencyAuthRequest, res: Response) => {
     try {
       const agencyId = req.agencyId;
-      if (!agencyId) { res.status(401).json({ error: "Unauthorized." }); return; }
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
 
       const { siteId } = req.query;
       if (!siteId || typeof siteId !== "string") {
@@ -60,20 +196,33 @@ export function createSchedulingRoutes(): Router {
         (siteData?.shiftConfig?.shifts ?? []).map((s) => [s.id, s])
       );
 
-      const assignments = snap.docs.map((d) => {
-        const data = d.data() as Record<string, unknown>;
-        const live = liveById.get(String(data.shiftId ?? ""));
-        if (!live) {
-          return { id: d.id, ...data };
-        }
-        return {
-          id: d.id,
-          ...data,
-          shiftLabel: live.label || data.shiftLabel,
-          shiftStartTime: live.startTime || data.shiftStartTime,
-          shiftEndTime: live.endTime || data.shiftEndTime,
-        };
-      });
+      const assignments = await Promise.all(
+        snap.docs.map(async (d) => {
+          const data = d.data() as Record<string, unknown>;
+          const live = liveById.get(String(data.shiftId ?? ""));
+          const guardId = String(data.guardId ?? "");
+          const todayLocked = await isTodayShiftInProgress({
+            guardId,
+            effectiveFrom: data.effectiveFrom as string | null | undefined,
+            effectiveTo: data.effectiveTo as string | null | undefined,
+            recurringDays: data.recurringDays,
+          });
+          const base = live
+            ? {
+                id: d.id,
+                ...data,
+                shiftLabel: live.label || data.shiftLabel,
+                shiftStartTime: live.startTime || data.shiftStartTime,
+                shiftEndTime: live.endTime || data.shiftEndTime,
+              }
+            : { id: d.id, ...data };
+          return {
+            ...base,
+            shiftLocked: todayLocked,
+            shiftLockedReason: todayLocked ? TODAY_SHIFT_LOCKED_CHANGE : undefined,
+          };
+        })
+      );
       res.json(assignments);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -85,12 +234,22 @@ export function createSchedulingRoutes(): Router {
   router.post("/", async (req: AgencyAuthRequest, res: Response) => {
     try {
       const agencyId = req.agencyId;
-      if (!agencyId) { res.status(401).json({ error: "Unauthorized." }); return; }
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
 
       const {
-        siteId, guardId, guardName,
-        shiftId, shiftLabel, shiftStartTime, shiftEndTime,
-        recurringDays, effectiveFrom, effectiveTo,
+        siteId,
+        guardId,
+        guardName,
+        shiftId,
+        shiftLabel,
+        shiftStartTime,
+        shiftEndTime,
+        recurringDays,
+        effectiveFrom,
+        effectiveTo,
       } = req.body as Record<string, unknown>;
 
       if (!siteId || !guardId || !shiftId || !recurringDays || !effectiveFrom) {
@@ -100,18 +259,16 @@ export function createSchedulingRoutes(): Router {
 
       const adminDb = getFirestore();
 
-      // ── Enforce requiredGuards cap ─────────────────────────────────────────
-      // 1. Fetch the site to get shiftConfig
       const siteDoc = await adminDb.collection("sites").doc(String(siteId)).get();
       if (!siteDoc.exists) {
-        res.status(404).json({ error: "Site not found." }); return;
+        res.status(404).json({ error: "Site not found." });
+        return;
       }
       const siteData = siteDoc.data() as Record<string, unknown>;
-      // Verify site belongs to this agency
       if (siteData.agencyId !== agencyId) {
-        res.status(403).json({ error: "Forbidden." }); return;
+        res.status(403).json({ error: "Forbidden." });
+        return;
       }
-      // Find the shift definition — live site times are source of truth
       const shiftConfig = siteData.shiftConfig as {
         shifts?: Array<{
           id: string;
@@ -123,9 +280,9 @@ export function createSchedulingRoutes(): Router {
       } | null | undefined;
       const shiftDef = shiftConfig?.shifts?.find((s) => s.id === String(shiftId));
       if (!shiftDef) {
-        res.status(400).json({ error: "Shift not found on this site." }); return;
+        res.status(400).json({ error: "Shift not found on this site." });
+        return;
       }
-      // Count how many guards are already assigned to this shift
       const existingSnap = await adminDb
         .collection(SHIFT_ASSIGNMENTS_COLLECTION)
         .where("siteId", "==", String(siteId))
@@ -137,11 +294,12 @@ export function createSchedulingRoutes(): Router {
         });
         return;
       }
-      // ── End cap check ──────────────────────────────────────────────────────
 
       const data = {
         agencyId,
-        siteId, guardId, guardName: guardName ?? "",
+        siteId,
+        guardId,
+        guardName: guardName ?? "",
         shiftId,
         shiftLabel: shiftDef.label || String(shiftLabel ?? "Duty"),
         shiftStartTime: shiftDef.startTime || String(shiftStartTime ?? "08:00"),
@@ -154,6 +312,14 @@ export function createSchedulingRoutes(): Router {
       };
 
       const ref = await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).add(data);
+      await syncGuardProfileFromAssignment({
+        guardId: String(guardId),
+        siteId: String(siteId),
+        shiftStartTime: String(data.shiftStartTime),
+        shiftEndTime: String(data.shiftEndTime),
+        shiftLabel: String(data.shiftLabel),
+      });
+
       const siteName = String(
         (siteData.siteName as string | undefined) ?? "Assigned Site"
       );
@@ -178,12 +344,14 @@ export function createSchedulingRoutes(): Router {
   router.patch("/:id", async (req: AgencyAuthRequest, res: Response) => {
     try {
       const agencyId = req.agencyId;
-      if (!agencyId) { res.status(401).json({ error: "Unauthorized." }); return; }
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
 
       const assignmentId = req.params["id"] as string;
       const adminDb = getFirestore();
 
-      // Verify ownership
       const doc = await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).get();
       if (!doc.exists || (doc.data() as { agencyId?: string })?.agencyId !== agencyId) {
         res.status(403).json({ error: "Not authorised to edit this assignment." });
@@ -197,12 +365,50 @@ export function createSchedulingRoutes(): Router {
         shiftLabel?: string;
         shiftStartTime?: string;
         shiftEndTime?: string;
+        effectiveFrom?: string | null;
+        effectiveTo?: string | null;
+        recurringDays?: unknown;
       };
+
       const body = req.body as Record<string, unknown>;
       const nextShiftId = String(body.shiftId ?? current.shiftId ?? "");
       const nextSiteId = String(current.siteId ?? "");
+      const nextEffectiveFrom = String(
+        body.effectiveFrom ?? current.effectiveFrom ?? ""
+      );
+      const nextEffectiveTo =
+        body.effectiveTo === null || body.effectiveTo === ""
+          ? null
+          : body.effectiveTo !== undefined
+            ? String(body.effectiveTo)
+            : current.effectiveTo
+              ? String(current.effectiveTo)
+              : null;
+      const nextRecurringDays =
+        body.recurringDays !== undefined ? body.recurringDays : current.recurringDays;
 
-      // Re-read live site shift so PATCH cannot leave stale times/labels.
+      const todayLocked = await isTodayShiftInProgress({
+        guardId: String(current.guardId ?? ""),
+        effectiveFrom: current.effectiveFrom,
+        effectiveTo: current.effectiveTo,
+        recurringDays: current.recurringDays,
+      });
+      if (todayLocked) {
+        const lockError = todayDutyChangeBlocked({
+          current,
+          next: {
+            shiftId: nextShiftId,
+            effectiveFrom: nextEffectiveFrom,
+            effectiveTo: nextEffectiveTo,
+            recurringDays: nextRecurringDays,
+          },
+        });
+        if (lockError) {
+          res.status(409).json({ error: lockError });
+          return;
+        }
+      }
+
       let liveLabel: string | undefined;
       let liveStart: string | undefined;
       let liveEnd: string | undefined;
@@ -240,6 +446,26 @@ export function createSchedulingRoutes(): Router {
       await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).update(updates);
 
       const guardId = String(current.guardId ?? "");
+      const nextLabel = String(
+        liveLabel ?? body.shiftLabel ?? current.shiftLabel ?? "Duty"
+      );
+      const nextStart = String(
+        liveStart ?? body.shiftStartTime ?? current.shiftStartTime ?? ""
+      );
+      const nextEnd = String(
+        liveEnd ?? body.shiftEndTime ?? current.shiftEndTime ?? ""
+      );
+
+      if (guardId && nextSiteId && nextStart && nextEnd) {
+        await syncGuardProfileFromAssignment({
+          guardId,
+          siteId: nextSiteId,
+          shiftStartTime: nextStart,
+          shiftEndTime: nextEnd,
+          shiftLabel: nextLabel,
+        });
+      }
+
       if (guardId) {
         const siteName = await siteDisplayName(adminDb, nextSiteId);
         void notifyRosterUpdate({
@@ -247,15 +473,9 @@ export function createSchedulingRoutes(): Router {
           agencyId,
           action: "updated",
           siteName,
-          shiftLabel: String(
-            liveLabel ?? body.shiftLabel ?? current.shiftLabel ?? "Duty"
-          ),
-          shiftStartTime: String(
-            liveStart ?? body.shiftStartTime ?? current.shiftStartTime ?? ""
-          ),
-          shiftEndTime: String(
-            liveEnd ?? body.shiftEndTime ?? current.shiftEndTime ?? ""
-          ),
+          shiftLabel: nextLabel,
+          shiftStartTime: nextStart,
+          shiftEndTime: nextEnd,
         }).catch(() => undefined);
       }
 
@@ -270,12 +490,14 @@ export function createSchedulingRoutes(): Router {
   router.delete("/:id", async (req: AgencyAuthRequest, res: Response) => {
     try {
       const agencyId = req.agencyId;
-      if (!agencyId) { res.status(401).json({ error: "Unauthorized." }); return; }
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
 
       const assignmentId = req.params["id"] as string;
       const adminDb = getFirestore();
 
-      // Verify ownership
       const doc = await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).get();
       if (!doc.exists || (doc.data() as { agencyId?: string })?.agencyId !== agencyId) {
         res.status(403).json({ error: "Not authorised to delete this assignment." });
@@ -288,7 +510,22 @@ export function createSchedulingRoutes(): Router {
         shiftLabel?: string;
         shiftStartTime?: string;
         shiftEndTime?: string;
+        effectiveFrom?: string | null;
+        effectiveTo?: string | null;
+        recurringDays?: unknown;
       };
+
+      const todayLocked = await isTodayShiftInProgress({
+        guardId: String(prior.guardId ?? ""),
+        effectiveFrom: prior.effectiveFrom,
+        effectiveTo: prior.effectiveTo,
+        recurringDays: prior.recurringDays,
+      });
+      if (todayLocked) {
+        res.status(409).json({ error: TODAY_SHIFT_LOCKED_DELETE });
+        return;
+      }
+
       await adminDb.collection(SHIFT_ASSIGNMENTS_COLLECTION).doc(assignmentId).delete();
 
       if (prior.guardId) {

@@ -7,10 +7,30 @@ import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import {
   dutyTypeLabel,
+  formatDurationLabel,
   formatShiftTimeRange,
   formatTodayBadge,
 } from '../../utils/shift-display';
 import { shiftSummaryReferenceCardStyles as styles } from '../../styles/shift-summary-reference-card.styles';
+
+function cleanDutyTitle(
+  profileLabel: string | undefined,
+  dutyLabel: string | undefined,
+  shiftFrom: string,
+  shiftTo: string,
+): string {
+  const profile = profileLabel?.trim() ?? '';
+  if (profile && !/^today'?s?\s+shift/i.test(profile)) {
+    return profile;
+  }
+  const fromDuty = (dutyLabel ?? '')
+    .replace(/^today'?s?\s+shift\s*[•·-]?\s*/i, '')
+    .trim();
+  if (fromDuty && fromDuty.length <= 32) {
+    return fromDuty;
+  }
+  return dutyTypeLabel(shiftFrom, shiftTo);
+}
 
 export function ShiftSummaryReferenceCard() {
   const duty = useGuardDutyAssignment();
@@ -19,21 +39,13 @@ export function ShiftSummaryReferenceCard() {
 
   const shiftFrom = profile?.shiftFrom || duty.shiftFrom || guardUser?.shiftFrom || '08:00';
   const shiftTo = profile?.shiftTo || duty.shiftTo || guardUser?.shiftTo || '20:00';
-  const dutyTitle =
-    profile?.shiftLabel?.trim() ||
-    duty.shiftLabel ||
-    dutyTypeLabel(shiftFrom, shiftTo);
-  const reference =
-    duty.assignmentId ||
-    profile?.site.id ||
-    guardUser?.assignedSiteId ||
-    guardUser?.employeeCode ||
-    '—';
-  const statusLabel = duty.shiftActive
-    ? 'Active On Duty'
-    : duty.isDelayed
-      ? 'Delayed'
-      : 'Scheduled';
+  const dutyTitle = cleanDutyTitle(
+    profile?.shiftLabel,
+    duty.shiftLabel,
+    shiftFrom,
+    shiftTo,
+  );
+  const duration = formatDurationLabel(shiftFrom, shiftTo);
   const punchedLabel = duty.punchedAt
     ? new Date(duty.punchedAt).toLocaleTimeString('en-IN', {
         timeZone: 'Asia/Kolkata',
@@ -41,48 +53,58 @@ export function ShiftSummaryReferenceCard() {
         minute: '2-digit',
         hour12: true,
       })
-    : 'Not checked in';
-  const statusBadge =
-    duty.punchInStatus?.trim() ||
-    (duty.shiftActive ? 'On Duty' : duty.statusBadge);
+    : null;
+
+  let statusLabel = 'Scheduled';
+  if (duty.shiftActive) {
+    const late =
+      duty.punchInStatus?.toLowerCase().includes('late') === true;
+    statusLabel = late ? 'Late Login' : 'On Duty';
+  } else if (duty.isDelayed) {
+    statusLabel = 'Delayed';
+  } else if (duty.statusBadge === 'MISSED') {
+    statusLabel = 'Missed';
+  }
 
   return (
     <View style={styles.card}>
       <View style={styles.spine} />
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <View>
-            <Text style={styles.referenceLabel}>Shift Reference</Text>
-            <Text style={styles.referenceValue}>#{reference}</Text>
-          </View>
+          <Text style={styles.todayLabel}>{formatTodayBadge()}</Text>
           <View style={styles.statusBadge}>
-            <MaterialIcons name="verified" size={18} color={appColors.onPrimaryFixed} />
             <Text style={styles.statusText}>{statusLabel}</Text>
           </View>
         </View>
 
-        <Text style={styles.dutyTitle}>{dutyTitle}</Text>
+        <Text style={styles.dutyTitle} numberOfLines={2}>
+          {dutyTitle}
+        </Text>
 
-        <View style={styles.metaRow}>
-          <MaterialIcons name="calendar-today" size={20} color={appColors.primary} />
-          <Text style={styles.metaText}>{formatTodayBadge()}</Text>
-        </View>
         <View style={styles.metaRow}>
           <MaterialIcons name="schedule" size={20} color={appColors.primary} />
           <Text style={styles.metaTextStrong}>
             {formatShiftTimeRange(shiftFrom, shiftTo)}
+            {duration ? `  ${duration}` : ''}
           </Text>
         </View>
 
         <View style={styles.checkedInRow}>
-          <View style={styles.checkedInLeft}>
-            <MaterialIcons name="how-to-reg" size={22} color={appColors.primary} />
-            <Text style={styles.checkedInLabel}>
-              Checked-in:{' '}
-              <Text style={styles.checkedInTime}>{punchedLabel}</Text>
-            </Text>
-          </View>
-          <Text style={styles.earlyBadge}>{statusBadge}</Text>
+          <MaterialIcons
+            name={punchedLabel ? 'how-to-reg' : 'pending-actions'}
+            size={22}
+            color={appColors.primary}
+          />
+          <Text style={styles.checkedInLabel}>
+            {punchedLabel ? (
+              <>
+                Checked in at{' '}
+                <Text style={styles.checkedInTime}>{punchedLabel}</Text>
+              </>
+            ) : (
+              'Not checked in yet'
+            )}
+          </Text>
         </View>
       </View>
     </View>

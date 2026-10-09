@@ -4,20 +4,20 @@ import { appColors, appRadii, appSpacing, appTypography } from '../theme';
 
 export const scheduleShiftReliefRequestStyles = StyleSheet.create({
   card: {
-    backgroundColor: appColors.surfaceContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: appSpacing.sm,
+    backgroundColor: appColors.surfaceContainerLowest,
     borderRadius: appRadii.xl,
     padding: appSpacing.md,
-    gap: appSpacing.sm,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 1,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: appSpacing.sm,
+  cardPressed: {
+    opacity: 0.92,
   },
   iconWrap: {
     width: 40,
@@ -26,36 +26,19 @@ export const scheduleShiftReliefRequestStyles = StyleSheet.create({
     backgroundColor: appColors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
   title: {
     ...appTypography.titleLg,
     color: appColors.onSurface,
   },
   message: {
-    ...appTypography.bodyLg,
+    ...appTypography.labelLg,
     color: appColors.onSurfaceVariant,
-    lineHeight: 22,
-  },
-  button: {
-    minHeight: 56,
-    borderRadius: appRadii.xl,
-    backgroundColor: appColors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  buttonPressed: {
-    backgroundColor: appColors.primaryContainer,
-    transform: [{ scale: 0.99 }],
-  },
-  buttonText: {
-    ...appTypography.labelXl,
-    color: appColors.onPrimary,
   },
 });

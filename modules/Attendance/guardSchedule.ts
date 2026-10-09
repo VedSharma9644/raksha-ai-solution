@@ -22,6 +22,7 @@ const JS_TO_DOW: DayOfWeek[] = [
 export type GuardScheduleDutyStatus =
   | "coming"
   | "on_duty"
+  | "late_login"
   | "delayed"
   | "completed"
   | "missed"
@@ -97,17 +98,17 @@ function isNightDuty(shiftFrom: string, shiftTo: string): boolean {
   return to <= from || from >= 18;
 }
 
+/** Format roster HH:mm wall-clock labels without timezone conversion (Cloud Run is UTC). */
 function formatTimeRange(shiftFrom: string, shiftTo: string): string {
   const toLabel = (hhmm: string) => {
-    const [h, m] = hhmm.split(":").map(Number);
-    const dt = new Date();
-    dt.setHours(h || 0, m || 0, 0, 0);
-    return dt.toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    const match = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+    const h = match ? Number(match[1]) : 0;
+    const m = match ? Number(match[2]) : 0;
+    const hour24 = ((Number.isFinite(h) ? h : 0) % 24 + 24) % 24;
+    const minute = ((Number.isFinite(m) ? m : 0) % 60 + 60) % 60;
+    const suffix = hour24 >= 12 ? "pm" : "am";
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
   };
   return `${toLabel(shiftFrom)} – ${toLabel(shiftTo)}`;
 }
@@ -191,8 +192,9 @@ function resolveTodayDutyStatus(params: {
     const late =
       params.punch.punchInStatus?.toLowerCase().includes("late") === true;
     return {
-      dutyStatus: "on_duty",
-      statusLabel: late ? "On Duty • Late Login" : "On Duty",
+      dutyStatus: late ? "late_login" : "on_duty",
+      // Multiline-friendly label for the Schedule badge
+      statusLabel: late ? "On Duty\nLate Login" : "On Duty",
     };
   }
 

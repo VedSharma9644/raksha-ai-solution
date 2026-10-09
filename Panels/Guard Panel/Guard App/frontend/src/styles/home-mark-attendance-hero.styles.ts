@@ -72,6 +72,9 @@ export const homeMarkAttendanceHeroStyles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: appSpacing.sm,
   },
+  titleOnDuty: {
+    color: '#FFFFFF',
+  },
   subtitle: {
     ...appTypography.bodyXl,
     color: appColors.onPrimaryContainer,
@@ -80,15 +83,23 @@ export const homeMarkAttendanceHeroStyles = StyleSheet.create({
     paddingHorizontal: appSpacing.sm,
     marginTop: 4,
   },
+  subtitleOnDuty: {
+    color: '#FFFFFF',
+  },
   lockRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: appSpacing.xs,
     marginBottom: appSpacing.md,
+    paddingHorizontal: appSpacing.sm,
   },
   lockText: {
     ...appTypography.labelLg,
     color: appColors.onPrimaryContainer,
+    flexShrink: 1,
+  },
+  lockTextOnDuty: {
+    color: '#FFFFFF',
   },
 });

@@ -54,6 +54,10 @@ export function AssignShiftModal({
     existingAssignment?.effectiveTo ?? ""
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const todayLocked = Boolean(existingAssignment?.shiftLocked);
+  const lockedReason =
+    existingAssignment?.shiftLockedReason ||
+    "This guard has already punched in today. You can still edit future dates, but today's shift cannot be changed or removed until they punch out.";
 
   // Keep shiftId in sync when the shift list loads
   useEffect(() => {
@@ -161,7 +165,7 @@ export function AssignShiftModal({
                       value={s.id}
                       checked={shiftId === s.id}
                       onChange={() => setShiftId(s.id)}
-                      disabled={isSaving}
+                      disabled={isSaving || todayLocked}
                       className="assign-shift-modal__radio"
                     />
                     <div className="assign-shift-modal__shift-info">
@@ -239,6 +243,12 @@ export function AssignShiftModal({
             </div>
           </div>
 
+          {todayLocked ? (
+            <p className="assign-shift-modal__save-error" role="status">
+              {lockedReason}
+            </p>
+          ) : null}
+
           {saveError && (
             <p className="assign-shift-modal__save-error" role="alert">{saveError}</p>
           )}
@@ -248,7 +258,12 @@ export function AssignShiftModal({
               <button
                 type="button"
                 className="assign-shift-modal__delete-btn"
-                disabled={isSaving}
+                disabled={isSaving || todayLocked}
+                title={
+                  todayLocked
+                    ? "Cannot remove while the guard is on duty today"
+                    : undefined
+                }
                 onClick={() => void onDelete(existingAssignment.id)}
               >
                 Remove

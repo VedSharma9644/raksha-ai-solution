@@ -32,7 +32,12 @@ export function PrimaryActionButton({
       onPress={onPress}
     >
       <MaterialIcons name={icon} size={24} color={iconColor} />
-      <Text style={isEmergency ? styles.emergencyLabel : styles.lightLabel}>{label}</Text>
+      <Text
+        style={isEmergency ? styles.emergencyLabel : styles.lightLabel}
+        numberOfLines={2}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

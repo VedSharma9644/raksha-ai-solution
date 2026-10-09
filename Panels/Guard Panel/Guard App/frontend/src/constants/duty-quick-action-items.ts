@@ -10,26 +10,26 @@ export type DutyQuickActionItem = {
 export const dutyQuickActionItems: DutyQuickActionItem[] = [
   {
     key: 'schedule',
-    title: 'My Schedule',
-    subtitle: 'Next: Tomorrow Day',
+    title: 'Schedule',
+    subtitle: 'Upcoming shifts',
     icon: 'calendar-month',
   },
   {
     key: 'leave',
     title: 'Leave',
-    subtitle: 'Apply or check status',
+    subtitle: 'Apply or check',
     icon: 'event-busy',
   },
   {
     key: 'history',
     title: 'History',
-    subtitle: '24 days present',
+    subtitle: 'Attendance log',
     icon: 'fact-check',
   },
   {
     key: 'relieve',
-    title: 'Relieve Guard',
-    subtitle: 'Shift handover',
+    title: 'Relief',
+    subtitle: 'Request cover',
     icon: 'published-with-changes',
   },
 ];

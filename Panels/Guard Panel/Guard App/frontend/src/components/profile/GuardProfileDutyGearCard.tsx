@@ -29,6 +29,10 @@ export function GuardProfileDutyGearCard() {
   const { profile, isLoading } = useGuardProfile();
   const gear = profile?.gear ?? [];
 
+  if (!isLoading && gear.length === 0) {
+    return null;
+  }
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
@@ -38,21 +42,15 @@ export function GuardProfileDutyGearCard() {
           </View>
           <Text style={styles.title}>{guardProfileDefaults.gearTitle}</Text>
         </View>
-        <Text style={styles.headerMetaMuted}>
-          {gear.length === 0
-            ? 'None issued'
-            : `${gear.length} Logged Item${gear.length === 1 ? '' : 's'}`}
-        </Text>
+        {gear.length > 0 ? (
+          <Text style={styles.headerMetaMuted}>
+            {gear.length} item{gear.length === 1 ? '' : 's'}
+          </Text>
+        ) : null}
       </View>
 
       {isLoading && !profile ? (
         <ActivityIndicator color={appColors.primary} style={{ marginVertical: 12 }} />
-      ) : null}
-
-      {!isLoading && gear.length === 0 ? (
-        <Text style={styles.listMeta}>
-          No duty gear assigned yet. Items issued from Admin/HR inventory will appear here.
-        </Text>
       ) : null}
 
       <View style={styles.stackTight}>
@@ -69,13 +67,10 @@ export function GuardProfileDutyGearCard() {
                 <Text style={styles.listMeta}>
                   {item.category}
                   {item.quantity > 0
-                    ? ` • Qty ${item.quantity} ${item.unit || 'pcs'}`
+                    ? ` · ${item.quantity} ${item.unit || 'pcs'}`
                     : ''}
                 </Text>
               </View>
-            </View>
-            <View style={styles.statusNeutral}>
-              <Text style={styles.statusNeutralText}>Issued</Text>
             </View>
           </View>
         ))}

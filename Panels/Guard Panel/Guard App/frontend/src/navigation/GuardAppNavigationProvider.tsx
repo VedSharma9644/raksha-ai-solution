@@ -36,6 +36,8 @@ type GuardAppNavigationContextValue = {
     accuracyMeters: number;
   } | null) => void;
   signIn: (token: string, guard: GuardSessionUser) => void;
+  /** Merge live roster fields from /today into the in-memory session user. */
+  patchGuardUser: (patch: Partial<GuardSessionUser>) => void;
   signOut: () => void;
   goHome: () => void;
   goBack: () => void;
@@ -148,6 +150,10 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
     setMainTabState('home');
   }, []);
 
+  const patchGuardUser = useCallback((patch: Partial<GuardSessionUser>) => {
+    setGuardUser((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
   const signOut = useCallback(() => {
     setIsAuthenticated(false);
     setAuthToken(null);
@@ -197,6 +203,7 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       setPatrolMode,
       setLastKnownLocation,
       signIn,
+      patchGuardUser,
       signOut,
       goHome,
       goBack,
@@ -227,6 +234,7 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
       setPatrolMode,
       setLastKnownLocation,
       signIn,
+      patchGuardUser,
       signOut,
       goHome,
       goBack,

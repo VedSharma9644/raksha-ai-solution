@@ -55,6 +55,9 @@ export interface GuardShiftAssignment {
   effectiveTo?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  /** True when the guard has an open punch-in for today — roster edits blocked. */
+  shiftLocked?: boolean;
+  shiftLockedReason?: string;
 }
 
 export const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";

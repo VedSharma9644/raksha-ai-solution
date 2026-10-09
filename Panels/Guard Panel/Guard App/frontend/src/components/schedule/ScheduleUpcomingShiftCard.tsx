@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
 import type {
@@ -20,6 +21,8 @@ function statusIcon(
   switch (dutyStatus) {
     case 'on_duty':
       return 'verified';
+    case 'late_login':
+      return 'warning-amber';
     case 'delayed':
       return 'schedule';
     case 'coming':
@@ -33,24 +36,58 @@ function statusIcon(
   }
 }
 
-export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardProps) {
-  if (shift.kind === 'rest') {
-    return (
-      <View style={[styles.card, styles.restCard]}>
-        <View style={styles.headerRow}>
-          <View style={styles.dayRow}>
-            {shift.todayBadge ? (
+function DayHeader({
+  dayLabel,
+  todayBadge,
+  tomorrowBadge,
+  status,
+}: {
+  dayLabel: string;
+  todayBadge?: boolean;
+  tomorrowBadge?: boolean;
+  status: ReactNode;
+}) {
+  return (
+    <View style={styles.headerRow}>
+      <View style={styles.dayCol}>
+        {todayBadge || tomorrowBadge ? (
+          <View style={styles.dayMetaRow}>
+            {todayBadge ? (
               <View style={styles.todayBadge}>
                 <Text style={styles.todayText}>Today</Text>
               </View>
             ) : null}
-            <Text style={styles.dayLabel}>{shift.dayLabel}</Text>
+            {tomorrowBadge && !todayBadge ? (
+              <View style={styles.tomorrowBadge}>
+                <Text style={styles.tomorrowText}>Tomorrow</Text>
+              </View>
+            ) : null}
           </View>
-          <View style={[styles.statusBadge, styles.statusBadgeRest]}>
-            <MaterialIcons name="bed" size={16} color={appColors.primary} />
-            <Text style={styles.statusText}>{shift.statusLabel}</Text>
-          </View>
-        </View>
+        ) : null}
+        <Text style={styles.dayLabel} numberOfLines={1}>
+          {dayLabel}
+        </Text>
+      </View>
+      {status}
+    </View>
+  );
+}
+
+export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardProps) {
+  if (shift.kind === 'rest') {
+    return (
+      <View style={[styles.card, styles.restCard]}>
+        <DayHeader
+          dayLabel={shift.dayLabel}
+          todayBadge={shift.todayBadge}
+          tomorrowBadge={shift.tomorrowBadge}
+          status={
+            <View style={[styles.statusBadge, styles.statusBadgeRest]}>
+              <MaterialIcons name="bed" size={16} color={appColors.primary} />
+              <Text style={styles.statusText}>{shift.statusLabel}</Text>
+            </View>
+          }
+        />
         <View style={styles.restBody}>
           <View style={styles.restIconWrap}>
             <MaterialIcons name="weekend" size={24} color={appColors.primary} />
@@ -70,6 +107,7 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
   const statusBadgeStyle = [
     styles.statusBadge,
     dutyStatus === 'on_duty' && styles.statusBadgeOnDuty,
+    dutyStatus === 'late_login' && styles.statusBadgeLateLogin,
     dutyStatus === 'delayed' && styles.statusBadgeDelayed,
     dutyStatus === 'coming' && styles.statusBadgeComing,
     dutyStatus === 'completed' && styles.statusBadgeCompleted,
@@ -79,6 +117,7 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
   const statusTextStyle = [
     styles.statusText,
     dutyStatus === 'on_duty' && styles.statusTextOnDuty,
+    dutyStatus === 'late_login' && styles.statusTextLateLogin,
     dutyStatus === 'delayed' && styles.statusTextDelayed,
     dutyStatus === 'coming' && styles.statusTextComing,
     dutyStatus === 'completed' && styles.statusTextCompleted,
@@ -88,47 +127,45 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
   const iconColor =
     dutyStatus === 'on_duty'
       ? '#065f46'
-      : dutyStatus === 'delayed' || dutyStatus === 'missed'
-        ? appColors.error
-        : dutyStatus === 'coming'
-          ? appColors.primaryContainer
-          : isNight
-            ? appColors.onSurface
-            : appColors.primary;
+      : dutyStatus === 'late_login'
+        ? '#b45309'
+        : dutyStatus === 'delayed' || dutyStatus === 'missed'
+          ? appColors.error
+          : dutyStatus === 'coming'
+            ? appColors.primaryContainer
+            : isNight
+              ? appColors.onSurface
+              : appColors.primary;
 
   return (
     <View style={[styles.card, shift.todayBadge && styles.todayCard]}>
-      <View style={styles.headerRow}>
-        <View style={styles.dayRow}>
-          {shift.todayBadge ? (
-            <View style={styles.todayBadge}>
-              <Text style={styles.todayText}>Today</Text>
-            </View>
-          ) : null}
-          {shift.tomorrowBadge && !shift.todayBadge ? (
-            <View style={styles.tomorrowBadge}>
-              <Text style={styles.tomorrowText}>Tomorrow</Text>
-            </View>
-          ) : null}
-          <Text style={styles.dayLabel}>{shift.dayLabel}</Text>
-        </View>
-        <View style={statusBadgeStyle}>
-          <MaterialIcons
-            name={statusIcon(dutyStatus, isNight)}
-            size={16}
-            color={iconColor}
-          />
-          <Text style={statusTextStyle}>{shift.statusLabel}</Text>
-        </View>
-      </View>
+      <DayHeader
+        dayLabel={shift.dayLabel}
+        todayBadge={shift.todayBadge}
+        tomorrowBadge={shift.tomorrowBadge}
+        status={
+          <View style={statusBadgeStyle}>
+            <MaterialIcons
+              name={statusIcon(dutyStatus, isNight)}
+              size={16}
+              color={iconColor}
+            />
+            <Text style={statusTextStyle}>{shift.statusLabel}</Text>
+          </View>
+        }
+      />
 
       <View style={styles.siteBlock}>
         <View style={styles.siteCol}>
           <View style={styles.siteRow}>
             <MaterialIcons name={siteIcon} size={18} color={appColors.secondary} />
-            <Text style={styles.siteName}>{shift.siteName}</Text>
+            <Text style={styles.siteName} numberOfLines={2}>
+              {shift.siteName}
+            </Text>
           </View>
-          <Text style={styles.postName}>{shift.postName}</Text>
+          <Text style={styles.postName} numberOfLines={2}>
+            {shift.postName}
+          </Text>
         </View>
         <MaterialIcons
           name={isNight ? 'nightlight' : 'wb-sunny'}
@@ -137,19 +174,12 @@ export function ScheduleUpcomingShiftCard({ shift }: ScheduleUpcomingShiftCardPr
         />
       </View>
 
-      {shift.nightAllowanceLabel ? (
-        <View style={styles.allowanceChip}>
-          <MaterialIcons name="currency-rupee" size={18} color={appColors.primaryContainer} />
-          <Text style={styles.allowanceText}>{shift.nightAllowanceLabel}</Text>
-        </View>
-      ) : null}
-
       <View style={styles.footerRow}>
         <View style={styles.timeRow}>
           <MaterialIcons name="schedule" size={18} color={appColors.secondary} />
           <Text style={styles.timeText}>{shift.timeLabel}</Text>
         </View>
-        <TextChevronLink />
+        <TextChevronLink label="Details" />
       </View>
     </View>
   );

@@ -8,50 +8,50 @@ import { homeAssignedSiteInfoStyles as styles } from '../../styles/home-assigned
 type AssignedSiteInfoCardProps = {
   siteName?: string;
   siteDetail?: string;
-  supervisorName?: string;
-  supervisorPhone?: string;
-  gpsLocked?: boolean;
+  hrName?: string;
+  hrPhone?: string;
 };
 
 export function AssignedSiteInfoCard({
-  siteName = 'Assigned site',
+  siteName,
   siteDetail,
-  supervisorName,
-  supervisorPhone,
-  gpsLocked = true,
+  hrName,
+  hrPhone,
 }: AssignedSiteInfoCardProps) {
-  const canCall = Boolean(supervisorPhone?.trim());
+  const site = siteName?.trim();
+  const post = siteDetail?.trim();
+  const tel = hrPhone?.trim();
+  const canCall = Boolean(tel);
+
+  if (!site && !post && !canCall) {
+    return null;
+  }
 
   return (
     <View style={styles.siteCard}>
-      <View style={styles.siteRow}>
-        <MaterialIcons name="location-on" size={22} color={appColors.primary} />
-        <View style={styles.siteTextCol}>
-          <Text style={styles.siteName}>{siteName}</Text>
-          {siteDetail ? <Text style={styles.siteDetail}>{siteDetail}</Text> : null}
+      {site || post ? (
+        <View style={styles.siteRow}>
+          <MaterialIcons name="location-on" size={22} color={appColors.primary} />
+          <View style={styles.siteTextCol}>
+            {site ? <Text style={styles.siteName}>{site}</Text> : null}
+            {post ? <Text style={styles.siteDetail}>{post}</Text> : null}
+          </View>
         </View>
-      </View>
+      ) : null}
 
-      <View style={styles.chipsRow}>
-        {canCall ? (
+      {canCall ? (
+        <View style={styles.chipsRow}>
           <Pressable
             style={({ pressed }) => [styles.callChip, pressed && styles.callChipPressed]}
-            onPress={() => Linking.openURL(`tel:${supervisorPhone}`)}
+            onPress={() => Linking.openURL(`tel:${tel}`)}
           >
             <MaterialIcons name="call" size={18} color={appColors.primary} />
             <Text style={styles.callText}>
-              Supervisor{supervisorName ? `: ${supervisorName}` : ''} (Call)
+              Call {hrName?.trim() || 'Site HR'}
             </Text>
           </Pressable>
-        ) : null}
-
-        {gpsLocked ? (
-          <View style={styles.gpsChip}>
-            <View style={styles.gpsDot} />
-            <Text style={styles.gpsText}>GPS Locked</Text>
-          </View>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }

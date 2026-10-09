@@ -43,19 +43,29 @@ export function SchedulingPage() {
       canEdit={true}
       onBack={() => navigate(APP_ROUTES.siteList)}
       onCreateAssignment={async (params) => {
-        await createAssignment({
+        const created = await createAssignment({
           siteId: id,
           ...params,
         });
-        reload();
+        if (created) {
+          reload();
+          return true;
+        }
+        return false;
       }}
       onUpdateAssignment={async (assignmentId, params) => {
-        await updateAssignment(assignmentId, params);
-        reload();
+        const ok = await updateAssignment(assignmentId, params);
+        if (ok) {
+          reload();
+        }
+        return ok;
       }}
       onDeleteAssignment={async (assignmentId) => {
-        await removeAssignment(assignmentId);
-        reload();
+        const ok = await removeAssignment(assignmentId);
+        if (ok) {
+          reload();
+        }
+        return ok;
       }}
     />
   );

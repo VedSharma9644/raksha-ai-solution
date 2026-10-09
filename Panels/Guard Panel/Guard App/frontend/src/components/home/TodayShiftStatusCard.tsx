@@ -10,6 +10,12 @@ import { StatusPill } from '../shared/StatusPill';
 export function TodayShiftStatusCard() {
   const duty = useGuardDutyAssignment();
   const iconName = duty.isNight ? 'nights-stay' : 'wb-sunny';
+  const siteLine = [
+    duty.siteName !== 'Assigned site' ? duty.siteName : null,
+    duty.postName && duty.postName !== 'Assigned post' ? duty.postName : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <RaisedCard style={styles.card}>
@@ -18,7 +24,9 @@ export function TodayShiftStatusCard() {
         <View style={styles.topRow}>
           <View style={styles.shiftLabelRow}>
             <MaterialIcons name={iconName} size={20} color={appColors.primary} />
-            <Text style={styles.shiftLabel}>{duty.shiftLabel}</Text>
+            <Text style={styles.shiftLabel} numberOfLines={2}>
+              {duty.shiftLabel}
+            </Text>
           </View>
           <StatusPill
             label={duty.statusBadge}
@@ -41,17 +49,16 @@ export function TodayShiftStatusCard() {
           ) : null}
         </View>
 
-        <Text style={styles.statusMuted}>
-          {duty.siteName}
-          {duty.postName ? ` • ${duty.postName}` : ''}
-        </Text>
+        {siteLine ? (
+          <Text style={styles.statusMuted} numberOfLines={2}>
+            {siteLine}
+          </Text>
+        ) : null}
 
         <View style={styles.statusRow}>
-          <View style={styles.statusLeft}>
-            <MaterialIcons name="schedule" size={20} color={appColors.secondary} />
-            <Text style={styles.statusMuted}>Status:</Text>
-            <Text style={styles.statusValue}>{duty.statusText}</Text>
-          </View>
+          <Text style={styles.statusValue} numberOfLines={2}>
+            {duty.statusText}
+          </Text>
           {duty.countdownLabel ? (
             <Text style={styles.countdown}>{duty.countdownLabel}</Text>
           ) : null}

@@ -10,12 +10,10 @@ import { GuardProfileAuditQr } from './GuardProfileAuditQr';
 
 type GuardProfileDigitalIdCardProps = {
   onOpenQr: () => void;
-  onDownload: () => void;
 };
 
 export function GuardProfileDigitalIdCard({
   onOpenQr,
-  onDownload,
 }: GuardProfileDigitalIdCardProps) {
   const { guardUser } = useGuardAppNavigation();
   const guardId = guardUser?.employeeCode?.trim() || '—';
@@ -29,7 +27,7 @@ export function GuardProfileDigitalIdCard({
         <View style={styles.topBarLeft}>
           <MaterialIcons name="verified" size={18} color={appColors.primaryFixed} />
           <Text style={styles.topBarLabel} numberOfLines={1}>
-            Verified Guard Profile
+            Guard ID
           </Text>
         </View>
         <View style={styles.activeChip}>
@@ -39,19 +37,6 @@ export function GuardProfileDigitalIdCard({
       </View>
 
       <View style={styles.body}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>Duty Credential</Text>
-            <Text style={styles.cardTitle} numberOfLines={1}>
-              Guard Digital ID
-            </Text>
-          </View>
-          <View style={styles.idBadge}>
-            <Text style={styles.idLabel}>{guardProfileDefaults.guardIdLabel}</Text>
-            <Text style={styles.idValue}>{guardId}</Text>
-          </View>
-        </View>
-
         <View style={styles.identityRow}>
           <View style={styles.photoWrap}>
             {photoUri ? (
@@ -61,22 +46,17 @@ export function GuardProfileDigitalIdCard({
                 <GuardUserAvatar fullName={guardName} size={84} />
               </View>
             )}
-            <View style={styles.gradeBar}>
-              <Text style={styles.gradeText}>ON DUTY</Text>
-            </View>
           </View>
           <View style={styles.identityCopy}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={styles.name} numberOfLines={2}>
               {guardName}
             </Text>
             <Text style={styles.role} numberOfLines={1}>
               {guardRole}
             </Text>
-            <View style={styles.chipsRow}>
-              <View style={styles.chip}>
-                <MaterialIcons name="local-police" size={15} color={appColors.primary} />
-                <Text style={styles.chipText}>{guardProfileDefaults.verifiedChip}</Text>
-              </View>
+            <View style={styles.idBadge}>
+              <Text style={styles.idLabel}>{guardProfileDefaults.guardIdLabel}</Text>
+              <Text style={styles.idValue}>{guardId}</Text>
             </View>
           </View>
         </View>
@@ -85,15 +65,11 @@ export function GuardProfileDigitalIdCard({
           <View style={styles.qrCopy}>
             <View style={styles.qrTitleRow}>
               <MaterialIcons name="qr-code-scanner" size={18} color={appColors.primary} />
-              <Text style={styles.qrTitle}>Duty ID Code</Text>
+              <Text style={styles.qrTitle}>Duty QR</Text>
             </View>
             <Text style={styles.qrHint}>
-              Show this code for on-site identity checks (Guard ID {guardId})
+              Show for on-site identity check
             </Text>
-            <View style={styles.validRow}>
-              <MaterialIcons name="badge" size={14} color={appColors.secondary} />
-              <Text style={styles.validText}>ID {guardId}</Text>
-            </View>
           </View>
           <Pressable
             accessibilityLabel="Open Fullscreen QR"
@@ -105,31 +81,15 @@ export function GuardProfileDigitalIdCard({
           </Pressable>
         </View>
 
-        <View style={styles.actionsRow}>
-          <Pressable
-            style={({ pressed }) => [styles.secondaryAction, pressed && styles.actionPressed]}
-            onPress={onDownload}
-          >
-            <MaterialIcons name="download" size={20} color={appColors.primary} />
-            <Text style={styles.actionLabel} numberOfLines={1}>
-              {guardProfileDefaults.downloadPdfLabel}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.primaryAction, pressed && styles.actionPressed]}
-            onPress={onOpenQr}
-          >
-            <MaterialIcons name="fullscreen" size={20} color={appColors.onPrimary} />
-            <Text style={styles.primaryActionLabel} numberOfLines={1}>
-              {guardProfileDefaults.fullBadgeLabel}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.footerBar}>
-        <Text style={styles.footerText}>RAKSHA GUARD ID</Text>
-        <Text style={styles.footerHash}>CODE: {guardId}</Text>
+        <Pressable
+          style={({ pressed }) => [styles.primaryAction, pressed && styles.actionPressed]}
+          onPress={onOpenQr}
+        >
+          <MaterialIcons name="fullscreen" size={20} color={appColors.onPrimary} />
+          <Text style={styles.primaryActionLabel} numberOfLines={1}>
+            {guardProfileDefaults.fullBadgeLabel}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );

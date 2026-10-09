@@ -49,7 +49,13 @@ export type GuardDutyAssignmentView = {
 };
 
 export function useGuardDutyAssignment(): GuardDutyAssignmentView {
-  const { authToken, guardUser, shiftActive: navShiftActive } = useGuardAppNavigation();
+  const {
+    authToken,
+    guardUser,
+    shiftActive: navShiftActive,
+    patchGuardUser,
+    setShiftActive,
+  } = useGuardAppNavigation();
   const [today, setToday] = useState<TodayShiftStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [tick, setTick] = useState(0);
@@ -63,12 +69,23 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
     try {
       const data = await fetchTodayShift(authToken);
       setToday(data);
+      setShiftActive(Boolean(data.shiftActive));
+      // Keep session user aligned with live roster — never leave login stale times on screen.
+      if (data.shiftFrom || data.shiftTo || data.siteName || data.postName) {
+        patchGuardUser({
+          ...(data.shiftFrom ? { shiftFrom: data.shiftFrom } : {}),
+          ...(data.shiftTo ? { shiftTo: data.shiftTo } : {}),
+          ...(data.siteName ? { siteName: data.siteName } : {}),
+          ...(data.postName ? { postName: data.postName } : {}),
+          ...(data.assignedSiteId ? { assignedSiteId: data.assignedSiteId } : {}),
+        });
+      }
     } catch {
       // Keep last known assignment on transient errors
     } finally {
       setIsLoading(false);
     }
-  }, [authToken]);
+  }, [authToken, patchGuardUser, setShiftActive]);
 
   useEffect(() => {
     void refresh();
@@ -130,7 +147,7 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       const lateLogin =
         punchInStatus?.toLowerCase() === 'late' ||
         punchInStatus?.toLowerCase() === 'late login';
-      statusBadge = lateLogin ? 'LATE LOGIN' : 'ON DUTY';
+      statusBadge = lateLogin ? 'ON DUTY\nLATE LOGIN' : 'ON DUTY';
       statusText = lateLogin ? 'Late check-in' : 'Checked in on time';
       badgeTone = lateLogin ? 'warning' : 'success';
     } else if (delayedWaiting) {

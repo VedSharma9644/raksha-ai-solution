@@ -5,14 +5,17 @@ import { appColors, appRadii, appTypography } from '../theme';
 export const sharedStatusPillStyles = StyleSheet.create({
   base: {
     paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: appRadii.full,
-    flexShrink: 0,
-    maxWidth: '100%',
+    paddingVertical: 4,
+    borderRadius: appRadii.lg,
+    flexShrink: 1,
+    maxWidth: '48%',
+    alignSelf: 'flex-start',
   },
   label: {
     ...appTypography.labelLg,
     fontFamily: 'PublicSans_700Bold',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   primarySoft: {
     backgroundColor: appColors.surfaceContainerHighest,

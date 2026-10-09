@@ -14,30 +14,37 @@ type GuardGreetingBannerProps = {
   photoUri?: string | null;
   siteName?: string;
   siteDetail?: string;
-  supervisorName?: string;
-  supervisorPhone?: string;
+  hrName?: string;
+  hrPhone?: string;
 };
 
 export function GuardGreetingBanner({
   guardName = 'Guard',
   fullName,
-  guardId = '#RK-4092',
-  post = 'Gate No. 3',
+  guardId,
+  post,
   photoUri,
   siteName,
   siteDetail,
-  supervisorName,
-  supervisorPhone,
+  hrName,
+  hrPhone,
 }: GuardGreetingBannerProps) {
+  const idLabel = guardId?.trim();
+  const postLabel = post?.trim();
+
   return (
     <RaisedCard>
       <View style={styles.topRow}>
         <View style={styles.greetingCol}>
-          <Text style={styles.greeting}>Good Morning, {guardName}!</Text>
+          <Text style={styles.greeting}>Hello, {guardName}</Text>
           <View style={styles.metaRow}>
-            <StatusPill label={`ID: ${guardId}`} variant="idBadge" />
-            <Text style={styles.dot}>•</Text>
-            <Text style={styles.post}>{post}</Text>
+            {idLabel ? <StatusPill label={`ID: ${idLabel}`} variant="idBadge" /> : null}
+            {idLabel && postLabel ? <Text style={styles.dot}>•</Text> : null}
+            {postLabel ? (
+              <Text style={styles.post} numberOfLines={1}>
+                {postLabel}
+              </Text>
+            ) : null}
           </View>
         </View>
         <View style={styles.photoWrap}>
@@ -48,8 +55,8 @@ export function GuardGreetingBanner({
       <AssignedSiteInfoCard
         siteName={siteName}
         siteDetail={siteDetail}
-        supervisorName={supervisorName}
-        supervisorPhone={supervisorPhone}
+        hrName={hrName}
+        hrPhone={hrPhone}
       />
     </RaisedCard>
   );

@@ -57,12 +57,7 @@ export function GuardProfileScreenContent() {
 
   return (
     <View style={styles.content}>
-      <GuardProfileDigitalIdCard
-        onOpenQr={() => setQrVisible(true)}
-        onDownload={() =>
-          showToast('PDF export will be available soon.')
-        }
-      />
+      <GuardProfileDigitalIdCard onOpenQr={() => setQrVisible(true)} />
       <GuardProfileEmployerCard />
       <GuardProfileComplianceCard />
       <GuardProfileDutyGearCard />
@@ -70,7 +65,6 @@ export function GuardProfileScreenContent() {
       <GuardProfileSupportCard
         language={language}
         onLanguageChange={setLanguage}
-        onOpenSecurity={() => showToast(guardProfileDefaults.toastSecurity)}
         onLogoutPress={() => setLogoutVisible(true)}
       />
 

@@ -32,7 +32,7 @@ export interface SchedulingScreenProps {
     recurringDays: import("@raskha/scheduling").DayOfWeek[];
     effectiveFrom: string;
     effectiveTo?: string | null;
-  }) => Promise<void>;
+  }) => Promise<boolean>;
   onUpdateAssignment: (
     assignmentId: string,
     params: Partial<{
@@ -44,8 +44,8 @@ export interface SchedulingScreenProps {
       effectiveFrom: string;
       effectiveTo?: string | null;
     }>
-  ) => Promise<void>;
-  onDeleteAssignment: (assignmentId: string) => Promise<void>;
+  ) => Promise<boolean>;
+  onDeleteAssignment: (assignmentId: string) => Promise<boolean>;
 }
 
 export function SchedulingScreen({
@@ -89,17 +89,19 @@ export function SchedulingScreen({
   }
 
   async function handleSave(params: Parameters<typeof onCreateAssignment>[0]) {
-    if (editingAssignment) {
-      await onUpdateAssignment(editingAssignment.id, params);
-    } else {
-      await onCreateAssignment(params);
+    const ok = editingAssignment
+      ? await onUpdateAssignment(editingAssignment.id, params)
+      : await onCreateAssignment(params);
+    if (ok) {
+      closeModal();
     }
-    closeModal();
   }
 
   async function handleDelete(assignmentId: string) {
-    await onDeleteAssignment(assignmentId);
-    closeModal();
+    const ok = await onDeleteAssignment(assignmentId);
+    if (ok) {
+      closeModal();
+    }
   }
 
   // Prepopulate preselectedShiftId for shifts in modal

@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
@@ -10,15 +10,18 @@ export function ScheduleTodayShiftHeroCard() {
   const { openShiftDetails } = useGuardAppNavigation();
   const duty = useGuardDutyAssignment();
 
+  const lateLogin =
+    duty.punchInStatus?.toLowerCase() === 'late' ||
+    duty.punchInStatus?.toLowerCase() === 'late login';
   const dutyStatus = duty.shiftActive
-    ? duty.punchInStatus?.toLowerCase() === 'late'
-      ? 'On Duty • Late login'
-      : 'On Duty • Checked-in'
+    ? lateLogin
+      ? 'On Duty\nLate Login'
+      : 'On Duty'
     : duty.isDelayed
-      ? 'Delayed • Not at site'
+      ? 'Delayed'
       : duty.statusBadge === 'MISSED'
-        ? 'Missed • No check-in'
-        : 'Assigned • Check-in pending';
+        ? 'Missed'
+        : 'Coming';
 
   return (
     <View style={styles.card}>
@@ -30,23 +33,30 @@ export function ScheduleTodayShiftHeroCard() {
             <Text style={styles.todayBadgeText}>{duty.todayBadge}</Text>
           </View>
           <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
             <Text style={styles.liveText}>{dutyStatus}</Text>
           </View>
         </View>
 
-        <Text style={styles.siteName}>{duty.siteName}</Text>
-        <View style={styles.postRow}>
-          <MaterialIcons name="location-on" size={18} color={appColors.primary} />
-          <Text style={styles.postText}>{duty.postName}</Text>
-        </View>
+        <Text style={styles.siteName} numberOfLines={2}>
+          {duty.siteName}
+        </Text>
+        {duty.postName && duty.postName !== 'Assigned post' ? (
+          <View style={styles.postRow}>
+            <MaterialIcons name="location-on" size={18} color={appColors.primary} />
+            <Text style={styles.postText} numberOfLines={2}>
+              {duty.postName}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.timeCard}>
           <View style={styles.timeLeft}>
             <MaterialIcons name="schedule" size={22} color={appColors.primary} />
-            <View>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.timeRange}>{duty.timeRange}</Text>
-              <Text style={styles.timeMeta}>{duty.dutyType}</Text>
+              {duty.durationLabel ? (
+                <Text style={styles.timeMeta}>{duty.durationLabel.replace(/[()]/g, '')}</Text>
+              ) : null}
             </View>
           </View>
           <View style={styles.sunCircle}>
@@ -58,19 +68,11 @@ export function ScheduleTodayShiftHeroCard() {
           </View>
         </View>
 
-        <View style={styles.actions}>
-          <Pressable style={styles.actionOutline} onPress={openShiftDetails}>
-            <MaterialIcons name="info" size={20} color={appColors.primary} />
-            <Text style={styles.actionOutlineText}>Shift Details</Text>
-          </Pressable>
-          <Pressable
-            style={styles.actionPrimary}
-            onPress={() => Alert.alert('Post Check', 'Post check workflow will open here soon.')}
-          >
-            <MaterialIcons name="checklist" size={20} color={appColors.onPrimary} />
-            <Text style={styles.actionPrimaryText}>Post Check</Text>
-          </Pressable>
-        </View>
+        <Pressable style={styles.actionOutline} onPress={openShiftDetails}>
+          <MaterialIcons name="info" size={20} color={appColors.primary} />
+          <Text style={styles.actionOutlineText}>View details</Text>
+          <MaterialIcons name="chevron-right" size={20} color={appColors.primary} />
+        </Pressable>
       </View>
     </View>
   );

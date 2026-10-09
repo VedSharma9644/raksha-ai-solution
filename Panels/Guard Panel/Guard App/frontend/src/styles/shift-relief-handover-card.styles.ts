@@ -4,84 +4,41 @@ import { appColors, appRadii, appSpacing, appTypography } from '../theme';
 
 export const shiftReliefHandoverCardStyles = StyleSheet.create({
   card: {
-    backgroundColor: appColors.surfaceContainerLowest,
-    borderRadius: appRadii.xl,
-    padding: appSpacing.md,
-    gap: appSpacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: appSpacing.xs,
-  },
-  headerTitle: {
-    ...appTypography.titleLg,
-    color: appColors.onSurface,
-  },
-  squadLabel: {
-    ...appTypography.labelLg,
-    color: appColors.onSurfaceVariant,
-  },
-  profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: appSpacing.sm,
-    padding: appSpacing.sm,
-    backgroundColor: appColors.surfaceContainer,
+    backgroundColor: appColors.surfaceContainerLowest,
     borderRadius: appRadii.xl,
+    padding: appSpacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  photo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  cardPressed: {
+    opacity: 0.92,
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: appColors.surfaceContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   copy: {
     flex: 1,
     minWidth: 0,
+    gap: 2,
   },
-  name: {
+  title: {
     ...appTypography.titleLg,
     color: appColors.onSurface,
   },
-  guardId: {
+  subtitle: {
     ...appTypography.labelLg,
     color: appColors.onSurfaceVariant,
-  },
-  reliefWindow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  reliefWindowText: {
-    ...appTypography.bodyLg,
-    color: appColors.primary,
-    fontFamily: 'PublicSans_700Bold',
-  },
-  requestButton: {
-    height: 56,
-    borderRadius: appRadii.xl,
-    backgroundColor: appColors.secondaryContainer,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  requestButtonPressed: {
-    transform: [{ scale: 0.97 }],
-  },
-  requestButtonText: {
-    ...appTypography.labelXl,
-    color: appColors.onSecondaryContainer,
   },
 });

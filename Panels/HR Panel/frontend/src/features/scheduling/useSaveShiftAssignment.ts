@@ -66,27 +66,31 @@ export function useSaveShiftAssignment() {
   async function updateAssignment(
     assignmentId: string,
     params: Partial<Omit<SaveGuardShiftAssignmentParams, "agencyId" | "siteId" | "guardId">>
-  ): Promise<void> {
+  ): Promise<boolean> {
     setIsSaving(true);
     setSaveError("");
     try {
       await apiRequest("PATCH", `/api/scheduling/${assignmentId}`, params);
+      return true;
     } catch (err: unknown) {
       const e = err as { message?: string };
       setSaveError(e.message ?? "Failed to update assignment.");
+      return false;
     } finally {
       setIsSaving(false);
     }
   }
 
-  async function removeAssignment(assignmentId: string): Promise<void> {
+  async function removeAssignment(assignmentId: string): Promise<boolean> {
     setIsSaving(true);
     setSaveError("");
     try {
       await apiRequest("DELETE", `/api/scheduling/${assignmentId}`);
+      return true;
     } catch (err: unknown) {
       const e = err as { message?: string };
       setSaveError(e.message ?? "Failed to delete assignment.");
+      return false;
     } finally {
       setIsSaving(false);
     }

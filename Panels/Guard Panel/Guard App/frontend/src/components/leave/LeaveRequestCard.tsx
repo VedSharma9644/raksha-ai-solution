@@ -3,9 +3,12 @@ import * as Linking from 'expo-linking';
 import { Alert, Pressable, Text, View } from 'react-native';
 
 import {
-  leaveTimeOffDefaults,
   type LeaveRequestCard as LeaveRequestCardData,
 } from '../../constants/leave-time-off-defaults';
+import {
+  toTelHref,
+  useGuardProfile,
+} from '../../hooks/useGuardProfile';
 import { leaveRequestCardStyles as styles } from '../../styles/leave-request-card.styles';
 import { appColors } from '../../theme';
 
@@ -44,6 +47,9 @@ function statusVisuals(status: LeaveRequestCardData['status']) {
 }
 
 export function LeaveRequestCard({ item, onWithdraw, withdrawing }: LeaveRequestCardProps) {
+  const { profile } = useGuardProfile();
+  const hrName = profile?.site.hrName?.trim() || 'Site HR';
+  const hrTel = toTelHref(profile?.site.hrContact?.trim() || '');
   const visuals = statusVisuals(item.status);
   const isRejected = item.status === 'rejected';
   const hasRichApproval = Boolean(item.approvalNote && item.approvalDetail);
@@ -148,17 +154,19 @@ export function LeaveRequestCard({ item, onWithdraw, withdrawing }: LeaveRequest
             <Text style={styles.withdrawLabel}>{withdrawing ? 'Withdrawing…' : 'Withdraw'}</Text>
           </Pressable>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.callButton,
-              pressed && styles.actionPressed,
-            ]}
-            onPress={() => Linking.openURL(`tel:${leaveTimeOffDefaults.supervisorTel}`)}
-          >
-            <MaterialIcons name="call" size={18} color={appColors.onPrimary} />
-            <Text style={styles.callLabel}>Call Supervisor</Text>
-          </Pressable>
+          {hrTel ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.callButton,
+                pressed && styles.actionPressed,
+              ]}
+              onPress={() => Linking.openURL(`tel:${hrTel}`)}
+            >
+              <MaterialIcons name="call" size={18} color={appColors.onPrimary} />
+              <Text style={styles.callLabel}>Call {hrName}</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
     </View>

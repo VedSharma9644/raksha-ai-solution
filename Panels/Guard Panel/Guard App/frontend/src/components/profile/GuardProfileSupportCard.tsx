@@ -17,14 +17,12 @@ import { appColors } from '../../theme';
 type GuardProfileSupportCardProps = {
   language: ProfileLanguage;
   onLanguageChange: (language: ProfileLanguage) => void;
-  onOpenSecurity: () => void;
   onLogoutPress: () => void;
 };
 
 export function GuardProfileSupportCard({
   language,
   onLanguageChange,
-  onOpenSecurity,
   onLogoutPress,
 }: GuardProfileSupportCardProps) {
   const { profile } = useGuardProfile();
@@ -37,30 +35,27 @@ export function GuardProfileSupportCard({
     <View style={styles.card}>
       <Text style={styles.title}>{guardProfileDefaults.supportTitle}</Text>
 
-      <Pressable
-        style={({ pressed }) => [styles.helpline, pressed && styles.pressed]}
-        onPress={() => {
-          if (hrTel) {
+      {hrTel ? (
+        <Pressable
+          style={({ pressed }) => [styles.helpline, pressed && styles.pressed]}
+          onPress={() => {
             void Linking.openURL(`tel:${hrTel}`);
-          }
-        }}
-        disabled={!hrTel}
-      >
-        <View style={styles.helplineLeft}>
-          <View style={styles.helplineIcon}>
-            <MaterialIcons name="support-agent" size={22} color={appColors.onPrimary} />
+          }}
+        >
+          <View style={styles.helplineLeft}>
+            <View style={styles.helplineIcon}>
+              <MaterialIcons name="support-agent" size={22} color={appColors.onPrimary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.helplineTitle} numberOfLines={1}>
+                Call {hrName}
+              </Text>
+              <Text style={styles.helplineSub}>{formatPhoneDisplay(hrContact)}</Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.helplineTitle}>Call {hrName}</Text>
-            <Text style={styles.helplineSub}>
-              {hrContact
-                ? formatPhoneDisplay(hrContact)
-                : 'HR phone not on file for this site'}
-            </Text>
-          </View>
-        </View>
-        <MaterialIcons name="arrow-forward" size={24} color={appColors.onPrimary} />
-      </Pressable>
+          <MaterialIcons name="call" size={22} color={appColors.onPrimary} />
+        </Pressable>
+      ) : null}
 
       <View style={styles.rowTile}>
         <View style={styles.rowLeft}>
@@ -91,20 +86,6 @@ export function GuardProfileSupportCard({
           </Pressable>
         </View>
       </View>
-
-      <Pressable
-        style={({ pressed }) => [styles.rowTile, pressed && styles.pressed]}
-        onPress={onOpenSecurity}
-      >
-        <View style={styles.rowLeft}>
-          <MaterialIcons name="lock-reset" size={22} color={appColors.secondary} />
-          <View>
-            <Text style={styles.rowTitle}>{guardProfileDefaults.securityTitle}</Text>
-            <Text style={styles.rowSub}>{guardProfileDefaults.securitySub}</Text>
-          </View>
-        </View>
-        <MaterialIcons name="chevron-right" size={20} color={appColors.secondary} />
-      </Pressable>
 
       <View style={styles.logoutWrap}>
         <Pressable

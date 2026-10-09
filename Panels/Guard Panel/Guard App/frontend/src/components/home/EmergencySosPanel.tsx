@@ -47,15 +47,17 @@ export function EmergencySosPanel() {
           <MaterialIcons name="warning" size={28} color={appColors.onTertiary} />
         </View>
         <View style={styles.copy}>
-          <Text style={styles.title}>EMERGENCY ASSISTANCE</Text>
+          <Text style={styles.title} numberOfLines={2}>
+            Emergency Assistance
+          </Text>
           <Text style={styles.description}>
-            Tap if you need immediate supervisor & central control room backup
+            Tap to confirm and call Site HR for immediate backup
           </Text>
         </View>
       </View>
 
       <PrimaryActionButton
-        label="SOS Emergency (Requires Confirmation)"
+        label="SOS Emergency"
         icon="emergency"
         onPress={triggerSos}
         variant="emergency"

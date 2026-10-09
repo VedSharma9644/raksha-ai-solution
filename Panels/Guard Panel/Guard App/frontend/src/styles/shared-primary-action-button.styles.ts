@@ -4,13 +4,18 @@ import { appColors, appRadii, appSpacing, appTypography } from '../theme';
 
 export const sharedPrimaryActionButtonStyles = StyleSheet.create({
   base: {
+    alignSelf: 'stretch',
     width: '100%',
-    height: 56,
+    maxWidth: '100%',
+    minHeight: 56,
     borderRadius: appRadii.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: appSpacing.xs,
+    paddingHorizontal: appSpacing.md,
+    paddingVertical: appSpacing.sm,
+    overflow: 'hidden',
   },
   light: {
     backgroundColor: appColors.surfaceContainerLowest,
@@ -27,6 +32,8 @@ export const sharedPrimaryActionButtonStyles = StyleSheet.create({
   lightLabel: {
     ...appTypography.labelXl,
     color: appColors.primary,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   emergency: {
     backgroundColor: appColors.tertiaryContainer,
@@ -37,5 +44,7 @@ export const sharedPrimaryActionButtonStyles = StyleSheet.create({
   emergencyLabel: {
     ...appTypography.labelXl,
     color: appColors.onTertiary,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

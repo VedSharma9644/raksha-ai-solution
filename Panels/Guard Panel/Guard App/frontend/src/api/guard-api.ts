@@ -131,6 +131,7 @@ export type AttendanceHistoryResponse = {
 export type GuardScheduleDutyStatus =
   | 'coming'
   | 'on_duty'
+  | 'late_login'
   | 'delayed'
   | 'completed'
   | 'missed'

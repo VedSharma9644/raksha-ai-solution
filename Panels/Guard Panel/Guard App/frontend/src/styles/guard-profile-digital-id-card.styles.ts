@@ -86,11 +86,13 @@ export const guardProfileDigitalIdCardStyles = StyleSheet.create({
     color: appColors.onSurface,
   },
   idBadge: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
     backgroundColor: appColors.surfaceContainerHigh,
     paddingHorizontal: appSpacing.sm,
     paddingVertical: 4,
     borderRadius: appRadii.lg,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   idLabel: {
     fontSize: 10,
@@ -254,10 +256,10 @@ export const guardProfileDigitalIdCardStyles = StyleSheet.create({
     paddingHorizontal: appSpacing.sm,
   },
   primaryAction: {
-    flex: 1,
+    width: '100%',
     minHeight: 50,
     borderRadius: appRadii.xl,
-    backgroundColor: appColors.primaryContainer,
+    backgroundColor: appColors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

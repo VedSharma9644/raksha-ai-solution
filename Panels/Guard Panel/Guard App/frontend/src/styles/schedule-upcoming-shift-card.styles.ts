@@ -21,18 +21,19 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: appSpacing.xs,
-    flexWrap: 'wrap',
+    gap: appSpacing.sm,
+    width: '100%',
   },
-  dayRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: '50%',
+  dayCol: {
+    flex: 1,
     minWidth: 0,
+    gap: 6,
+  },
+  dayMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flexWrap: 'wrap',
+    gap: 6,
   },
   todayCard: {
     borderWidth: 1.5,
@@ -40,10 +41,10 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
   },
   todayBadge: {
     backgroundColor: appColors.primary,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: appRadii.full,
-    flexShrink: 0,
+    alignSelf: 'flex-start',
   },
   todayText: {
     ...appTypography.labelLg,
@@ -52,10 +53,10 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
   },
   tomorrowBadge: {
     backgroundColor: appColors.primaryFixed,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: appRadii.full,
-    flexShrink: 0,
+    alignSelf: 'flex-start',
   },
   tomorrowText: {
     ...appTypography.labelLg,
@@ -66,18 +67,17 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     ...appTypography.titleLg,
     color: appColors.onSurface,
     flexShrink: 1,
-    flex: 1,
-    minWidth: 0,
   },
   statusBadge: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 4,
     backgroundColor: appColors.surfaceContainerLow,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 5,
     borderRadius: appRadii.md,
     flexShrink: 0,
+    maxWidth: '48%',
   },
   statusBadgeNight: {
     backgroundColor: appColors.surfaceContainerHigh,
@@ -86,12 +86,16 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     backgroundColor: appColors.surfaceContainerHighest,
     borderRadius: appRadii.full,
     paddingHorizontal: 10,
+    alignItems: 'center',
   },
   statusBadgeComing: {
     backgroundColor: 'rgba(30, 94, 99, 0.12)',
   },
   statusBadgeOnDuty: {
     backgroundColor: 'rgba(6, 95, 70, 0.14)',
+  },
+  statusBadgeLateLogin: {
+    backgroundColor: 'rgba(180, 83, 9, 0.14)',
   },
   statusBadgeDelayed: {
     backgroundColor: appColors.errorContainer,
@@ -106,6 +110,10 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
     ...appTypography.labelLg,
     color: appColors.primary,
     fontFamily: 'PublicSans_700Bold',
+    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
+    lineHeight: 16,
   },
   statusTextNight: {
     color: appColors.onSurface,
@@ -115,6 +123,9 @@ export const scheduleUpcomingShiftCardStyles = StyleSheet.create({
   },
   statusTextOnDuty: {
     color: '#065f46',
+  },
+  statusTextLateLogin: {
+    color: '#b45309',
   },
   statusTextDelayed: {
     color: appColors.error,

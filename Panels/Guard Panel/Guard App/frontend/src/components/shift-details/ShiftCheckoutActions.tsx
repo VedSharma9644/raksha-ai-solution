@@ -9,27 +9,26 @@ import { shiftCheckoutActionsStyles as styles } from '../../styles/shift-checkou
 export function ShiftCheckoutActions() {
   const { openPatrolSession } = useGuardAppNavigation();
   const duty = useGuardDutyAssignment();
+  const ending = duty.shiftActive;
 
   return (
     <View style={styles.section}>
       <Pressable
         style={({ pressed }) => [styles.checkoutButton, pressed && styles.checkoutButtonPressed]}
-        onPress={() => openPatrolSession(duty.shiftActive ? 'punch_out' : 'punch_in')}
+        onPress={() => openPatrolSession(ending ? 'punch_out' : 'punch_in')}
       >
-        <MaterialIcons name="logout" size={28} color={appColors.onPrimary} />
-        <Text style={styles.checkoutLabel}>
-          {duty.shiftActive
-            ? 'Mark Check-Out / Shift End'
-            : 'Mark Attendance / Punch In'}
+        <MaterialIcons
+          name={ending ? 'logout' : 'login'}
+          size={24}
+          color={appColors.onPrimary}
+        />
+        <Text style={styles.checkoutLabel} numberOfLines={1}>
+          {ending ? 'End shift' : 'Punch in'}
         </Text>
       </Pressable>
-
-      <View style={styles.sosHintRow}>
-        <MaterialIcons name="camera-alt" size={18} color={appColors.tertiary} />
-        <Text style={styles.sosHintText}>
-          Opens the live selfie camera at your assigned site geofence
-        </Text>
-      </View>
+      <Text style={styles.sosHintText}>
+        Opens camera for a live selfie at your site
+      </Text>
     </View>
   );
 }
