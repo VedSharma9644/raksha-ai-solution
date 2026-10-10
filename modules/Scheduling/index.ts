@@ -18,3 +18,20 @@ export {
   listShiftAssignmentsByGuard,
   getShiftAssignmentById,
 } from "./schedulingService";
+
+export type {
+  CoverageSite,
+  CoverageSiteShift,
+  RosterCoverageGap,
+  SiteRosterCoverage,
+  RosterCoverageReport,
+} from "./rosterCoverage";
+export {
+  toDutyDateKey,
+  addDaysToDutyDate,
+  weekdayFromDutyDate,
+  assignmentCoversDutyDate,
+  findSiteCoverageGaps,
+  buildAgencyRosterCoverage,
+  summarizeSiteCoverageGaps,
+} from "./rosterCoverage";

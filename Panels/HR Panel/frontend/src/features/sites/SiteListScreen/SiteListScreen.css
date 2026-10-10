@@ -13,6 +13,43 @@
   max-width: 24rem;
 }
 
+.site-list-screen__coverage-banner {
+  margin-block-end: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: var(--radius-md, 8px);
+  color: #9a3412;
+  font-size: 0.875rem;
+}
+
+.site-list-screen__coverage-banner p {
+  margin: 0.35rem 0 0;
+}
+
+.site-list-screen__coverage-hint {
+  opacity: 0.9;
+  font-size: 0.8125rem;
+}
+
+.site-table__row--coverage-risk {
+  background: color-mix(in srgb, #fdba74 18%, transparent);
+}
+
+.site-table__coverage-chip {
+  display: inline-block;
+  margin-inline-start: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background: #fed7aa;
+  color: #9a3412;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
 .site-list-screen__table-wrap {
   overflow-x: auto;
 }

@@ -1,5 +1,9 @@
-import { useState } from "react";
-import type { GuardShiftAssignment } from "@raskha/scheduling";
+import { useMemo, useState } from "react";
+import {
+  findSiteCoverageGaps,
+  summarizeSiteCoverageGaps,
+  type GuardShiftAssignment,
+} from "@raskha/scheduling";
 import type { Site } from "@raskha/site-management";
 import type { Guard } from "@raskha/guard-management";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
@@ -69,6 +73,23 @@ export function SchedulingScreen({
 
   const shifts = site.shiftConfig?.shifts ?? [];
   const siteGuards = guards.filter((g) => g.assignedSiteId === site.id);
+
+  const nextWeekCoverage = useMemo(
+    () =>
+      findSiteCoverageGaps({
+        site: {
+          id: site.id,
+          siteName: site.siteName,
+          status: site.status,
+          shiftConfig: site.shiftConfig,
+        },
+        assignments,
+        days: 7,
+      }),
+    [site, assignments]
+  );
+  const coverageSummary = summarizeSiteCoverageGaps(nextWeekCoverage);
+  const previewGaps = nextWeekCoverage.gaps.slice(0, 4);
 
   function openCreateModal(shiftId?: string) {
     setEditingAssignment(null);
@@ -167,6 +188,39 @@ export function SchedulingScreen({
             </div>
           </div>
         )}
+
+        {!isLoading && coverageSummary ? (
+          <div className="scheduling-screen__coverage-banner" role="status">
+            <span className="scheduling-screen__coverage-icon" aria-hidden>
+              ⚠
+            </span>
+            <div className="scheduling-screen__coverage-copy">
+              <strong>Scheduling attention needed</strong>
+              <p>{coverageSummary}</p>
+              {previewGaps.length > 0 ? (
+                <ul className="scheduling-screen__coverage-list">
+                  {previewGaps.map((gap) => (
+                    <li key={`${gap.dutyDate}-${gap.shiftId}`}>
+                      {gap.dayLabel} · {gap.shiftLabel}: {gap.assigned}/{gap.required}{" "}
+                      guard{gap.required === 1 ? "" : "s"}
+                      {gap.assigned === 0 ? " (none assigned)" : ` (${gap.shortBy} short)`}
+                    </li>
+                  ))}
+                  {nextWeekCoverage.gapCount > previewGaps.length ? (
+                    <li>
+                      +{nextWeekCoverage.gapCount - previewGaps.length} more…
+                    </li>
+                  ) : null}
+                </ul>
+              ) : null}
+              {canEdit ? (
+                <p className="scheduling-screen__coverage-hint">
+                  Assign guards for the open days so this site stays covered.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         {error && (
           <p className="scheduling-screen__error" role="alert">{error}</p>

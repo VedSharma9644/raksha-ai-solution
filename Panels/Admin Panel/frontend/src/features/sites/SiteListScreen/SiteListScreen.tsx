@@ -60,6 +60,9 @@ function IconShield() {
 export interface SiteListScreenProps {
   sites: Site[];
   guards: Guard[];
+  /** Site IDs with understaffed shifts in the next 7 days. */
+  understaffedSiteIds?: string[];
+  coverageSummary?: string;
   onBack: () => void;
   onAddSite: () => void;
   onSelectSite: (siteId: string) => void;
@@ -70,6 +73,8 @@ export interface SiteListScreenProps {
 export function SiteListScreen({
   sites,
   guards,
+  understaffedSiteIds = [],
+  coverageSummary,
   onBack,
   onAddSite,
   onSelectSite,
@@ -77,6 +82,10 @@ export function SiteListScreen({
   onSchedule,
 }: SiteListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const understaffedSet = useMemo(
+    () => new Set(understaffedSiteIds),
+    [understaffedSiteIds]
+  );
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -116,6 +125,16 @@ export function SiteListScreen({
           }
         />
 
+        {coverageSummary ? (
+          <div className="site-list-screen__coverage-banner" role="status">
+            <strong>Next 7 days — scheduling gaps</strong>
+            <p>{coverageSummary}</p>
+            <p className="site-list-screen__coverage-hint">
+              Open Schedule on a highlighted site to assign missing guards.
+            </p>
+          </div>
+        ) : null}
+
         <div className="site-list-screen__filters">
           <TextField
             label="Search"
@@ -150,9 +169,20 @@ export function SiteListScreen({
               ) : (
                 filtered.map((site) => {
                   const count = guardCountBySite[site.id] ?? 0;
+                  const needsSchedule = understaffedSet.has(site.id);
                   return (
-                    <tr key={site.id} className="site-table__row">
-                      <td className="site-table__name">{site.siteName}</td>
+                    <tr
+                      key={site.id}
+                      className={`site-table__row${needsSchedule ? " site-table__row--coverage-risk" : ""}`}
+                    >
+                      <td className="site-table__name">
+                        {site.siteName}
+                        {needsSchedule ? (
+                          <span className="site-table__coverage-chip" title="Understaffed in the next 7 days">
+                            Needs schedule
+                          </span>
+                        ) : null}
+                      </td>
                       <td>{SITE_TYPE_LABELS[site.siteType] ?? site.siteType}</td>
                       <td>{site.clientName}</td>
                       <td>{site.city}</td>

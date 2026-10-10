@@ -93,7 +93,7 @@ export function ProspectGuardDetailPage() {
   }
 
   async function handleAddNote(content: string) {
-    await addNote(content, hrStaff?.displayName ?? "HR Staff");
+    await addNote(content, hrStaff?.fullName ?? "HR Staff");
   }
 
   if (isLoading) {
@@ -122,7 +122,7 @@ export function ProspectGuardDetailPage() {
       isSavingGuard={isSaving}
       saveGuardError={saveError}
       isSavingNote={isSavingNote}
-      currentUserName={hrStaff?.displayName ?? "HR Staff"}
+      currentUserName={hrStaff?.fullName ?? "HR Staff"}
       onBack={() => navigate(APP_ROUTES.prospectGuards)}
       onUpdateGuard={handleUpdateGuard}
       onUpdateStatus={handleUpdateStatus}

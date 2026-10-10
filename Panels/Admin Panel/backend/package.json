@@ -21,6 +21,7 @@
     "@raskha/relief": "1.0.0",
     "@raskha/notifications": "1.0.0",
     "@raskha/site-management": "1.0.0",
+    "@raskha/scheduling": "1.0.0",
     "@raskha/shared": "1.0.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",

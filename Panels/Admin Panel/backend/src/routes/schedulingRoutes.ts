@@ -3,6 +3,10 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getTodayOpenPunchIn } from "@raskha/attendance";
 import { GUARDS_COLLECTION } from "@raskha/guard-management";
 import { notifyRosterUpdate } from "@raskha/notifications";
+import {
+  buildAgencyRosterCoverage,
+  type GuardShiftAssignment,
+} from "@raskha/scheduling";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
 
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
@@ -156,6 +160,71 @@ export function createSchedulingRoutes(): Router {
   const router = Router();
 
   router.use(requireAgencyCaller);
+
+  // ── GET /api/scheduling/coverage?days=7 — next-N-day understaffed sites ─────
+  router.get("/coverage", async (req: AgencyAuthRequest, res: Response) => {
+    try {
+      const agencyId = req.agencyId;
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
+
+      const daysRaw = Number(req.query.days ?? 7);
+      const days = Number.isFinite(daysRaw) ? Math.max(1, Math.min(daysRaw, 31)) : 7;
+      const adminDb = getFirestore();
+
+      const [sitesSnap, assignmentsSnap] = await Promise.all([
+        adminDb.collection("sites").where("agencyId", "==", agencyId).get(),
+        adminDb
+          .collection(SHIFT_ASSIGNMENTS_COLLECTION)
+          .where("agencyId", "==", agencyId)
+          .get(),
+      ]);
+
+      const sites = sitesSnap.docs.map((d) => {
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          siteName: String(data.siteName ?? "Site"),
+          status: typeof data.status === "string" ? data.status : "active",
+          shiftConfig: data.shiftConfig as
+            | { shifts?: Array<{ id: string; label?: string; requiredGuards?: number }> }
+            | null
+            | undefined,
+        };
+      });
+
+      const assignmentsBySiteId: Record<string, GuardShiftAssignment[]> = {};
+      for (const d of assignmentsSnap.docs) {
+        const data = d.data() as Record<string, unknown>;
+        const siteId = String(data.siteId ?? "");
+        if (!siteId) {
+          continue;
+        }
+        const row = {
+          id: d.id,
+          ...data,
+        } as unknown as GuardShiftAssignment;
+        if (!assignmentsBySiteId[siteId]) {
+          assignmentsBySiteId[siteId] = [];
+        }
+        assignmentsBySiteId[siteId]!.push(row);
+      }
+
+      const report = buildAgencyRosterCoverage({
+        sites,
+        assignmentsBySiteId,
+        days,
+      });
+      res.json(report);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      res.status(500).json({
+        error: e.message ?? "Failed to compute roster coverage.",
+      });
+    }
+  });
 
   // ── GET /api/scheduling?siteId=xxx — list shift assignments for a site ──────
   router.get("/", async (req: AgencyAuthRequest, res: Response) => {

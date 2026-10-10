@@ -65,6 +65,7 @@ await esbuild.build({
       monorepoRoot,
       "modules/Site Management/index.ts"
     ),
+    "@raskha/scheduling": path.join(monorepoRoot, "modules/Scheduling/index.ts"),
   },
   packages: "external",
   banner: {
