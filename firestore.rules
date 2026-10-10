@@ -1,0 +1,216 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ─────────────────────────────────────────────────────
+
+    /** The requesting user is the agency admin for the given agencyId. */
+    function isAgencyAdmin(agencyId) {
+      return request.auth != null && request.auth.uid == agencyId;
+    }
+
+    /** The requesting user is an active HR staff member of the given agency. */
+    function isActiveHrStaff(agencyId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/hrStaff/$(request.auth.uid))
+        && get(/databases/$(database)/documents/hrStaff/$(request.auth.uid)).data.agencyId == agencyId
+        && get(/databases/$(database)/documents/hrStaff/$(request.auth.uid)).data.status == 'active';
+    }
+
+    /** Either agency admin or active HR staff. */
+    function hasAgencyAccess(agencyId) {
+      return isAgencyAdmin(agencyId) || isActiveHrStaff(agencyId);
+    }
+
+    // ─── agencies ─────────────────────────────────────────────────────────────
+    // Agency document ID == agency owner's Firebase Auth UID.
+
+    match /agencies/{agencyId} {
+      allow get: if request.auth != null
+                    && (request.auth.uid == agencyId || isActiveHrStaff(agencyId));
+      allow create, update: if request.auth.uid == agencyId;
+      allow delete: if false;  // never deleted from client
+    }
+
+    // ─── agencyModuleAccess ───────────────────────────────────────────────────
+
+    match /agencyModuleAccess/{agencyId} {
+      allow read:   if hasAgencyAccess(agencyId);
+      allow write:  if false;  // managed by Super Admin only
+    }
+
+    // ─── hrStaff ──────────────────────────────────────────────────────────────
+
+    match /hrStaff/{staffId} {
+      allow get:    if request.auth != null
+                      && (request.auth.uid == staffId
+                          || isAgencyAdmin(resource.data.agencyId));
+      allow list:   if request.auth != null
+                      && isAgencyAdmin(request.query.filters["agencyId"].value);
+      allow create: if request.auth.uid == staffId
+                      || isAgencyAdmin(request.resource.data.agencyId);
+      allow update: if isAgencyAdmin(resource.data.agencyId)
+                      || request.auth.uid == staffId;
+      allow delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── guards ───────────────────────────────────────────────────────────────
+    // Guards create their own document (via secondary app) so allow uid == docId.
+
+    match /guards/{guardId} {
+      allow get:    if request.auth != null
+                      && (request.auth.uid == guardId
+                          || hasAgencyAccess(resource.data.agencyId));
+      allow list:   if request.auth != null;
+      allow create: if request.auth.uid == guardId
+                      || hasAgencyAccess(request.resource.data.agencyId);
+      allow update: if hasAgencyAccess(resource.data.agencyId)
+                      || request.auth.uid == guardId;
+      allow delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── sites ────────────────────────────────────────────────────────────────
+
+    match /sites/{siteId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── branches ─────────────────────────────────────────────────────────────
+
+    match /branches/{branchId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── inventoryItems ───────────────────────────────────────────────────────
+    // Master catalog — admin creates, all agency members read.
+
+    match /inventoryItems/{itemId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if isAgencyAdmin(request.resource.data.agencyId);
+      allow update: if isAgencyAdmin(resource.data.agencyId);
+      allow delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── branchStock ──────────────────────────────────────────────────────────
+    // Admin sets allocatedStock; HR updates assignedStock via guard assignments.
+
+    match /branchStock/{stockId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update: if hasAgencyAccess(resource.data.agencyId);
+      allow delete: if isAgencyAdmin(resource.data.agencyId);
+    }
+
+    // ─── guardInventoryAssignments ────────────────────────────────────────────
+
+    match /guardInventoryAssignments/{assignmentId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── attendanceRecords ────────────────────────────────────────────────────
+
+    match /attendanceRecords/{recordId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── leaveRequests ────────────────────────────────────────────────────────
+
+    match /leaveRequests/{reqId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── reliefRequests ───────────────────────────────────────────────────────
+
+    match /reliefRequests/{reqId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── shiftAssignments ─────────────────────────────────────────────────────
+
+    match /shiftAssignments/{shiftId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── formSchemas ──────────────────────────────────────────────────────────
+
+    match /formSchemas/{schemaId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create, update, delete: if isAgencyAdmin(resource.data.agencyId)
+                                       || isAgencyAdmin(request.resource.data.agencyId);
+    }
+
+    // ─── agencyFormBuilderFeatures ────────────────────────────────────────────
+
+    match /agencyFormBuilderFeatures/{featureId} {
+      allow read:   if request.auth != null;
+      allow write:  if false;  // managed by Super Admin backend
+    }
+
+    // ─── prospectClients ──────────────────────────────────────────────────────
+
+    match /prospectClients/{clientId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── prospectGuards ───────────────────────────────────────────────────────
+
+    match /prospectGuards/{pgId} {
+      allow read:   if request.auth != null && hasAgencyAccess(resource.data.agencyId);
+      allow list:   if request.auth != null;
+      allow create: if hasAgencyAccess(request.resource.data.agencyId);
+      allow update, delete: if hasAgencyAccess(resource.data.agencyId);
+    }
+
+    // ─── guardLoginOtps ───────────────────────────────────────────────────────
+
+    match /guardLoginOtps/{otpId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ─── guardPushTokens / guardNotifications ─────────────────────────────────
+
+    match /guardPushTokens/{tokenId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /guardNotifications/{notifId} {
+      allow read:  if request.auth != null;
+      allow write: if false;  // written by backend only
+    }
+
+    // ─── Catch-all: deny everything else ─────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

@@ -22,6 +22,8 @@ export interface CreateHrStaffParams {
   email: string;
   password: string;
   notes: string;
+  /** Branch IDs this HR staff member is allowed to access. */
+  assignedBranchIds?: string[];
 }
 
 /**
@@ -34,7 +36,7 @@ export async function createHrStaffAccount(
   firebaseConfig: object,
   params: CreateHrStaffParams
 ): Promise<HrStaff> {
-  const { agencyId, fullName, employeeCode, phone, email, password, notes } = params;
+  const { agencyId, fullName, employeeCode, phone, email, password, notes, assignedBranchIds } = params;
 
   // Use a secondary app so the admin stays logged in
   const appName = `hr-creation-${Date.now()}`;
@@ -64,6 +66,7 @@ export async function createHrStaffAccount(
     phone,
     email,
     notes,
+    assignedBranchIds: assignedBranchIds ?? [],
     status: "active" as HrStaffStatus,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

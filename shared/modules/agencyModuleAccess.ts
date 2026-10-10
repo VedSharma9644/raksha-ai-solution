@@ -23,6 +23,7 @@ export const FORM_BUILDER_MODULE_ID = "form_builder";
 export const DEFAULT_ENABLED_FEATURE_IDS: string[] = [
   "employee_management",
   "site_management",
+  "inventory",
 ];
 
 export function isModuleEnabled(

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ProspectClient } from "@raskha/client-management";
 import type { ProspectFormValues } from "./prospectFormTypes";
 import { auth } from "../../lib/firebase";
+import { useBranchContext } from "../branches";
 
 function resolveAdminApiBase(): string {
   const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
@@ -59,6 +60,7 @@ function formToPayload(values: ProspectFormValues) {
 }
 
 export function useSaveProspect() {
+  const { activeBranchId } = useBranchContext();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -66,7 +68,10 @@ export function useSaveProspect() {
     setIsSaving(true);
     setSaveError("");
     try {
-      return await apiRequest<ProspectClient>("POST", "/api/prospects", formToPayload(values));
+      return await apiRequest<ProspectClient>("POST", "/api/prospects", {
+        ...formToPayload(values),
+        branchId: activeBranchId ?? null,
+      });
     } catch (err: unknown) {
       const e = err as { message?: string };
       setSaveError(e.message ?? "Failed to create prospect.");

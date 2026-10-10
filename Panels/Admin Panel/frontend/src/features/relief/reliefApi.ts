@@ -76,8 +76,10 @@ function toReliefRequest(item: ApiReliefRequest): ReliefRequest {
 
 export async function fetchAgencyReliefRequests(
   status: "all" | ReliefRequestStatus = "all",
+  branchId?: string | null,
 ): Promise<{ requests: ReliefRequest[]; counts: ReliefListResponse["counts"] }> {
   const query = new URLSearchParams({ status });
+  if (branchId) query.set("branchId", branchId);
   const response = await fetch(
     `${API_BASE}/api/relief/requests?${query.toString()}`,
     { headers: await authHeaders() },

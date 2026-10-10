@@ -235,8 +235,8 @@
 }
 
 .prospect-badge--initial    { background: color-mix(in srgb, var(--color-secondary) 15%, var(--color-surface)); color: var(--color-secondary); }
-.prospect-badge--discussion { background: #dbeafe; color: #1e40af; }
-.prospect-badge--proposal   { background: #e0f2fe; color: #0369a1; }
-.prospect-badge--negotiation{ background: #ede9fe; color: #4c1d95; }
-.prospect-badge--converted  { background: #dcfce7; color: #166534; }
+.prospect-badge--discussion { background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)); color: var(--color-primary); }
+.prospect-badge--proposal   { background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface)); color: var(--color-primary-dark); }
+.prospect-badge--negotiation{ background: var(--color-warning-container); color: var(--color-on-warning-container); }
+.prospect-badge--converted  { background: var(--color-success-container); color: var(--color-on-success-container); }
 .prospect-badge--lost       { background: var(--color-surface-muted); color: var(--color-on-surface-variant); }

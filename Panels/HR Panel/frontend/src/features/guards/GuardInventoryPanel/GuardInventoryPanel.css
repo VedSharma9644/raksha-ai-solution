@@ -174,3 +174,14 @@
   color: #b45309;
   margin: 0;
 }
+
+.guard-inventory-panel__no-stock {
+  font-size: 0.83rem;
+  color: var(--color-text-secondary, #6b7280);
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}

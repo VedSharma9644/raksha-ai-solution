@@ -1,4 +1,5 @@
 import { ActionCard } from "../../../components/ActionCard";
+import { BranchSelector } from "../../../components/BranchSelector";
 import { NotificationMenu } from "../../notifications";
 import { ProfileMenu } from "../../profile";
 import type { AgencyNotification } from "../../notifications";
@@ -31,6 +32,7 @@ export function AgencyDashboardScreen({
         </div>
 
         <div className="agency-dashboard__toolbar">
+          <BranchSelector />
           <NotificationMenu
             notifications={notifications}
             onSelectNotification={onSelectNotification}

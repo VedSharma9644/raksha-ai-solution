@@ -6,6 +6,13 @@ export type SiteStatus = "active" | "inactive";
 
 export type ShiftType = "day" | "night" | "custom";
 
+/** Per-gender guard count breakdown for a shift slot */
+export interface ShiftGenderRequirement {
+  male: number;
+  female: number;
+  other: number;
+}
+
 export interface SiteShift {
   /** Unique within the site — use "day", "night", or a short uuid for custom shifts */
   id: string;
@@ -13,7 +20,10 @@ export interface SiteShift {
   shiftType: ShiftType;
   startTime: string;    // HH:MM  e.g. "07:00"
   endTime: string;      // HH:MM  e.g. "19:00"
+  /** Total guards needed (sum of genderRequirements when provided) */
   requiredGuards: number;
+  /** Optional per-gender breakdown. null/undefined = not specified */
+  genderRequirements?: ShiftGenderRequirement | null;
 }
 
 export interface SiteShiftConfig {
@@ -75,6 +85,9 @@ export interface Site {
   intervalCheckinMinutes?: number | null;
   /** Shift slots and 24h surveillance flag */
   shiftConfig?: SiteShiftConfig | null;
+
+  /** Branch this site belongs to. null/undefined = unassigned (agency-wide). */
+  branchId?: string | null;
 
   createdAt: Timestamp;
   updatedAt: Timestamp;

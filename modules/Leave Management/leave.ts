@@ -30,6 +30,8 @@ export interface LeaveRequestRecord {
   approvalDetail?: string;
   rejectionRemark?: string;
   compensationNote?: string;
+  /** Branch this leave request belongs to (inherited from guard's site). */
+  branchId?: string | null;
   appliedAt: Timestamp;
   updatedAt: Timestamp;
   decidedAt?: Timestamp;

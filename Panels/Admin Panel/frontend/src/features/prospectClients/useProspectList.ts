@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProspectClient, ProspectStatus } from "@raskha/client-management";
 import { useAuthContext } from "../authentication";
+import { useBranchContext } from "../branches";
+import { appendBranchParam } from "../../lib/branchFilter";
 import { auth } from "../../lib/firebase";
 
 function resolveAdminApiBase(): string {
@@ -27,6 +29,7 @@ async function authHeaders(): Promise<Headers> {
 
 export function useProspectList(statusFilter?: ProspectStatus | "") {
   const { agency } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const [prospects, setProspects] = useState<ProspectClient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,9 +41,10 @@ export function useProspectList(statusFilter?: ProspectStatus | "") {
     setIsLoading(true);
     setError("");
 
-    const url = statusFilter
+    let url = statusFilter
       ? `${API_BASE}/api/prospects?status=${encodeURIComponent(statusFilter)}`
       : `${API_BASE}/api/prospects`;
+    url = appendBranchParam(url, activeBranchId);
 
     authHeaders()
       .then((headers) => fetch(url, { headers }))
@@ -57,7 +61,7 @@ export function useProspectList(statusFilter?: ProspectStatus | "") {
         setError(e.message ?? "Failed to load prospects.");
       })
       .finally(() => setIsLoading(false));
-  }, [agency, statusFilter, tick]);
+  }, [agency, activeBranchId, statusFilter, tick]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
 

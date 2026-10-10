@@ -11,6 +11,8 @@ export interface HrStaff {
   email: string;
   notes: string;
   status: HrStaffStatus;
+  /** Branch IDs this HR staff member is allowed to access. */
+  assignedBranchIds?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

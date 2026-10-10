@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useBranchContext } from "../branches";
 import {
   decideAgencyLeaveRequest,
   fetchAgencyLeaveRequests,
@@ -7,16 +8,17 @@ import {
 import type { LeaveRequest, LeaveRequestStatus } from "./leaveTypes";
 
 export function useAgencyLeave() {
+  const { activeBranchId } = useBranchContext();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (branchId: string | null) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchAgencyLeaveRequests("all");
+      const data = await fetchAgencyLeaveRequests("all", branchId);
       setLeaveRequests(data.requests);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -28,8 +30,8 @@ export function useAgencyLeave() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(activeBranchId);
+  }, [activeBranchId, load]);
 
   const updateStatus = useCallback(
     async (leaveId: string, status: LeaveRequestStatus) => {
@@ -61,7 +63,7 @@ export function useAgencyLeave() {
     isLoading,
     isUpdatingId,
     error,
-    refresh: load,
+    refresh: () => load(activeBranchId),
     updateStatus,
   };
 }

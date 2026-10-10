@@ -5,6 +5,7 @@ import { FormPanel } from "../../../components/FormPanel";
 import { PasswordField } from "../../../components/PasswordField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
+import { useBranchContext } from "../../branches";
 import "./HrStaffForm.css";
 
 export interface HrStaffFormValues {
@@ -14,6 +15,7 @@ export interface HrStaffFormValues {
   email: string;
   password: string;
   notes: string;
+  assignedBranchIds: string[];
 }
 
 export const EMPTY_HR_STAFF_FORM: HrStaffFormValues = {
@@ -23,6 +25,7 @@ export const EMPTY_HR_STAFF_FORM: HrStaffFormValues = {
   email: "",
   password: "",
   notes: "",
+  assignedBranchIds: [],
 };
 
 export interface HrStaffFormProps {
@@ -40,6 +43,7 @@ export function HrStaffForm({
   onSubmit,
   onCancel,
 }: HrStaffFormProps) {
+  const { branches } = useBranchContext();
   const [values, setValues] = useState<HrStaffFormValues>({
     ...EMPTY_HR_STAFF_FORM,
     ...initialValues,
@@ -172,6 +176,37 @@ export function HrStaffForm({
           placeholder="HR responsibilities, team, or onboarding notes"
           disabled={isSubmitting}
         />
+
+        {/* ── Branch Assignment ── */}
+        {branches.length > 0 && (
+          <>
+            <p className="hr-staff-form__section-label">Branch Assignment</p>
+            <p className="hr-staff-form__section-hint">
+              Select which branches this HR staff member can access.
+            </p>
+            <div className="hr-staff-form__branch-checkboxes">
+              {branches.map((branch) => (
+                <label key={branch.id} className="hr-staff-form__branch-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={values.assignedBranchIds.includes(branch.id)}
+                    disabled={isSubmitting}
+                    onChange={(e) => {
+                      const ids = e.target.checked
+                        ? [...values.assignedBranchIds, branch.id]
+                        : values.assignedBranchIds.filter((id) => id !== branch.id);
+                      updateField("assignedBranchIds", ids);
+                    }}
+                  />
+                  <span>{branch.name}</span>
+                  {branch.city ? (
+                    <span className="hr-staff-form__branch-city"> — {branch.city}</span>
+                  ) : null}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="form-panel__actions">
           <Button

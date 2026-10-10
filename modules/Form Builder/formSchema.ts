@@ -9,6 +9,8 @@ export interface FormSchema {
   agencyId: string;
   formType: FormType;
   fields: FormField[];
+  /** Branch this form schema is scoped to. null/undefined = agency-wide. */
+  branchId?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -226,14 +226,57 @@ function renderShiftConfigField(
 
               <div className="shift-config__field shift-config__field--guards">
                 <label className="shift-config__field-label">Guards needed</label>
-                <input
-                  type="number"
-                  className={`shift-config__input${shiftErrors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
-                  min={1}
-                  value={shift.requiredGuards}
-                  onChange={(e) => onUpdateShift(idx, { requiredGuards: e.target.value })}
-                  disabled={disabled}
-                />
+                <div className="shift-config__gender-inputs">
+                  <div className="shift-config__gender-group">
+                    <span className="shift-config__gender-label">Male</span>
+                    <input
+                      type="number"
+                      className={`shift-config__input${shiftErrors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
+                      min={0}
+                      value={shift.requiredMale ?? "0"}
+                      onChange={(e) => {
+                        const male = e.target.value;
+                        const total = (parseInt(male) || 0) + (parseInt(shift.requiredFemale ?? "0") || 0) + (parseInt(shift.requiredOther ?? "0") || 0);
+                        onUpdateShift(idx, { requiredMale: male, requiredGuards: String(total || 0) });
+                      }}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div className="shift-config__gender-group">
+                    <span className="shift-config__gender-label">Female</span>
+                    <input
+                      type="number"
+                      className="shift-config__input"
+                      min={0}
+                      value={shift.requiredFemale ?? "0"}
+                      onChange={(e) => {
+                        const female = e.target.value;
+                        const total = (parseInt(shift.requiredMale ?? "0") || 0) + (parseInt(female) || 0) + (parseInt(shift.requiredOther ?? "0") || 0);
+                        onUpdateShift(idx, { requiredFemale: female, requiredGuards: String(total || 0) });
+                      }}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div className="shift-config__gender-group">
+                    <span className="shift-config__gender-label">Other</span>
+                    <input
+                      type="number"
+                      className="shift-config__input"
+                      min={0}
+                      value={shift.requiredOther ?? "0"}
+                      onChange={(e) => {
+                        const other = e.target.value;
+                        const total = (parseInt(shift.requiredMale ?? "0") || 0) + (parseInt(shift.requiredFemale ?? "0") || 0) + (parseInt(other) || 0);
+                        onUpdateShift(idx, { requiredOther: other, requiredGuards: String(total || 0) });
+                      }}
+                      disabled={disabled}
+                    />
+                  </div>
+                  <div className="shift-config__gender-total">
+                    <span className="shift-config__gender-label">Total</span>
+                    <span className="shift-config__gender-total-value">{shift.requiredGuards || "0"}</span>
+                  </div>
+                </div>
                 {shiftErrors[`shift_guards_${idx}`] && (
                   <span className="shift-config__field-error">{shiftErrors[`shift_guards_${idx}`]}</span>
                 )}

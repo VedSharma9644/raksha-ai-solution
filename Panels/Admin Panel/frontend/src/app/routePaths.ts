@@ -4,6 +4,7 @@ export const APP_ROUTES = {
   formBuilder: "/form-builder",
   // Guards
   addGuard: "/guards/add",
+  viewGuard: "/guards/:id",
   editGuard: "/guards/:id/edit",
   employeeList: "/employees",
   // Sites
@@ -19,6 +20,7 @@ export const APP_ROUTES = {
   inventoryList: "/inventory",
   addInventoryItem: "/inventory/add",
   editInventoryItem: "/inventory/:id/edit",
+  inventoryBranchStock: "/inventory/:id/branch-stock",
   // Attendance
   attendance: "/attendance",
   // Leave
@@ -33,9 +35,18 @@ export const APP_ROUTES = {
   // Prospect Guards
   prospectGuards: "/prospect-guards",
   prospectGuardDetail: "/prospect-guards/:id",
+  // Branches
+  branchList: "/branches",
+  addBranch: "/branches/add",
+  editBranch: "/branches/:id/edit",
 } as const;
 
 export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
+
+/** Build the concrete view-guard URL for a specific guard ID */
+export function viewGuardPath(guardId: string): string {
+  return `/guards/${guardId}`;
+}
 
 /** Build the concrete edit-guard URL for a specific guard ID */
 export function editGuardPath(guardId: string): string {
@@ -62,6 +73,10 @@ export function editInventoryItemPath(itemId: string): string {
   return `/inventory/${itemId}/edit`;
 }
 
+export function inventoryBranchStockPath(itemId: string): string {
+  return `/inventory/${itemId}/branch-stock`;
+}
+
 /** Build the scheduling URL for a specific site */
 export function schedulingPath(siteId: string): string {
   return `/scheduling/${siteId}`;
@@ -75,4 +90,9 @@ export function prospectDetailPath(prospectId: string): string {
 /** Build the prospect guard detail URL for a specific guard */
 export function prospectGuardDetailPath(guardId: string): string {
   return `/prospect-guards/${guardId}`;
+}
+
+/** Build the edit-branch URL for a specific branch */
+export function editBranchPath(branchId: string): string {
+  return `/branches/${branchId}/edit`;
 }

@@ -11,6 +11,7 @@ import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
 import {
   EMPTY_STAFF_MEMBER_FORM,
 } from "../staffFormTypes";
+import { useBranchContext } from "../../branches";
 import "./StaffMemberForm.css";
 
 const ROLE_COPY: Record<StaffRole, { submitLabel: string }> = {
@@ -37,6 +38,7 @@ export function StaffMemberForm({
   onSubmit,
   onCancel,
 }: StaffMemberFormProps) {
+  const { branches } = useBranchContext();
   const [values, setValues] = useState<StaffMemberFormValues>(
     initialValues ?? EMPTY_STAFF_MEMBER_FORM,
   );
@@ -55,6 +57,7 @@ export function StaffMemberForm({
     const nextErrors: Partial<Record<keyof StaffMemberFormValues, string>> = {};
 
     if (!values.fullName.trim()) nextErrors.fullName = "Enter the full name.";
+    if (!values.gender) nextErrors.gender = "Select a gender.";
     if (!values.phone.trim()) {
       nextErrors.phone = "Enter a phone number.";
     } else if (!/^[0-9+\-\s]{8,15}$/.test(values.phone.trim())) {
@@ -176,6 +179,22 @@ export function StaffMemberForm({
             required
             disabled={isSubmitting}
           />
+          <SelectField
+            label="Gender"
+            name="gender"
+            value={values.gender}
+            onChange={(e) =>
+              updateField("gender", e.target.value as StaffMemberFormValues["gender"])
+            }
+            options={[
+              { value: "male",   label: "Male" },
+              { value: "female", label: "Female" },
+              { value: "other",  label: "Other" },
+            ]}
+            errorMessage={errors.gender}
+            required
+            disabled={isSubmitting}
+          />
           <TextField
             label="Caste"
             name="caste"
@@ -291,6 +310,28 @@ export function StaffMemberForm({
           />
         </div>
 
+        {/* ── Section: Branch Assignment (Guard / Supervisor) ── */}
+        {role !== "hr" && branches.length > 0 && (
+          <>
+            <p className="staff-member-form__section-label">Branch Assignment</p>
+            <div className="form-panel__grid">
+              <SelectField
+                label="Assigned branch"
+                name="branchId"
+                value={values.branchId}
+                onChange={(e) => updateField("branchId", e.target.value)}
+                options={branches.map((b) => ({
+                  value: b.id,
+                  label: b.city ? `${b.name} — ${b.city}` : b.name,
+                }))}
+                placeholder="No branch (unassigned)"
+                errorMessage={errors.branchId}
+                disabled={isSubmitting}
+              />
+            </div>
+          </>
+        )}
+
         {/* ── Section: Preferences ── */}
         <p className="staff-member-form__section-label">Preferences</p>
         <div className="form-panel__grid">
@@ -405,6 +446,37 @@ export function StaffMemberForm({
           placeholder="Shift preference, certifications, or onboarding notes"
           disabled={isSubmitting}
         />
+
+        {/* ── Section: Branch Assignment (HR only) ── */}
+        {role === "hr" && branches.length > 0 && (
+          <>
+            <p className="staff-member-form__section-label">Branch Assignment</p>
+            <p className="staff-member-form__section-hint">
+              Select which branches this HR staff member can access.
+            </p>
+            <div className="staff-member-form__branch-checkboxes">
+              {branches.map((branch) => (
+                <label key={branch.id} className="staff-member-form__branch-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={values.assignedBranchIds.includes(branch.id)}
+                    disabled={isSubmitting}
+                    onChange={(e) => {
+                      const ids = e.target.checked
+                        ? [...values.assignedBranchIds, branch.id]
+                        : values.assignedBranchIds.filter((id) => id !== branch.id);
+                      updateField("assignedBranchIds", ids);
+                    }}
+                  />
+                  <span>{branch.name}</span>
+                  {branch.city ? (
+                    <span className="staff-member-form__branch-city"> — {branch.city}</span>
+                  ) : null}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ── Section: Login Credentials ── */}
         <p className="staff-member-form__section-label">Login Credentials</p>

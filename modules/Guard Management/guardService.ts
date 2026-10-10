@@ -13,12 +13,13 @@ import {
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 import { GUARDS_COLLECTION } from "./guard";
-import type { Guard, GuardStatus } from "./guard";
+import type { Guard, GuardStatus, GuardGender } from "./guard";
 
 export interface AddGuardParams {
   agencyId: string;
   fullName: string;
   fatherName: string;
+  gender: GuardGender;
   phone: string;
   email: string;
   address: string;
@@ -43,11 +44,14 @@ export interface AddGuardParams {
   bankAccount: string;
   pfNumber: string;
   notes: string;
+  /** Branch this guard belongs to. null/undefined = unassigned. */
+  branchId?: string | null;
 }
 
 export interface UpdateGuardParams {
   fullName?: string;
   fatherName?: string;
+  gender?: GuardGender;
   phone?: string;
   email?: string;
   address?: string;
@@ -74,6 +78,8 @@ export interface UpdateGuardParams {
   pfNumber?: string;
   notes?: string;
   status?: GuardStatus;
+  /** Branch this guard belongs to. null = unassigned. */
+  branchId?: string | null;
 }
 
 export async function addGuard(

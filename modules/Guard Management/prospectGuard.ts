@@ -58,6 +58,9 @@ export interface ProspectGuard {
   status: ProspectGuardStatus;
   followUpDate: string | null;       // ISO date
 
+  /** Branch this prospect guard is assigned to. null/undefined = agency-wide. */
+  branchId?: string | null;
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

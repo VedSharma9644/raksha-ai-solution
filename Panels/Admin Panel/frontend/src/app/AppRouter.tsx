@@ -18,6 +18,7 @@ import { FormBuilderPage } from "../pages/FormBuilderPage";
 import { InventoryListPage } from "../pages/InventoryListPage";
 import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
 import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
+import { InventoryBranchStockPage } from "../pages/InventoryBranchStockPage";
 import { AttendancePage } from "../pages/AttendancePage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { ReliefManagementPage } from "../pages/ReliefManagementPage";
@@ -26,6 +27,10 @@ import { ProspectsPage } from "../pages/ProspectsPage";
 import { ProspectDetailPage } from "../pages/ProspectDetailPage";
 import { ProspectGuardsPage } from "../pages/ProspectGuardsPage";
 import { ProspectGuardDetailPage } from "../pages/ProspectGuardDetailPage";
+import { ViewGuardPage } from "../pages/ViewGuardPage";
+import { BranchListPage } from "../pages/BranchListPage";
+import { AddBranchPage } from "../pages/AddBranchPage";
+import { EditBranchPage } from "../pages/EditBranchPage";
 import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -97,6 +102,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <AddGuardPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.viewGuard}
+        element={
+          <ModuleRoute>
+            <ViewGuardPage />
           </ModuleRoute>
         }
       />
@@ -197,6 +210,14 @@ export function AppRouter() {
         }
       />
       <Route
+        path={APP_ROUTES.inventoryBranchStock}
+        element={
+          <ModuleRoute>
+            <InventoryBranchStockPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
         path={APP_ROUTES.attendance}
         element={
           <ModuleRoute>
@@ -258,6 +279,32 @@ export function AppRouter() {
           <ModuleRoute>
             <ProspectGuardDetailPage />
           </ModuleRoute>
+        }
+      />
+
+      {/* Branch Management — Admin only, no module gate */}
+      <Route
+        path={APP_ROUTES.branchList}
+        element={
+          <ProtectedRoute>
+            <BranchListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.addBranch}
+        element={
+          <ProtectedRoute>
+            <AddBranchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.editBranch}
+        element={
+          <ProtectedRoute>
+            <EditBranchPage />
+          </ProtectedRoute>
         }
       />
 

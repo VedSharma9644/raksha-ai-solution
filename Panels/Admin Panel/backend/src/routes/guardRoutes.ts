@@ -9,6 +9,7 @@ import {
   updateGuard,
   deleteGuard,
 } from "@raskha/guard-management";
+import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
 
 export function createGuardRoutes(db: Firestore): Router {
   const router = Router();
@@ -27,10 +28,31 @@ export function createGuardRoutes(db: Firestore): Router {
       const guard = await addGuard(db, {
         agencyId,
         fullName,
+        fatherName: req.body.fatherName ?? "",
+        gender: (req.body.gender as "male" | "female" | "other") ?? "male",
         employeeCode,
         phone,
         email,
+        address: req.body.address ?? "",
+        caste: req.body.caste ?? "",
+        height: req.body.height ?? "",
+        aadhaarNumber: req.body.aadhaarNumber ?? "",
+        panNumber: req.body.panNumber ?? "",
+        post: req.body.post ?? "",
+        joiningDate: req.body.joiningDate ?? "",
+        salary: req.body.salary ?? "",
+        experience: req.body.experience ?? "",
+        education: req.body.education ?? "",
         assignedSiteId: assignedSiteId ?? "",
+        guardType: (req.body.guardType as "ex-serviceman" | "civilian") ?? "civilian",
+        interestedCity: req.body.interestedCity ?? "",
+        shiftFrom: req.body.shiftFrom ?? "",
+        shiftTo: req.body.shiftTo ?? "",
+        characterCertificateUrl: req.body.characterCertificateUrl ?? "",
+        policeVerificationUrl: req.body.policeVerificationUrl ?? "",
+        profilePictureUrl: req.body.profilePictureUrl ?? "",
+        bankAccount: req.body.bankAccount ?? "",
+        pfNumber: req.body.pfNumber ?? "",
         notes: notes ?? "",
       });
 
@@ -141,10 +163,21 @@ export function createGuardRoutes(db: Firestore): Router {
     }
   });
 
-  // PUT /api/guards/:id — update a guard
-  router.put("/:id", async (req: Request, res: Response) => {
+  // PUT /api/guards/:id — update a guard (Admin SDK — bypasses Firestore rules)
+  router.put("/:id", requireAgencyCaller, async (req: AgencyAuthRequest, res: Response) => {
     try {
-      await updateGuard(db, req.params.id, req.body);
+      const adminDb = getFirestore();
+      const { id } = req.params;
+      const updates = req.body as Record<string, unknown>;
+
+      // Prevent overwriting immutable fields
+      const { agencyId: _a, createdAt: _c, ...safeUpdates } = updates;
+
+      await adminDb.collection("guards").doc(id).update({
+        ...safeUpdates,
+        updatedAt: new Date(),
+      });
+
       res.json({ success: true });
     } catch (error: unknown) {
       const err = error as { message?: string };

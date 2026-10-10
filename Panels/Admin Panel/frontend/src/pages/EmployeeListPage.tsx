@@ -1,11 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getGuardById, deleteGuard } from "@raskha/guard-management";
+import { deleteGuard } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
-import { APP_ROUTES, editGuardPath } from "../app/routePaths";
+import { APP_ROUTES, editGuardPath, viewGuardPath } from "../app/routePaths";
 import { EmployeeListScreen } from "../features/employees";
 import type { EmployeeListItem } from "../features/employees";
-import { GuardProfileModal } from "../features/guards";
 import { useGuardList } from "../features/guards";
 import { db } from "../lib/firebase";
 
@@ -25,22 +24,12 @@ function mapGuardToListItem(guard: Guard): EmployeeListItem {
 export function EmployeeListPage() {
   const navigate = useNavigate();
   const { guards, isLoading, error, reload } = useGuardList();
-  const [selectedGuard, setSelectedGuard] = useState<Guard | null>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   const employees = guards.map(mapGuardToListItem);
 
-  const handleViewEmployee = useCallback(async (employeeId: string) => {
-    setIsLoadingProfile(true);
-    try {
-      const guard = await getGuardById(db, employeeId);
-      if (guard) setSelectedGuard(guard);
-    } catch {
-      // silently ignore — guard may be stale
-    } finally {
-      setIsLoadingProfile(false);
-    }
-  }, []);
+  const handleViewEmployee = useCallback((employeeId: string) => {
+    navigate(viewGuardPath(employeeId));
+  }, [navigate]);
 
   const handleDeleteEmployee = useCallback(async (employeeId: string) => {
     const guard = guards.find((g) => g.id === employeeId);
@@ -71,25 +60,12 @@ export function EmployeeListPage() {
   }
 
   return (
-    <>
-      {isLoadingProfile && (
-        <div style={{ position: "fixed", top: "1rem", right: "1.5rem", background: "#1e293b", color: "#fff", padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 999 }}>
-          Loading profile…
-        </div>
-      )}
-
-      <EmployeeListScreen
-        employees={employees}
-        onBack={() => navigate(APP_ROUTES.dashboard)}
-        onViewEmployee={handleViewEmployee}
-        onSelectEmployee={(employeeId) => navigate(editGuardPath(employeeId))}
-        onDeleteEmployee={handleDeleteEmployee}
-      />
-
-      <GuardProfileModal
-        guard={selectedGuard}
-        onClose={() => setSelectedGuard(null)}
-      />
-    </>
+    <EmployeeListScreen
+      employees={employees}
+      onBack={() => navigate(APP_ROUTES.dashboard)}
+      onViewEmployee={handleViewEmployee}
+      onSelectEmployee={(employeeId) => navigate(editGuardPath(employeeId))}
+      onDeleteEmployee={handleDeleteEmployee}
+    />
   );
 }

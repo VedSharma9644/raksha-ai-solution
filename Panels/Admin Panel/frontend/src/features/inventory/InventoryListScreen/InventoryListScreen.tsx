@@ -19,6 +19,7 @@ export interface InventoryListScreenProps {
   onBack: () => void;
   onAddItem: () => void;
   onSelectItem: (itemId: string) => void;
+  onViewBranchStock: (itemId: string) => void;
   onSeedDefaults: () => void;
 }
 
@@ -28,6 +29,7 @@ export function InventoryListScreen({
   onBack,
   onAddItem,
   onSelectItem,
+  onViewBranchStock,
   onSeedDefaults,
 }: InventoryListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,13 +155,21 @@ export function InventoryListScreen({
                             {STATUS_LABELS[item.status]}
                           </span>
                         </td>
-                        <td>
+                        <td className="inventory-list-table__actions">
                           <button
                             type="button"
                             className="inventory-list-table__edit-btn"
                             onClick={() => onSelectItem(item.id)}
                           >
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="inventory-list-table__branch-btn"
+                            onClick={() => onViewBranchStock(item.id)}
+                            title="View branch distribution"
+                          >
+                            🏢 Branches
                           </button>
                         </td>
                       </tr>

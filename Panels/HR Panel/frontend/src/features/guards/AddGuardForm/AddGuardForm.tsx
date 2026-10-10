@@ -9,6 +9,7 @@ import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
 import type { GuardFormValues } from "../guardTypes";
 import { EMPTY_GUARD_FORM } from "../guardTypes";
+import { useBranchContext } from "../../branches";
 import "./AddGuardForm.css";
 
 export interface AddGuardFormProps {
@@ -27,6 +28,7 @@ export function AddGuardForm({
   onSubmit,
   onCancel,
 }: AddGuardFormProps) {
+  const { branches } = useBranchContext();
   const [values, setValues] = useState<GuardFormValues>(
     initialValues ?? EMPTY_GUARD_FORM,
   );
@@ -46,6 +48,7 @@ export function AddGuardForm({
     const nextErrors: Partial<Record<keyof GuardFormValues, string>> = {};
 
     if (!values.fullName.trim()) nextErrors.fullName = "Enter the full name.";
+    if (!values.gender) nextErrors.gender = "Select a gender.";
     if (!values.phone.trim()) {
       nextErrors.phone = "Enter a phone number.";
     } else if (!/^[0-9+\-\s]{8,15}$/.test(values.phone.trim())) {
@@ -172,6 +175,22 @@ export function AddGuardForm({
             required
             disabled={isSubmitting}
           />
+          <SelectField
+            label="Gender"
+            name="gender"
+            value={values.gender}
+            onChange={(e) =>
+              updateField("gender", e.target.value as GuardFormValues["gender"])
+            }
+            options={[
+              { value: "male",   label: "Male" },
+              { value: "female", label: "Female" },
+              { value: "other",  label: "Other" },
+            ]}
+            errorMessage={errors.gender}
+            required
+            disabled={isSubmitting}
+          />
           <TextField
             label="Caste"
             name="caste"
@@ -286,6 +305,28 @@ export function AddGuardForm({
             disabled={isSubmitting}
           />
         </div>
+
+        {/* ── Section: Branch Assignment ── */}
+        {branches.length > 0 && (
+          <>
+            <p className="add-guard-form__section-label">Branch Assignment</p>
+            <div className="form-panel__grid">
+              <SelectField
+                label="Assigned branch"
+                name="branchId"
+                value={values.branchId}
+                onChange={(e) => updateField("branchId", e.target.value)}
+                options={branches.map((b) => ({
+                  value: b.id,
+                  label: b.city ? `${b.name} — ${b.city}` : b.name,
+                }))}
+                placeholder="No branch (unassigned)"
+                errorMessage={errors.branchId}
+                disabled={isSubmitting}
+              />
+            </div>
+          </>
+        )}
 
         {/* ── Section: Preferences ── */}
         <p className="add-guard-form__section-label">Preferences</p>

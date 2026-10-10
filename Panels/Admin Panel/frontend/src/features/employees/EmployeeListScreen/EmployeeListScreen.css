@@ -75,8 +75,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary-light, #dbeafe);
-  color: var(--color-primary, #2563eb);
+  background: color-mix(in srgb, var(--color-primary) 15%, var(--color-surface));
+  color: var(--color-primary);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -146,13 +146,13 @@
 }
 
 .employee-list-table__status--active {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
 }
 
 .employee-list-table__status--on_leave {
-  background: #ffedd5;
-  color: #b45309;
+  background: var(--color-warning-container);
+  color: var(--color-on-warning-container);
 }
 
 .employee-list-table__status--inactive {

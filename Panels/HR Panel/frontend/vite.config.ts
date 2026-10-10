@@ -40,6 +40,14 @@ export default defineConfig({
         "../../../modules/Scheduling/index.ts"
       ),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
+      "@raskha/branch-management": path.resolve(
+        projectRoot,
+        "../../../modules/Branch Management/index.ts"
+      ),
+      "@raskha/branch-stock": path.resolve(
+        projectRoot,
+        "../../../modules/Branch Stock/index.ts"
+      ),
     },
   },
 });

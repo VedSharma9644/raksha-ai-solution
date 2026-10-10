@@ -2,6 +2,8 @@ import { Timestamp } from "firebase/firestore";
 
 export type GuardStatus = "active" | "inactive" | "on_leave";
 
+export type GuardGender = "male" | "female" | "other";
+
 export interface Guard {
   id: string;
   agencyId: string;
@@ -9,6 +11,7 @@ export interface Guard {
   // Personal details
   fullName: string;
   fatherName: string;
+  gender: GuardGender;
   phone: string;
   email: string;
   address: string;
@@ -47,6 +50,8 @@ export interface Guard {
 
   notes: string;
   status: GuardStatus;
+  /** Branch this guard belongs to. null/undefined = unassigned (agency-wide). */
+  branchId?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

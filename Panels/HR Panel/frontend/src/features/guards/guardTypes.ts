@@ -2,6 +2,7 @@ export interface GuardFormValues {
   // Personal
   fullName: string;
   fatherName: string;
+  gender: "male" | "female" | "other" | "";
   phone: string;
   email: string;
   address: string;
@@ -46,6 +47,9 @@ export interface GuardFormValues {
 
   notes: string;
 
+  /** Branch this guard is assigned to ("" = unassigned / follows active branch) */
+  branchId: string;
+
   // Login credentials — password stored only in Firebase Auth, never Firestore
   // Required on Add; leave blank on Edit to keep existing password
   password: string;
@@ -55,6 +59,7 @@ export interface GuardFormValues {
 export const EMPTY_GUARD_FORM: GuardFormValues = {
   fullName: "",
   fatherName: "",
+  gender: "",
   phone: "",
   email: "",
   address: "",
@@ -83,6 +88,7 @@ export const EMPTY_GUARD_FORM: GuardFormValues = {
   esiNumber: "",
   pfNumber: "",
   notes: "",
+  branchId: "",
   password: "",
   confirmPassword: "",
 };

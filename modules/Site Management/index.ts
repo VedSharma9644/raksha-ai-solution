@@ -6,6 +6,7 @@ export {
   type ShiftType,
   type SiteShift,
   type SiteShiftConfig,
+  type ShiftGenderRequirement,
 } from "./site";
 
 export {

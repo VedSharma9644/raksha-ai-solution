@@ -68,18 +68,18 @@
 }
 
 .leave-request-card__status--pending {
-  background: #ffedd5;
-  color: #b45309;
+  background: var(--color-warning-container);
+  color: var(--color-on-warning-container);
 }
 
 .leave-request-card__status--approved {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
 }
 
 .leave-request-card__status--rejected {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-container);
+  color: var(--color-error);
 }
 
 .leave-request-card__dates {

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { auth } from "../../lib/firebase";
+import { useBranchContext } from "../branches";
+import { appendBranchParam } from "../../lib/branchFilter";
 
 export interface ProspectGuardListItem {
   id: string;
@@ -27,6 +29,7 @@ function resolveAdminApiBase(): string {
 const API_BASE = resolveAdminApiBase();
 
 export function useProspectGuardList(statusFilter?: string) {
+  const { activeBranchId } = useBranchContext();
   const [guards, setGuards] = useState<ProspectGuardListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +43,8 @@ export function useProspectGuardList(statusFilter?: string) {
       const token = await user.getIdToken();
       const url = new URL(`${API_BASE}/api/prospect-guards`);
       if (statusFilter) url.searchParams.set("status", statusFilter);
-      const res = await fetch(url.toString(), {
+      const finalUrl = appendBranchParam(url.toString(), activeBranchId);
+      const res = await fetch(finalUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`Failed to load prospect guards (${res.status})`);
@@ -51,7 +55,7 @@ export function useProspectGuardList(statusFilter?: string) {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [activeBranchId, statusFilter]);
 
   useEffect(() => { fetchGuards(); }, [fetchGuards]);
 

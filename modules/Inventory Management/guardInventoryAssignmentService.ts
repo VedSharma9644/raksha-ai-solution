@@ -26,6 +26,15 @@ export interface AssignItemToGuardParams {
   category: string;
   unit: string;
   quantity: number;
+  /** branchId of the guard — stored on the assignment for branch-level tracking */
+  branchId?: string | null;
+  /**
+   * If provided, also updates branchStock.assignedStock for this branch's stock record.
+   * Pass the BranchStock document ID.
+   */
+  branchStockId?: string | null;
+  /** adjustBranchAssignedStock function — injected to avoid circular import */
+  adjustBranchStock?: (db: Firestore, branchStockId: string, delta: number) => Promise<void>;
 }
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
@@ -33,7 +42,7 @@ export interface AssignItemToGuardParams {
 /**
  * Assigns an inventory item to a guard.
  * Atomically: creates the assignment doc AND increments assignedStock on the
- * inventory item (writeBatch ensures both writes succeed or both fail).
+ * inventory item. Also updates branchStock.assignedStock if branchStockId provided.
  */
 export async function assignItemToGuard(
   db: Firestore,
@@ -51,6 +60,8 @@ export async function assignItemToGuard(
     category: params.category,
     unit: params.unit,
     quantity: params.quantity,
+    branchId: params.branchId ?? null,
+    branchStockId: params.branchStockId ?? null,
     assignedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -58,20 +69,26 @@ export async function assignItemToGuard(
 
   await batch.commit();
 
-  // 2. Adjust assignedStock on the inventory item (separate update with status recompute)
+  // 2. Adjust master item's assignedStock (admin total view)
   await adjustAssignedStock(db, params.itemId, params.quantity);
+
+  // 3. Adjust branch stock if branchStockId provided
+  if (params.branchStockId && params.adjustBranchStock) {
+    await params.adjustBranchStock(db, params.branchStockId, params.quantity);
+  }
 
   return { id: assignRef.id, ...data } as unknown as GuardInventoryAssignment;
 }
 
 /**
  * Updates the quantity on an existing assignment.
- * Adjusts the delta on inventoryItem.assignedStock accordingly.
+ * Adjusts both inventoryItem.assignedStock and branchStock.assignedStock.
  */
 export async function updateGuardAssignment(
   db: Firestore,
   assignmentId: string,
   newQuantity: number,
+  adjustBranchStock?: (db: Firestore, branchStockId: string, delta: number) => Promise<void>,
 ): Promise<void> {
   const assignRef = doc(db, GUARD_INVENTORY_ASSIGNMENT_COLLECTION, assignmentId);
   const snapshot = await getDoc(assignRef);
@@ -80,14 +97,17 @@ export async function updateGuardAssignment(
   const current = snapshot.data() as GuardInventoryAssignment;
   const delta = newQuantity - current.quantity;
 
-  // Update assignment quantity
   const batch = writeBatch(db);
   batch.update(assignRef, { quantity: newQuantity, updatedAt: serverTimestamp() });
   await batch.commit();
 
-  // Adjust assignedStock by the delta
   if (delta !== 0) {
+    // Update master item assigned stock
     await adjustAssignedStock(db, current.itemId, delta);
+    // Update branch stock if applicable
+    if (current.branchStockId && adjustBranchStock) {
+      await adjustBranchStock(db, current.branchStockId, delta);
+    }
   }
 }
 
@@ -97,6 +117,7 @@ export async function updateGuardAssignment(
 export async function removeGuardAssignment(
   db: Firestore,
   assignmentId: string,
+  adjustBranchStock?: (db: Firestore, branchStockId: string, delta: number) => Promise<void>,
 ): Promise<void> {
   const assignRef = doc(db, GUARD_INVENTORY_ASSIGNMENT_COLLECTION, assignmentId);
   const snapshot = await getDoc(assignRef);
@@ -106,6 +127,10 @@ export async function removeGuardAssignment(
 
   await deleteDoc(assignRef);
   await adjustAssignedStock(db, assignment.itemId, -assignment.quantity);
+
+  if (assignment.branchStockId && adjustBranchStock) {
+    await adjustBranchStock(db, assignment.branchStockId, -assignment.quantity);
+  }
 }
 
 /** Fetch all assignments for a specific guard, scoped to the agency. */

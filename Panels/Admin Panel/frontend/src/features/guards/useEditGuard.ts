@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getGuardById, updateGuard } from "@raskha/guard-management";
-import type { Guard } from "@raskha/guard-management";
+import { getGuardById } from "@raskha/guard-management";
+import type { Guard, GuardGender } from "@raskha/guard-management";
 import { APP_ROUTES } from "../../app/routePaths";
-import { db, storage } from "../../lib/firebase";
+import { auth, db, storage } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff";
 
 // Admin backend base URL — mirrors useEditHrStaff pattern
@@ -85,35 +85,51 @@ export function useEditGuard(guardId: string) {
             : Promise.resolve(values.profilePictureUrl),
         ]);
 
-      await updateGuard(db, guardId, {
-        fullName: values.fullName,
-        fatherName: values.fatherName,
-        phone: values.phone,
-        email: values.email,
-        address: values.address,
-        caste: values.caste,
-        height: values.height,
-        aadhaarNumber: values.aadhaarNumber,
-        panNumber: values.panNumber,
-        employeeCode: values.employeeCode,
-        post: values.post,
-        joiningDate: values.joiningDate,
-        salary: values.salary,
-        experience: values.experience,
-        education: values.education,
-        assignedSiteId: values.assignedSiteId,
-        guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
-        interestedCity: values.interestedCity,
-        shiftFrom: values.shiftFrom,
-        shiftTo: values.shiftTo,
-        characterCertificateUrl,
-        policeVerificationUrl,
-        profilePictureUrl,
-        bankAccount: values.bankAccount,
-        esiNumber: values.esiNumber,
-        pfNumber: values.pfNumber,
-        notes: values.notes,
-      });
+      await (async () => {
+        const token = await auth.currentUser?.getIdToken();
+        const res = await fetch(`${ADMIN_BACKEND_URL}/api/guards/${guardId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            fullName: values.fullName,
+            fatherName: values.fatherName,
+            gender: (values.gender || "male") as GuardGender,
+            phone: values.phone,
+            email: values.email,
+            address: values.address,
+            caste: values.caste,
+            height: values.height,
+            aadhaarNumber: values.aadhaarNumber,
+            panNumber: values.panNumber,
+            employeeCode: values.employeeCode,
+            post: values.post,
+            joiningDate: values.joiningDate,
+            salary: values.salary,
+            experience: values.experience,
+            education: values.education,
+            assignedSiteId: values.assignedSiteId,
+            guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
+            interestedCity: values.interestedCity,
+            shiftFrom: values.shiftFrom,
+            shiftTo: values.shiftTo,
+            characterCertificateUrl,
+            policeVerificationUrl,
+            profilePictureUrl,
+            bankAccount: values.bankAccount,
+            esiNumber: values.esiNumber,
+            pfNumber: values.pfNumber,
+            notes: values.notes,
+            branchId: values.branchId || null,
+          }),
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(body.error ?? "Failed to update guard.");
+        }
+      })();
 
       // If a new password was supplied, update Firebase Auth via backend
       if (values.password) {
@@ -141,6 +157,7 @@ export function useEditGuard(guardId: string) {
     ? {
         fullName: guard.fullName,
         fatherName: guard.fatherName ?? "",
+        gender: (guard.gender ?? "") as StaffMemberFormValues["gender"],
         phone: guard.phone,
         email: guard.email,
         address: guard.address ?? "",
@@ -169,6 +186,8 @@ export function useEditGuard(guardId: string) {
         esiNumber: guard.esiNumber ?? "",
         pfNumber: guard.pfNumber ?? "",
         notes: guard.notes ?? "",
+        branchId: guard.branchId ?? "",
+        assignedBranchIds: [],
         password: "",
         confirmPassword: "",
       }

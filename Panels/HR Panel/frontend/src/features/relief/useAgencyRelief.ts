@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useBranchContext } from "../branches";
 import {
   decideAgencyReliefRequest,
   fetchAgencyReliefRequests,
@@ -7,16 +8,17 @@ import {
 import type { ReliefRequest, ReliefRequestStatus } from "./reliefTypes";
 
 export function useAgencyRelief() {
+  const { activeBranchId } = useBranchContext();
   const [reliefRequests, setReliefRequests] = useState<ReliefRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (branchId: string | null) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchAgencyReliefRequests("all");
+      const data = await fetchAgencyReliefRequests("all", branchId);
       setReliefRequests(data.requests);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -28,8 +30,8 @@ export function useAgencyRelief() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(activeBranchId);
+  }, [activeBranchId, load]);
 
   const updateStatus = useCallback(
     async (
@@ -48,7 +50,7 @@ export function useAgencyRelief() {
       setError(null);
       try {
         await decideAgencyReliefRequest(reliefId, status, { assignedGuardId });
-        await load();
+        await load(activeBranchId);
       } catch (err: unknown) {
         const e = err as { message?: string };
         setError(e.message ?? "Failed to update relief request.");
@@ -57,7 +59,7 @@ export function useAgencyRelief() {
         setIsUpdatingId(null);
       }
     },
-    [load],
+    [activeBranchId, load],
   );
 
   return {
@@ -65,7 +67,7 @@ export function useAgencyRelief() {
     isLoading,
     isUpdatingId,
     error,
-    refresh: load,
+    refresh: () => load(activeBranchId),
     updateStatus,
   };
 }

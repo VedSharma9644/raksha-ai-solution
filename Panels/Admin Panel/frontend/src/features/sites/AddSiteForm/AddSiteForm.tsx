@@ -8,6 +8,7 @@ import { TextField } from "../../../components/TextField";
 import type { SiteFormValues, SiteShiftRowValues } from "../siteFormTypes";
 import { EMPTY_SITE_FORM, EMPTY_SHIFT_ROW, SITE_TYPE_OPTIONS } from "../siteFormTypes";
 import { SiteLocationPicker } from "../SiteLocationPicker/SiteLocationPicker";
+import { useBranchContext } from "../../branches";
 import "./AddSiteForm.css";
 
 const SHIFT_TYPE_OPTIONS = [
@@ -29,6 +30,7 @@ export function AddSiteForm({
   onSubmit,
   onCancel,
 }: AddSiteFormProps) {
+  const { branches } = useBranchContext();
   const [values, setValues] = useState<SiteFormValues>(initialValues ?? EMPTY_SITE_FORM);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
@@ -74,7 +76,7 @@ export function AddSiteForm({
       if (!s.startTime) nextErrors[`shift_start_${i}`] = "Set start time.";
       if (!s.endTime) nextErrors[`shift_end_${i}`] = "Set end time.";
       const rg = parseInt(s.requiredGuards, 10);
-      if (isNaN(rg) || rg < 1) nextErrors[`shift_guards_${i}`] = "Min 1 guard.";
+      if (isNaN(rg) || rg < 1) nextErrors[`shift_guards_${i}`] = "Min 1 guard total.";
     });
 
     setErrors(nextErrors);
@@ -240,6 +242,27 @@ export function AddSiteForm({
           disabled={isSubmitting}
         />
 
+        {/* ── Branch Assignment ── */}
+        {branches.length > 0 && (
+          <>
+            <p className="add-site-form__section-label">Branch Assignment</p>
+            <div className="form-panel__grid">
+              <SelectField
+                label="Assigned branch"
+                name="branchId"
+                value={values.branchId}
+                onChange={(e) => updateField("branchId", e.target.value)}
+                options={branches.map((b) => ({
+                  value: b.id,
+                  label: b.city ? `${b.name} — ${b.city}` : b.name,
+                }))}
+                placeholder="No branch (unassigned)"
+                disabled={isSubmitting}
+              />
+            </div>
+          </>
+        )}
+
         {/* ── Shift Configuration ── */}
         <p className="add-site-form__section-label">Shift Configuration</p>
         <div className="shift-config">
@@ -356,14 +379,57 @@ export function AddSiteForm({
 
                 <div className="shift-config__field shift-config__field--guards">
                   <label className="shift-config__field-label">Guards needed</label>
-                  <input
-                    type="number"
-                    className={`shift-config__input${errors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
-                    min={1}
-                    value={shift.requiredGuards}
-                    onChange={(e) => updateShift(idx, { requiredGuards: e.target.value })}
-                    disabled={isSubmitting}
-                  />
+                  <div className="shift-config__gender-inputs">
+                    <div className="shift-config__gender-group">
+                      <span className="shift-config__gender-label">Male</span>
+                      <input
+                        type="number"
+                        className={`shift-config__input${errors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
+                        min={0}
+                        value={shift.requiredMale}
+                        onChange={(e) => {
+                          const male = e.target.value;
+                          const total = (parseInt(male) || 0) + (parseInt(shift.requiredFemale) || 0) + (parseInt(shift.requiredOther) || 0);
+                          updateShift(idx, { requiredMale: male, requiredGuards: String(total || 0) });
+                        }}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="shift-config__gender-group">
+                      <span className="shift-config__gender-label">Female</span>
+                      <input
+                        type="number"
+                        className="shift-config__input"
+                        min={0}
+                        value={shift.requiredFemale}
+                        onChange={(e) => {
+                          const female = e.target.value;
+                          const total = (parseInt(shift.requiredMale) || 0) + (parseInt(female) || 0) + (parseInt(shift.requiredOther) || 0);
+                          updateShift(idx, { requiredFemale: female, requiredGuards: String(total || 0) });
+                        }}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="shift-config__gender-group">
+                      <span className="shift-config__gender-label">Other</span>
+                      <input
+                        type="number"
+                        className="shift-config__input"
+                        min={0}
+                        value={shift.requiredOther}
+                        onChange={(e) => {
+                          const other = e.target.value;
+                          const total = (parseInt(shift.requiredMale) || 0) + (parseInt(shift.requiredFemale) || 0) + (parseInt(other) || 0);
+                          updateShift(idx, { requiredOther: other, requiredGuards: String(total || 0) });
+                        }}
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="shift-config__gender-total">
+                      <span className="shift-config__gender-label">Total</span>
+                      <span className="shift-config__gender-total-value">{shift.requiredGuards || "0"}</span>
+                    </div>
+                  </div>
                   {errors[`shift_guards_${idx}`] && (
                     <span className="shift-config__field-error">{errors[`shift_guards_${idx}`]}</span>
                   )}

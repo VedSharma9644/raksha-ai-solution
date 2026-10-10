@@ -31,6 +31,10 @@ export default defineConfig({
       // Resolve @raskha/client-management from TypeScript source
       "@raskha/client-management": path.resolve(projectRoot, "../../../modules/Client Management/index.ts"),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
+      // Resolve @raskha/branch-management from TypeScript source
+      "@raskha/branch-management": path.resolve(projectRoot, "../../../modules/Branch Management/index.ts"),
+      // Resolve @raskha/branch-stock from TypeScript source
+      "@raskha/branch-stock": path.resolve(projectRoot, "../../../modules/Branch Stock/index.ts"),
     },
   },
 });

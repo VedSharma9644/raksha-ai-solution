@@ -1,10 +1,13 @@
 export const APP_ROUTES = {
   login: "/",
+  selectBranch: "/select-branch",
   dashboard: "/dashboard",
   addGuard: "/guards/add",
   guardList: "/guards",
   viewGuard: "/guards/:id",
   manageInventory: "/inventory",
+  addInventoryItem: "/inventory/add",
+  editInventoryItem: "/inventory/:itemId/edit",
   manageLeave: "/leave",
   manageRelief: "/relief",
   siteList: "/sites",
@@ -22,6 +25,10 @@ export type AppRoutePath = (typeof APP_ROUTES)[keyof typeof APP_ROUTES];
 
 export function viewGuardPath(guardId: string): string {
   return `/guards/${guardId}`;
+}
+
+export function editInventoryItemPath(itemId: string): string {
+  return `/inventory/${itemId}/edit`;
 }
 
 export function assignGuardsPath(siteId: string): string {

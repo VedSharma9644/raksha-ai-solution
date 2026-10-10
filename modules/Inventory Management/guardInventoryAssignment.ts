@@ -12,6 +12,11 @@ export interface GuardInventoryAssignment {
 
   quantity: number;
 
+  /** Branch (inherited from guard's branchId). */
+  branchId?: string | null;
+  /** Reference to the branchStock record this assignment draws from. */
+  branchStockId?: string | null;
+
   assignedAt: Timestamp;
   updatedAt: Timestamp;
 }

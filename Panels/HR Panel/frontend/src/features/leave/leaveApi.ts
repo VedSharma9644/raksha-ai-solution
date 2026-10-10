@@ -60,8 +60,10 @@ function toLeaveRequest(item: ApiLeaveRequest): LeaveRequest {
 
 export async function fetchAgencyLeaveRequests(
   status: "all" | LeaveRequestStatus = "all",
+  branchId?: string | null,
 ): Promise<{ requests: LeaveRequest[]; counts: LeaveListResponse["counts"] }> {
   const query = new URLSearchParams({ status });
+  if (branchId) query.set("branchId", branchId);
   const response = await fetch(
     `${API_BASE}/api/leave/requests?${query.toString()}`,
     { headers: await authHeaders() },

@@ -1,10 +1,12 @@
 import { useState } from "react";
-import type { GuardInventoryAssignment, InventoryItem } from "@raskha/inventory-management";
+import type { GuardInventoryAssignment } from "@raskha/inventory-management";
+import type { BranchInventoryRow } from "../../inventory/inventoryHooks";
 import "./GuardInventoryPanel.css";
 
 export interface GuardInventoryPanelProps {
   assignments: GuardInventoryAssignment[];
-  inventoryItems: InventoryItem[];
+  /** Branch inventory rows — show only items with available stock for this branch */
+  inventoryRows: BranchInventoryRow[];
   isLoading?: boolean;
   isSaving?: boolean;
   error?: string;
@@ -21,7 +23,7 @@ export interface GuardInventoryPanelProps {
 
 export function GuardInventoryPanel({
   assignments,
-  inventoryItems,
+  inventoryRows,
   isLoading = false,
   isSaving = false,
   error,
@@ -32,23 +34,18 @@ export function GuardInventoryPanel({
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState("1");
 
-  // Compute availableStock for each item
-  const itemsWithAvailable = inventoryItems.map((item) => ({
-    ...item,
-    availableStock: item.totalStock - (item.assignedStock ?? 0),
-  }));
-
-  const selectedItem = itemsWithAvailable.find((i) => i.id === selectedItemId);
+  const selectedRow = inventoryRows.find((r) => r.itemId === selectedItemId);
+  const assignableRows = inventoryRows.filter((r) => r.availableStock > 0);
 
   async function handleAdd() {
-    if (!selectedItemId || !selectedItem) return;
+    if (!selectedItemId || !selectedRow) return;
     const qty = parseInt(quantity, 10);
     if (isNaN(qty) || qty <= 0) return;
     await onAssign(
-      selectedItem.id,
-      selectedItem.name,
-      selectedItem.category,
-      selectedItem.unit,
+      selectedRow.itemId,
+      selectedRow.name,
+      selectedRow.category,
+      selectedRow.unit,
       qty,
     );
     setSelectedItemId("");
@@ -110,17 +107,23 @@ export function GuardInventoryPanel({
       )}
 
       {/* ── Add item row ── */}
+      {assignableRows.length === 0 ? (
+        <p className="guard-inventory-panel__no-stock">
+          No stock available for this branch yet.{" "}
+          Go to <strong>Inventory</strong> and use <em>"Set Stock"</em> to allocate items to this branch first.
+        </p>
+      ) : (
       <div className="guard-inventory-panel__add-row">
         <select
           className="guard-inventory-panel__select"
           value={selectedItemId}
           onChange={(e) => setSelectedItemId(e.target.value)}
-          disabled={isSaving || inventoryItems.length === 0}
+          disabled={isSaving}
         >
           <option value="">Select item…</option>
-          {itemsWithAvailable.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name} — Available: {item.availableStock} {item.unit}
+          {assignableRows.map((row) => (
+            <option key={row.itemId} value={row.itemId}>
+              {row.name} — Available: {row.availableStock} {row.unit}
             </option>
           ))}
         </select>
@@ -128,7 +131,7 @@ export function GuardInventoryPanel({
           type="number"
           className="guard-inventory-panel__qty-input"
           min={1}
-          max={selectedItem ? selectedItem.availableStock : undefined}
+          max={selectedRow ? selectedRow.availableStock : undefined}
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           disabled={isSaving || !selectedItemId}
@@ -142,16 +145,17 @@ export function GuardInventoryPanel({
             !selectedItemId ||
             !quantity ||
             parseInt(quantity, 10) <= 0 ||
-            (selectedItem ? parseInt(quantity, 10) > selectedItem.availableStock : false)
+            (selectedRow ? parseInt(quantity, 10) > selectedRow.availableStock : false)
           }
           onClick={() => void handleAdd()}
         >
           {isSaving ? "…" : "Add"}
         </button>
       </div>
-      {selectedItem && parseInt(quantity, 10) > selectedItem.availableStock && (
+      )}
+      {selectedRow && parseInt(quantity, 10) > selectedRow.availableStock && (
         <p className="guard-inventory-panel__warn">
-          Only {selectedItem.availableStock} {selectedItem.unit} available.
+          Only {selectedRow.availableStock} {selectedRow.unit} available in this branch.
         </p>
       )}
     </div>

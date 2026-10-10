@@ -39,6 +39,9 @@ export interface ProspectClient {
   status: ProspectStatus;
   followUpDate: string | null;   // ISO date string e.g. "2026-11-15"
 
+  /** Branch this prospect is assigned to. null/undefined = agency-wide. */
+  branchId?: string | null;
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

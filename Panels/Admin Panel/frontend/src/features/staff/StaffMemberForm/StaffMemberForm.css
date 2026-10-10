@@ -124,3 +124,34 @@
   margin: 0 0 0.5rem;
   line-height: 1.5;
 }
+
+/* ── Branch assignment checkboxes ── */
+.staff-member-form__branch-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface-raised, #f9f9f9);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+}
+
+.staff-member-form__branch-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.staff-member-form__branch-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.staff-member-form__branch-city {
+  color: var(--color-text-secondary, #718096);
+  font-size: 0.8rem;
+}

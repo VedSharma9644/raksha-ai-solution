@@ -2,11 +2,15 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ModuleProtectedRoute } from "../components/ModuleProtectedRoute";
 import { useAuthContext } from "../features/authentication";
+import { useBranchContext } from "../features/branches";
 import { AddGuardPage } from "../pages/AddGuardPage";
 import { GuardListPage } from "../pages/GuardListPage";
 import { ViewGuardPage } from "../pages/ViewGuardPage";
 import { HrDashboardPage } from "../pages/HrDashboardPage";
 import { InventoryPage } from "../pages/InventoryPage";
+import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
+import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
+import { BranchSelectionPage } from "../pages/BranchSelectionPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SiteListPage } from "../pages/SiteListPage";
@@ -20,13 +24,18 @@ import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { hrStaff, isLoading } = useAuthContext();
+  const { needsBranchSelection, isLoading: branchLoading } = useBranchContext();
 
-  if (isLoading) {
+  if (isLoading || branchLoading) {
     return null;
   }
 
   if (!hrStaff) {
     return <Navigate to={APP_ROUTES.login} replace />;
+  }
+
+  if (needsBranchSelection) {
+    return <Navigate to={APP_ROUTES.selectBranch} replace />;
   }
 
   return <>{children}</>;
@@ -54,6 +63,14 @@ function ModuleRoute({ children }: { children: ReactNode }) {
   );
 }
 
+/** Logged-in only — used for the branch selection screen (bypasses branch check). */
+function ProtectedBranchlessRoute({ children }: { children: ReactNode }) {
+  const { hrStaff, isLoading } = useAuthContext();
+  if (isLoading) return null;
+  if (!hrStaff) return <Navigate to={APP_ROUTES.login} replace />;
+  return <>{children}</>;
+}
+
 export function AppRouter() {
   return (
     <Routes>
@@ -63,6 +80,15 @@ export function AppRouter() {
           <GuestRoute>
             <LoginPage />
           </GuestRoute>
+        }
+      />
+
+      <Route
+        path={APP_ROUTES.selectBranch}
+        element={
+          <ProtectedBranchlessRoute>
+            <BranchSelectionPage />
+          </ProtectedBranchlessRoute>
         }
       />
 
@@ -103,6 +129,22 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <InventoryPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.addInventoryItem}
+        element={
+          <ModuleRoute>
+            <AddInventoryItemPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.editInventoryItem}
+        element={
+          <ModuleRoute>
+            <EditInventoryItemPage />
           </ModuleRoute>
         }
       />

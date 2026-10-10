@@ -2,6 +2,7 @@ export {
   GUARDS_COLLECTION,
   type Guard,
   type GuardStatus,
+  type GuardGender,
 } from "./guard";
 
 export {

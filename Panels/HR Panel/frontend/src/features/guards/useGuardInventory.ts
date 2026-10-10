@@ -6,11 +6,14 @@ import {
   removeGuardAssignment,
 } from "@raskha/inventory-management";
 import type { GuardInventoryAssignment } from "@raskha/inventory-management";
+import { adjustBranchAssignedStock } from "@raskha/branch-stock";
 import { db } from "../../lib/firebase";
 import { useAuthContext } from "../authentication";
+import { useBranchContext } from "../branches";
 
 export function useGuardInventory(guardId: string) {
   const { hrStaff } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const [assignments, setAssignments] = useState<GuardInventoryAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -40,6 +43,7 @@ export function useGuardInventory(guardId: string) {
     category: string,
     unit: string,
     quantity: number,
+    branchStockId?: string | null,
   ) {
     if (!hrStaff?.agencyId) return;
     setIsSaving(true);
@@ -53,6 +57,9 @@ export function useGuardInventory(guardId: string) {
         category,
         unit,
         quantity,
+        branchId: activeBranchId ?? null,
+        branchStockId: branchStockId ?? null,
+        adjustBranchStock: branchStockId ? adjustBranchAssignedStock : undefined,
       });
       setAssignments((prev) => [...prev, newAssignment]);
     } catch (err: unknown) {
@@ -67,7 +74,7 @@ export function useGuardInventory(guardId: string) {
     setIsSaving(true);
     setError("");
     try {
-      await updateGuardAssignment(db, assignmentId, newQuantity);
+      await updateGuardAssignment(db, assignmentId, newQuantity, adjustBranchAssignedStock);
       setAssignments((prev) =>
         prev.map((a) =>
           a.id === assignmentId ? { ...a, quantity: newQuantity } : a,
@@ -85,7 +92,7 @@ export function useGuardInventory(guardId: string) {
     setIsSaving(true);
     setError("");
     try {
-      await removeGuardAssignment(db, assignmentId);
+      await removeGuardAssignment(db, assignmentId, adjustBranchAssignedStock);
       setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     } catch (err: unknown) {
       const e = err as { message?: string };

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { createGuardAccount } from "@raskha/guard-management";
+import type { GuardGender } from "@raskha/guard-management";
 import { APP_ROUTES } from "../../app/routePaths";
 import { useAuthContext } from "../authentication";
+import { useBranchContext } from "../branches";
 import { db, storage, clientFirebaseConfig } from "../../lib/firebase";
 import type { GuardFormValues } from "./guardTypes";
 
@@ -20,6 +22,7 @@ async function uploadDocumentIfPresent(
 export function useAddGuard() {
   const navigate = useNavigate();
   const { hrStaff } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,6 +62,7 @@ export function useAddGuard() {
         password: values.password,
         fullName: values.fullName,
         fatherName: values.fatherName,
+        gender: (values.gender || "male") as GuardGender,
         phone: values.phone,
         email: values.email,
         address: values.address,
@@ -87,6 +91,7 @@ export function useAddGuard() {
         esiNumber: values.esiNumber,
         pfNumber: values.pfNumber,
         notes: values.notes,
+        branchId: values.branchId || activeBranchId || null,
       });
 
       navigate(APP_ROUTES.dashboard, { replace: true });

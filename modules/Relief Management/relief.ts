@@ -53,6 +53,8 @@ export interface ReliefRequestRecord {
   decidedByName?: string;
   approvalNote?: string;
   rejectionRemark?: string;
+  /** Branch this relief request belongs to (inherited from guard's site). */
+  branchId?: string | null;
   appliedAt: Timestamp;
   updatedAt: Timestamp;
   decidedAt?: Timestamp;

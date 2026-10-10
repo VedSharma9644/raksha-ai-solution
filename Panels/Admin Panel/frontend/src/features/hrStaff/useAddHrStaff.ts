@@ -29,6 +29,7 @@ export function useAddHrStaff() {
         email: values.email,
         password: values.password,
         notes: values.notes,
+        assignedBranchIds: values.assignedBranchIds ?? [],
       });
       navigate("/hr", { replace: true });
     } catch (err: unknown) {

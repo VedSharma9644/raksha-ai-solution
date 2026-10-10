@@ -8,13 +8,23 @@ import {
   addInventoryItem,
 } from "@raskha/inventory-management";
 import type { InventoryItem } from "@raskha/inventory-management";
+import {
+  listBranchStockByAgency,
+  listBranchStockByItem,
+  upsertBranchStock,
+} from "@raskha/branch-stock";
+import type { BranchStock } from "@raskha/branch-stock";
 import { db } from "../../lib/firebase";
 import { useAuthContext } from "../authentication";
+import { useBranchContext } from "../branches";
 import type { InventoryItemFormValues } from "./inventoryFormTypes";
 import { APP_ROUTES } from "../../app/routePaths";
 
+// ── List (admin, agency-wide master items) ───────────────────────────────────
+
 export function useInventoryList() {
   const { agency } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -25,14 +35,15 @@ export function useInventoryList() {
     setIsLoading(true);
     try {
       const data = await listInventoryItemsByAgency(db, agency.id);
-      setItems(data);
+      // Items are now agency-wide; activeBranchId is unused for master list
+      setItems(activeBranchId ? data : data);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to load inventory.");
     } finally {
       setIsLoading(false);
     }
-  }, [agency]);
+  }, [agency, activeBranchId]);
 
   useEffect(() => {
     void load();
@@ -54,6 +65,8 @@ export function useInventoryList() {
 
   return { items, isLoading, isSeeding, error, reload: load, seedDefaults };
 }
+
+// ── Add (admin creates master item, no branchId) ─────────────────────────────
 
 export function useAddInventoryItem() {
   const navigate = useNavigate();
@@ -77,6 +90,7 @@ export function useAddInventoryItem() {
         totalStock: Number(values.totalStock) || 0,
         thresholdStock: Number(values.thresholdStock) || 0,
         notes: values.notes,
+        branchId: null,   // items are agency-wide
       });
       navigate(APP_ROUTES.inventoryList, { replace: true });
     } catch (err: unknown) {
@@ -89,6 +103,8 @@ export function useAddInventoryItem() {
 
   return { saveItem, isSubmitting, error };
 }
+
+// ── Edit ─────────────────────────────────────────────────────────────────────
 
 export function useEditInventoryItem(itemId: string) {
   const navigate = useNavigate();
@@ -140,8 +156,109 @@ export function useInventoryItemDetail(itemId: string) {
   return { item, isLoading, error };
 }
 
-/** Navigate to the inventory list */
 export function useNavigateToInventory() {
   const navigate = useNavigate();
   return () => navigate(APP_ROUTES.inventoryList);
+}
+
+// ── Branch stock hooks (admin: per-branch distribution) ──────────────────────
+
+export function useBranchStockByItem(itemId: string) {
+  const { agency } = useAuthContext();
+  const [branchStocks, setBranchStocks] = useState<BranchStock[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!agency || !itemId) return;
+    setIsLoading(true);
+    try {
+      const data = await listBranchStockByItem(db, agency.id, itemId);
+      setBranchStocks(data);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message ?? "Failed to load branch stock.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [agency, itemId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { branchStocks, isLoading, error, reload: load };
+}
+
+export function useBranchStockByAgency() {
+  const { agency } = useAuthContext();
+  const [branchStocks, setBranchStocks] = useState<BranchStock[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!agency) return;
+    setIsLoading(true);
+    try {
+      const data = await listBranchStockByAgency(db, agency.id);
+      setBranchStocks(data);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message ?? "Failed to load agency branch stock.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [agency]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { branchStocks, isLoading, error, reload: load };
+}
+
+// ── Admin: allocate stock to a specific branch ────────────────────────────────
+
+export interface AllocateToBranchParams {
+  branchId: string;
+  itemId: string;
+  itemName: string;
+  category: string;
+  unit: string;
+  allocatedStock: number;
+  thresholdStock: number;
+}
+
+export function useAllocateToBranch(onSuccess?: () => void) {
+  const { agency } = useAuthContext();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function allocate(params: AllocateToBranchParams) {
+    if (!agency) { setError("Not authenticated."); return; }
+    setError("");
+    setIsSaving(true);
+    try {
+      await upsertBranchStock(db, {
+        agencyId:       agency.id,
+        branchId:       params.branchId,
+        itemId:         params.itemId,
+        itemName:       params.itemName,
+        category:       params.category,
+        unit:           params.unit,
+        allocatedStock: params.allocatedStock,
+        thresholdStock: params.thresholdStock,
+      });
+      onSuccess?.();
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message ?? "Failed to allocate stock.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function clearError() { setError(""); }
+
+  return { allocate, isSaving, error, clearError };
 }

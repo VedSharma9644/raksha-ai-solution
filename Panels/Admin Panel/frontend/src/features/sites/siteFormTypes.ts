@@ -23,7 +23,10 @@ export interface SiteShiftRowValues {
   shiftType: ShiftTypeOption;
   startTime: string; // HH:MM
   endTime: string;   // HH:MM
-  requiredGuards: string; // string for input, parsed to number on save
+  requiredGuards: string; // string for input, parsed to number on save (auto-sum of gender fields)
+  requiredMale: string;
+  requiredFemale: string;
+  requiredOther: string;
 }
 
 export const EMPTY_SHIFT_ROW = (): SiteShiftRowValues => ({
@@ -33,6 +36,9 @@ export const EMPTY_SHIFT_ROW = (): SiteShiftRowValues => ({
   startTime: "06:00",
   endTime: "18:00",
   requiredGuards: "1",
+  requiredMale: "1",
+  requiredFemale: "0",
+  requiredOther: "0",
 });
 
 // ─── Site form values ────────────────────────────────────────────────────────
@@ -70,6 +76,9 @@ export interface SiteFormValues {
   has24hSurveillance: boolean;
   intervalCheckinMinutes: string; // parsed to number on save; "" = disabled
   shifts: SiteShiftRowValues[];
+
+  /** Branch this site belongs to. "" = unassigned (follows active branch on create). */
+  branchId: string;
 }
 
 export const EMPTY_SITE_FORM: SiteFormValues = {
@@ -91,6 +100,7 @@ export const EMPTY_SITE_FORM: SiteFormValues = {
   has24hSurveillance: false,
   intervalCheckinMinutes: "",
   shifts: [],
+  branchId: "",
 };
 
 export const SITE_TYPE_OPTIONS = [

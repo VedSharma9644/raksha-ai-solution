@@ -21,6 +21,8 @@ export interface SaveGuardShiftAssignmentParams {
   siteId: string;
   guardId: string;
   guardName: string;
+  /** Gender of the guard — stored for gender-quota enforcement */
+  guardGender?: "male" | "female" | "other" | null;
   shiftId: string;
   shiftLabel: string;
   shiftStartTime: string;

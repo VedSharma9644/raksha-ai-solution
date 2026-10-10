@@ -22,6 +22,10 @@
   --color-on-error-container: #93000a;
 
   --color-success: #15803d;
+  --color-success-container: #dcfce7;
+  --color-on-success-container: #15803d;
+  --color-warning-container: #fef3c7;
+  --color-on-warning-container: #92400e;
 
   --color-hover-tint: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
   --color-page-wash: color-mix(in srgb, var(--color-primary) 6%, var(--color-background));
@@ -110,6 +114,10 @@
   --color-on-error-container: #ffdad6;
 
   --color-success: #6dde8f;
+  --color-success-container: rgba(20, 83, 45, 0.35);
+  --color-on-success-container: #86efac;
+  --color-warning-container: rgba(120, 53, 15, 0.35);
+  --color-on-warning-container: #fde68a;
 
   --color-hover-tint: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
   --color-page-wash: color-mix(in srgb, var(--color-primary) 8%, var(--color-background));

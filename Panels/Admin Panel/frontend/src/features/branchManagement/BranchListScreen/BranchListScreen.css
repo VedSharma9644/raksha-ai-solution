@@ -1,0 +1,111 @@
+.branch-list-screen {
+  padding: 1.5rem;
+}
+
+.branch-list-screen__filters {
+  margin-bottom: 1.5rem;
+  max-width: 360px;
+}
+
+.branch-list-screen__error {
+  color: var(--color-error);
+  background: var(--color-error-container);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.branch-list-screen__table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.branch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.branch-table th,
+.branch-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.branch-table th {
+  font-weight: 700;
+  color: var(--color-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-surface-muted);
+}
+
+.branch-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.branch-table__row:hover {
+  background: var(--color-hover-tint);
+}
+
+.branch-table__name {
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.branch-table__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+/* ── Status badges ── */
+.branch-table__status {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.branch-table__status--active {
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
+}
+
+.branch-table__status--inactive {
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface-variant);
+}
+
+/* ── Action button ── */
+.branch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.9rem;
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.branch-action-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}

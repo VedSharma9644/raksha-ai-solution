@@ -265,6 +265,25 @@ export function createSchedulingRoutes(): Router {
         (siteData?.shiftConfig?.shifts ?? []).map((s) => [s.id, s])
       );
 
+      // Batch-fetch guard genders so old assignments (without guardGender stored)
+      // still get the correct value in the API response.
+      const uniqueGuardIds = [...new Set(snap.docs.map((d) => String(d.data().guardId ?? "")))].filter(Boolean);
+      const guardGenderCache = new Map<string, string | null>();
+      if (uniqueGuardIds.length > 0) {
+        await Promise.all(
+          uniqueGuardIds.map(async (gid) => {
+            try {
+              const gDoc = await adminDb.collection(GUARDS_COLLECTION).doc(gid).get();
+              const gender = (gDoc.data() as { gender?: string } | undefined)?.gender ?? null;
+              const normalised = typeof gender === "string" ? gender.toLowerCase() : null;
+              guardGenderCache.set(gid, normalised);
+            } catch {
+              guardGenderCache.set(gid, null);
+            }
+          })
+        );
+      }
+
       const assignments = await Promise.all(
         snap.docs.map(async (d) => {
           const data = d.data() as Record<string, unknown>;
@@ -276,15 +295,24 @@ export function createSchedulingRoutes(): Router {
             effectiveTo: data.effectiveTo as string | null | undefined,
             recurringDays: data.recurringDays,
           });
+
+          // Inject guardGender: prefer stored value, fall back to live guard profile
+          const storedGender = data.guardGender;
+          const resolvedGender =
+            (storedGender !== undefined && storedGender !== null && storedGender !== "")
+              ? String(storedGender).toLowerCase()
+              : (guardGenderCache.get(guardId) ?? null);
+
           const base = live
             ? {
                 id: d.id,
                 ...data,
+                guardGender: resolvedGender,
                 shiftLabel: live.label || data.shiftLabel,
                 shiftStartTime: live.startTime || data.shiftStartTime,
                 shiftEndTime: live.endTime || data.shiftEndTime,
               }
-            : { id: d.id, ...data };
+            : { id: d.id, ...data, guardGender: resolvedGender };
           return {
             ...base,
             shiftLocked: todayLocked,
@@ -345,6 +373,7 @@ export function createSchedulingRoutes(): Router {
           startTime?: string;
           endTime?: string;
           requiredGuards: number;
+          genderRequirements?: { male: number; female: number; other: number } | null;
         }>;
       } | null | undefined;
       const shiftDef = shiftConfig?.shifts?.find((s) => s.id === String(shiftId));
@@ -352,16 +381,101 @@ export function createSchedulingRoutes(): Router {
         res.status(400).json({ error: "Shift not found on this site." });
         return;
       }
+      // Per-day fullness check: for each requested recurring day, count how many
+      // existing active assignments already cover that day. Block only if a
+      // specific day is already at capacity — not by total document count.
       const existingSnap = await adminDb
         .collection(SHIFT_ASSIGNMENTS_COLLECTION)
         .where("siteId", "==", String(siteId))
         .where("shiftId", "==", String(shiftId))
         .get();
-      if (existingSnap.size >= shiftDef.requiredGuards) {
+
+      const newEffectiveFrom = String(effectiveFrom ?? "");
+      const newEffectiveTo = effectiveTo ? String(effectiveTo) : null;
+      const requestedDays = Array.isArray(recurringDays)
+        ? (recurringDays as string[])
+        : [];
+
+      const DAY_LABELS_MAP: Record<string, string> = {
+        mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday",
+        fri: "Friday", sat: "Saturday", sun: "Sunday",
+      };
+
+      // Fetch the guard's gender for gender-quota checks
+      const guardDoc = await adminDb.collection(GUARDS_COLLECTION).doc(String(guardId)).get();
+      const guardGender = (guardDoc.data() as { gender?: string } | undefined)?.gender ?? null;
+      const genderLabel: Record<string, string> = { male: "Male", female: "Female", other: "Other" };
+
+      // ── Duplicate guard check ─────────────────────────────────────────────
+      // Block if this exact guard is already assigned to this shift on any
+      // overlapping day within the requested date range.
+      for (const d of existingSnap.docs) {
+        const a = d.data() as {
+          guardId?: string;
+          recurringDays?: string[];
+          effectiveTo?: string | null;
+          effectiveFrom?: string;
+        };
+        if (String(a.guardId ?? "") !== String(guardId)) continue;
+        const aDays = Array.isArray(a.recurringDays) ? a.recurringDays : [];
+        const overlapsDay = requestedDays.some((day) => aDays.includes(day));
+        if (!overlapsDay) continue;
+        // Date-range overlap check
+        if (a.effectiveTo && newEffectiveFrom && a.effectiveTo < newEffectiveFrom) continue;
+        if (newEffectiveTo && a.effectiveFrom && a.effectiveFrom > newEffectiveTo) continue;
         res.status(409).json({
-          error: `This shift is full — ${existingSnap.size}/${shiftDef.requiredGuards} guards already assigned.`,
+          error: "This guard is already assigned to this shift on one or more of the selected days. Each guard can only appear once per shift.",
         });
         return;
+      }
+
+      for (const day of requestedDays) {
+        let totalCount = 0;
+        let genderCount = 0;
+        for (const d of existingSnap.docs) {
+          const a = d.data() as {
+            recurringDays?: string[];
+            effectiveTo?: string | null;
+            effectiveFrom?: string;
+            guardGender?: string | null;
+          };
+          const aDays = Array.isArray(a.recurringDays) ? a.recurringDays : [];
+          if (!aDays.includes(day)) continue;
+          // Skip assignments that end before the new one starts
+          if (a.effectiveTo && newEffectiveFrom && a.effectiveTo < newEffectiveFrom) continue;
+          // Skip assignments that start after the new one ends
+          if (newEffectiveTo && a.effectiveFrom && a.effectiveFrom > newEffectiveTo) continue;
+          totalCount++;
+          if (guardGender && a.guardGender === guardGender) genderCount++;
+        }
+
+        const dayLabel = DAY_LABELS_MAP[day] ?? day;
+
+        // Total capacity check
+        if (totalCount >= shiftDef.requiredGuards) {
+          res.status(409).json({
+            error: `Shift already has ${totalCount}/${shiftDef.requiredGuards} guards on ${dayLabel}. Choose different days or remove an existing guard first.`,
+          });
+          return;
+        }
+
+        // Per-gender capacity check
+        const genderReq = shiftDef.genderRequirements;
+        if (genderReq && guardGender && guardGender in genderReq) {
+          const quota = genderReq[guardGender as keyof typeof genderReq] ?? 0;
+          if (quota === 0) {
+            res.status(409).json({
+              error: `This shift has no slots for ${genderLabel[guardGender] ?? guardGender} guards.`,
+            });
+            return;
+          }
+          if (genderCount >= quota) {
+            res.status(409).json({
+              error: `The ${genderLabel[guardGender] ?? guardGender} guard slot for ${dayLabel} is already full (${genderCount}/${quota}).`,
+            });
+            return;
+          }
+        }
       }
 
       const data = {
@@ -369,6 +483,7 @@ export function createSchedulingRoutes(): Router {
         siteId,
         guardId,
         guardName: guardName ?? "",
+        guardGender: guardGender ?? null,
         shiftId,
         shiftLabel: shiftDef.label || String(shiftLabel ?? "Duty"),
         shiftStartTime: shiftDef.startTime || String(shiftStartTime ?? "08:00"),

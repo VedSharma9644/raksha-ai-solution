@@ -83,6 +83,7 @@ export function AddGuardPage() {
               ...EMPTY_STAFF_MEMBER_FORM,
               fullName:        (data["fullName"]        as string) ?? "",
               fatherName:      (data["fatherName"]      as string) ?? "",
+              gender:          (data["gender"]          as StaffMemberFormValues["gender"]) || "",
               phone:           (data["phone"]           as string) ?? "",
               email:           (data["email"]           as string) ?? "",
               address:         (data["address"]         as string) ?? "",

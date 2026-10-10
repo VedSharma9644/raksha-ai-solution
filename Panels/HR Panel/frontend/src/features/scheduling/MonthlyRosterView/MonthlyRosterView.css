@@ -108,6 +108,18 @@
   pointer-events: none;
 }
 
+/* Past day cells — muted, still clickable (view-only) */
+.monthly-roster__cell--past {
+  opacity: 0.6;
+  background: var(--color-surface-raised, #f9fafb);
+}
+
+.monthly-roster__cell--past:hover {
+  border-color: var(--color-border, #e5e7eb);
+  background: var(--color-surface-raised, #f9fafb);
+  opacity: 0.75;
+}
+
 .monthly-roster__cell-num {
   font-size: 0.8rem;
   font-weight: 600;
@@ -133,6 +145,11 @@
 .monthly-roster__pill--day    { background: #f59e0b; }
 .monthly-roster__pill--night  { background: #6366f1; }
 .monthly-roster__pill--custom { background: #10b981; }
+
+/* Full coverage pill — green override */
+.monthly-roster__pill--full {
+  background: #10b981;
+}
 
 .monthly-roster__cell-no-shift {
   height: 4px;
@@ -216,15 +233,10 @@
 .monthly-roster__sidebar-guards {
   list-style: none;
   margin: 0;
-  padding: 0 0 0 1rem;
+  padding: 0 0 0 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-
-.monthly-roster__sidebar-guard {
-  font-size: 0.8rem;
-  color: var(--color-text, #374151);
 }
 
 .monthly-roster__sidebar-fill {
@@ -236,6 +248,65 @@
 .monthly-roster__sidebar-shortage {
   color: #f59e0b;
   font-weight: 600;
+}
+
+.monthly-roster__sidebar-full {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Past badge in sidebar date header */
+.monthly-roster__sidebar-past-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #6b7280);
+  background: var(--color-surface-raised, #f3f4f6);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-inline-start: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Guard list items in sidebar */
+.monthly-roster__sidebar-guard {
+  font-size: 0.8rem;
+  color: var(--color-text, #374151);
+}
+
+.monthly-roster__sidebar-guard-name {
+  font-size: 0.8rem;
+}
+
+/* Clickable guard button (edit mode) */
+.monthly-roster__sidebar-guard-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text, #374151);
+  font-size: 0.8rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.monthly-roster__sidebar-guard-btn:hover {
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 10%, transparent);
+  color: var(--color-primary, #2563eb);
+}
+
+.monthly-roster__sidebar-guard-edit-icon {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin-inline-start: auto;
 }
 
 .monthly-roster__sidebar-assign-btn {
@@ -253,6 +324,34 @@
 
 .monthly-roster__sidebar-assign-btn:hover {
   color: #1d4ed8;
+}
+
+/* ── Gender breakdown row in sidebar ── */
+.monthly-roster__gender-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-inline-start: 1rem;
+  margin-block-start: 2px;
+}
+
+.monthly-roster__gender-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, #f59e0b 15%, transparent);
+  color: #b45309;
+}
+
+.monthly-roster__gender-badge--met {
+  background: color-mix(in srgb, #10b981 15%, transparent);
+  color: #047857;
+}
+
+.monthly-roster__gender-badge--zero {
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 12%, transparent);
+  color: var(--color-primary, #2563eb);
 }
 
 @media (max-width: 640px) {

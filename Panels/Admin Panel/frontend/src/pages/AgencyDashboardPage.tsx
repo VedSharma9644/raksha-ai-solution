@@ -24,6 +24,7 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
   "prospect-clients": APP_ROUTES.prospects,
   "prospect-guards": APP_ROUTES.prospectGuards,
+  branches: APP_ROUTES.branchList,
 };
 
 export function AgencyDashboardPage() {

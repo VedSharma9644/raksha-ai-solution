@@ -4,6 +4,7 @@ export interface StaffMemberFormValues {
   // Personal
   fullName: string;
   fatherName: string;
+  gender: "male" | "female" | "other" | "";
   phone: string;
   email: string;
   address: string;
@@ -46,6 +47,12 @@ export interface StaffMemberFormValues {
 
   notes: string;
 
+  // Branch assignment
+  /** For guards/supervisors — which branch they belong to ("" = unassigned) */
+  branchId: string;
+  /** For HR staff — which branches they can access */
+  assignedBranchIds: string[];
+
   // Login credentials (password only stored in Firebase Auth, never Firestore)
   // Required on Add; leave blank on Edit to keep existing password
   password: string;
@@ -55,6 +62,7 @@ export interface StaffMemberFormValues {
 export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   fullName: "",
   fatherName: "",
+  gender: "",
   phone: "",
   email: "",
   address: "",
@@ -83,6 +91,8 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   esiNumber: "",
   pfNumber: "",
   notes: "",
+  branchId: "",
+  assignedBranchIds: [],
   password: "",
   confirmPassword: "",
 };

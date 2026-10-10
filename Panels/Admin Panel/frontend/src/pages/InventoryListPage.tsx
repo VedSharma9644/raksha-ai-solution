@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { InventoryListScreen } from "../features/inventory";
 import { useInventoryList } from "../features/inventory";
-import { APP_ROUTES, editInventoryItemPath } from "../app/routePaths";
+import { APP_ROUTES, editInventoryItemPath, inventoryBranchStockPath } from "../app/routePaths";
 
 export function InventoryListPage() {
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ export function InventoryListPage() {
         onBack={() => navigate(APP_ROUTES.dashboard)}
         onAddItem={() => navigate(APP_ROUTES.addInventoryItem)}
         onSelectItem={(id) => navigate(editInventoryItemPath(id))}
+        onViewBranchStock={(id) => navigate(inventoryBranchStockPath(id))}
         onSeedDefaults={seedDefaults}
       />
     </>

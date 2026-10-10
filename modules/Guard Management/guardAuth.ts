@@ -11,12 +11,13 @@ import type { Firestore } from "firebase/firestore";
 import { initializeApp, deleteApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { GUARDS_COLLECTION } from "./guard";
-import type { Guard, GuardStatus } from "./guard";
+import type { Guard, GuardStatus, GuardGender } from "./guard";
 
 export interface CreateGuardAccountParams {
   agencyId: string;
   fullName: string;
   fatherName: string;
+  gender: GuardGender;
   phone: string;
   email: string;
   password: string;
@@ -43,6 +44,8 @@ export interface CreateGuardAccountParams {
   esiNumber: string;
   pfNumber: string;
   notes: string;
+  /** Branch this guard belongs to. null/undefined = unassigned. */
+  branchId?: string | null;
 }
 
 /**

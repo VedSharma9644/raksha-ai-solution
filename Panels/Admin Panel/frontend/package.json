@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@raskha/branch-management": "*",
+    "@raskha/branch-stock": "*",
     "@react-google-maps/api": "^2.20.8",
     "@types/leaflet": "^1.9.22",
     "firebase": "^12.19.0",

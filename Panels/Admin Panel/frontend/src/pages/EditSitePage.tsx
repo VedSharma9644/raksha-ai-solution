@@ -18,15 +18,19 @@ import { PageHeader } from "../components/PageHeader";
 function toFormData(
   values: SiteFormValues
 ): Record<string, string | File | null> {
-  const data: Record<string, string | File | null> = {};
+  const data: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(values)) {
-    if (typeof value === "string" || value instanceof File || value === null) {
+    if (Array.isArray(value) || typeof value === "boolean") {
+      // Pass arrays (shifts) and booleans (has24hSurveillance) through as-is.
+      // FormBuilderForm reads these with `as unknown as` casts.
+      data[key] = value;
+    } else if (typeof value === "string" || value instanceof File || value === null) {
       data[key] = value;
     } else {
       data[key] = value == null ? "" : String(value);
     }
   }
-  return data;
+  return data as Record<string, string | File | null>;
 }
 
 export function EditSitePage() {

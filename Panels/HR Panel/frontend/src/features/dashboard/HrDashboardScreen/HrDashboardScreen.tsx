@@ -1,4 +1,5 @@
 import { ActionCard } from "../../../components/ActionCard";
+import { BranchSelector } from "../../../components/BranchSelector";
 import { NotificationMenu } from "../../notifications";
 import { ProfileMenu } from "../../profile";
 import type { HrNotification } from "../../notifications";
@@ -31,6 +32,7 @@ export function HrDashboardScreen({
         </div>
 
         <div className="hr-dashboard__toolbar">
+          <BranchSelector />
           <NotificationMenu
             notifications={notifications}
             onSelectNotification={onSelectNotification}

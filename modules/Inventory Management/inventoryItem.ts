@@ -17,6 +17,9 @@ export interface InventoryItem {
   notes: string;
   status: InventoryStatus; // computed + stored on every write
 
+  /** Branch this item belongs to. null/undefined = agency-wide. */
+  branchId?: string | null;
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -20,6 +20,8 @@ export interface UpdateHrStaffParams {
   email?: string;
   notes?: string;
   status?: HrStaffStatus;
+  /** Branch IDs this HR staff member is allowed to access. */
+  assignedBranchIds?: string[];
 }
 
 export async function getHrStaffById(

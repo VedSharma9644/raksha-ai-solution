@@ -1,20 +1,98 @@
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GuardShiftAssignment, DayOfWeek } from "@raskha/scheduling";
 import { ALL_DAYS, DAY_LABELS } from "@raskha/scheduling";
 import type { SiteShift } from "@raskha/site-management";
 import type { Guard } from "@raskha/guard-management";
 import "./AssignShiftModal.css";
 
+// ── Gender helpers ────────────────────────────────────────────────────────────
+
+type GuardGenderKey = "male" | "female" | "other";
+
+const GENDER_ICON: Record<GuardGenderKey, string> = {
+  male:   "♂",
+  female: "♀",
+  other:  "⚧",
+};
+const GENDER_LABEL: Record<GuardGenderKey, string> = {
+  male:   "Male",
+  female: "Female",
+  other:  "Other",
+};
+const GENDER_KEYS: GuardGenderKey[] = ["male", "female", "other"];
+
+/**
+ * Counts how many guards of each gender are already assigned for a shift,
+ * filtered to assignments that overlap at least one of `filterDays`.
+ * Pass ALL_DAYS to count every assignment regardless of which days are ticked.
+ * Returns null when the shift has no genderRequirements set.
+ */
+function computeGenderUsed(
+  shift: SiteShift,
+  filterDays: DayOfWeek[],
+  assignments: GuardShiftAssignment[],
+  guards: Guard[],
+  editingAssignmentId?: string | null,
+): { male: number; female: number; other: number } | null {
+  if (!shift.genderRequirements) return null;
+  const used: Record<GuardGenderKey, number> = { male: 0, female: 0, other: 0 };
+
+  for (const a of assignments) {
+    if (a.id === editingAssignmentId) continue;
+    if (a.shiftId !== shift.id) continue;
+    if (!filterDays.some((d) => a.recurringDays.includes(d))) continue;
+    // Prefer stored guardGender; fall back to guard profile lookup
+    const rawGender =
+      (a.guardGender !== undefined && a.guardGender !== null)
+        ? a.guardGender
+        : guards.find((g) => g.id === a.guardId)?.gender ?? null;
+    const gender = typeof rawGender === "string" ? rawGender.toLowerCase() : null;
+    if (gender === "male" || gender === "female" || gender === "other") {
+      used[gender as GuardGenderKey]++;
+    }
+  }
+  return used;
+}
+
+/**
+ * Returns remaining capacity per gender for the given shift + selected days.
+ * Used to decide which guards can still be added (dropdown filter).
+ */
+function computeGenderCapacity(
+  shift: SiteShift,
+  selectedDays: DayOfWeek[],
+  assignments: GuardShiftAssignment[],
+  guards: Guard[],
+  editingAssignmentId?: string | null,
+): { male: number; female: number; other: number } | null {
+  if (!shift.genderRequirements) return null;
+  const req = shift.genderRequirements;
+  const used = computeGenderUsed(shift, selectedDays, assignments, guards, editingAssignmentId);
+  if (!used) return null;
+
+  return {
+    male:   Math.max(0, req.male   - used.male),
+    female: Math.max(0, req.female - used.female),
+    other:  Math.max(0, req.other  - used.other),
+  };
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
 export interface AssignShiftModalProps {
-  /** Guards already assigned to this site */
+  /** Guards available in the dropdown (site guards) */
   guards: Guard[];
-  /** All existing shift assignments for this site */
+  /** ALL agency guards — used only for gender lookup fallback on old assignments */
+  allGuards?: Guard[];
+  /** All shift assignments for this site — used to compute gender capacity */
   assignments: GuardShiftAssignment[];
   /** Shift slots from site.shiftConfig.shifts */
   shifts: SiteShift[];
   /** If editing an existing assignment */
   existingAssignment?: GuardShiftAssignment | null;
+  /** Pre-fill date (YYYY-MM-DD) when opening from a specific day cell */
+  prefilledDate?: string;
   isSaving: boolean;
   saveError: string;
   onSave: (data: {
@@ -34,34 +112,36 @@ export interface AssignShiftModalProps {
 
 const today = () => new Date().toISOString().split("T")[0]!;
 
+const JS_DOW_TO_DAY: DayOfWeek[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+function dayOfWeekFromDate(dateStr: string): DayOfWeek {
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  return JS_DOW_TO_DAY[d.getUTCDay()]!;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function AssignShiftModal({
   guards,
+  allGuards,
   assignments,
   shifts,
   existingAssignment,
+  prefilledDate,
   isSaving,
   saveError,
   onSave,
   onDelete,
   onClose,
 }: AssignShiftModalProps) {
-  // Initialize to the first non-full shift (or preselected shift, or shifts[0])
-  const firstAvailableShiftId = (() => {
-    if (existingAssignment) return existingAssignment.shiftId;
-    // Prefer the first shift that is NOT already at capacity
-    const nonFull = shifts.find(
-      (s) => assignments.filter((a) => a.shiftId === s.id).length < s.requiredGuards
-    );
-    return nonFull?.id ?? shifts[0]?.id ?? "";
-  })();
-
   const [guardId, setGuardId] = useState(existingAssignment?.guardId ?? "");
-  const [shiftId, setShiftId] = useState(firstAvailableShiftId);
+  const [shiftId, setShiftId] = useState(existingAssignment?.shiftId ?? "");
   const [recurringDays, setRecurringDays] = useState<DayOfWeek[]>(
-    existingAssignment?.recurringDays ?? ALL_DAYS
+    existingAssignment?.recurringDays ??
+      (prefilledDate ? [dayOfWeekFromDate(prefilledDate)] : ALL_DAYS)
   );
   const [effectiveFrom, setEffectiveFrom] = useState(
-    existingAssignment?.effectiveFrom ?? today()
+    existingAssignment?.effectiveFrom ?? prefilledDate ?? today()
   );
   const [effectiveTo, setEffectiveTo] = useState(
     existingAssignment?.effectiveTo ?? ""
@@ -72,12 +152,63 @@ export function AssignShiftModal({
     existingAssignment?.shiftLockedReason ||
     "This guard has already punched in today. You can still edit future dates, but today's shift cannot be changed or removed until they punch out.";
 
-  // Update shiftId if shifts load after mount and nothing is selected yet
+  // Keep shiftId in sync when the shift list loads
   useEffect(() => {
     if (!shiftId && shifts.length > 0) {
       setShiftId(shifts[0]!.id);
     }
   }, [shifts, shiftId]);
+
+  const selectedShift = useMemo(
+    () => shifts.find((s) => s.id === shiftId) ?? null,
+    [shifts, shiftId],
+  );
+
+  // Merge allGuards + guards so gender lookup always has the widest possible pool
+  const guardPool = useMemo(
+    () => {
+      if (!allGuards || allGuards.length === 0) return guards;
+      // Deduplicate by id
+      const map = new Map(allGuards.map((g) => [g.id, g]));
+      guards.forEach((g) => { if (!map.has(g.id)) map.set(g.id, g); });
+      return [...map.values()];
+    },
+    [guards, allGuards],
+  );
+
+  // Compute remaining gender capacity for the selected shift + days (used for dropdown filter)
+  const genderCapacity = useMemo(() => {
+    if (!selectedShift) return null;
+    return computeGenderCapacity(
+      selectedShift,
+      recurringDays,
+      assignments,
+      guardPool,
+      existingAssignment?.id ?? null,
+    );
+  }, [selectedShift, recurringDays, assignments, guardPool, existingAssignment]);
+
+  // Compute filled counts across ALL days — used only for the "Filled:" display row
+  const filledGenderUsed = useMemo(() => {
+    if (!selectedShift) return null;
+    return computeGenderUsed(
+      selectedShift,
+      ALL_DAYS,
+      assignments,
+      guardPool,
+      existingAssignment?.id ?? null,
+    );
+  }, [selectedShift, assignments, guardPool, existingAssignment]);
+
+  // Filter the guard list: hide guards whose gender slot is exhausted
+  const availableGuards = useMemo(() => {
+    if (!genderCapacity) return guards; // no gender requirements → show all
+    return guards.filter((g) => {
+      const gk = g.gender as GuardGenderKey | undefined;
+      if (!gk) return true; // guard has no gender set → always show
+      return genderCapacity[gk] > 0;
+    });
+  }, [guards, genderCapacity]);
 
   function toggleDay(day: DayOfWeek) {
     setRecurringDays((prev) =>
@@ -91,16 +222,6 @@ export function AssignShiftModal({
     if (!shiftId) errs.shiftId = "Select a shift.";
     if (recurringDays.length === 0) errs.recurringDays = "Select at least one day.";
     if (!effectiveFrom) errs.effectiveFrom = "Set effective from date.";
-
-    // Enforce requiredGuards cap (skip when editing an existing assignment)
-    if (!existingAssignment && shiftId) {
-      const selectedShift = shifts.find((s) => s.id === shiftId);
-      const assignedCount = assignments.filter((a) => a.shiftId === shiftId).length;
-      if (selectedShift && assignedCount >= selectedShift.requiredGuards) {
-        errs.guardId = `This shift is full — ${assignedCount}/${selectedShift.requiredGuards} guards already assigned.`;
-      }
-    }
-
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -109,8 +230,8 @@ export function AssignShiftModal({
     e.preventDefault();
     if (!validate()) return;
 
-    const selectedShift = shifts.find((s) => s.id === shiftId);
-    if (!selectedShift) return;
+    const selectedShiftObj = shifts.find((s) => s.id === shiftId);
+    if (!selectedShiftObj) return;
 
     const selectedGuard = guards.find((g) => g.id === guardId);
     if (!selectedGuard) return;
@@ -119,29 +240,14 @@ export function AssignShiftModal({
       guardId,
       guardName: selectedGuard.fullName,
       shiftId,
-      shiftLabel: selectedShift.label,
-      shiftStartTime: selectedShift.startTime,
-      shiftEndTime: selectedShift.endTime,
+      shiftLabel: selectedShiftObj.label,
+      shiftStartTime: selectedShiftObj.startTime,
+      shiftEndTime: selectedShiftObj.endTime,
       recurringDays,
       effectiveFrom,
       effectiveTo: effectiveTo || null,
     });
   }
-
-  // Guards not yet assigned to the currently selected shift (when creating)
-  const availableGuards = existingAssignment
-    ? guards  // editing — keep the existing guard selectable
-    : guards.filter(
-        (g) => !assignments.some((a) => a.guardId === g.id && a.shiftId === shiftId)
-      );
-
-  // Whether the currently selected shift is already at capacity
-  const selectedShiftDef = shifts.find((s) => s.id === shiftId);
-  const assignedToShift = assignments.filter((a) => a.shiftId === shiftId).length;
-  const shiftIsFull =
-    !existingAssignment &&
-    !!selectedShiftDef &&
-    assignedToShift >= selectedShiftDef.requiredGuards;
 
   return (
     <div className="assign-shift-modal__backdrop" onClick={onClose}>
@@ -167,37 +273,6 @@ export function AssignShiftModal({
         </div>
 
         <form className="assign-shift-modal__body" onSubmit={handleSubmit} noValidate>
-          {/* Guard selector */}
-          <div className="assign-shift-modal__field">
-            <label className="assign-shift-modal__label">Guard</label>
-            <select
-              className={`assign-shift-modal__select${errors.guardId ? " assign-shift-modal__select--error" : ""}`}
-              value={guardId}
-              onChange={(e) => setGuardId(e.target.value)}
-              disabled={isSaving || !!existingAssignment || shiftIsFull}
-            >
-              <option value="">Select a guard…</option>
-              {availableGuards.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.fullName} ({g.employeeCode})
-                </option>
-              ))}
-            </select>
-            {shiftIsFull && (
-              <p className="assign-shift-modal__shift-full">
-                This shift is full ({assignedToShift}/{selectedShiftDef!.requiredGuards} guards assigned).
-                {shifts.length > 1 ? " Select a different shift below." : " Remove an existing guard first."}
-              </p>
-            )}
-            {!shiftIsFull && availableGuards.length === 0 && !existingAssignment && (
-              <span className="assign-shift-modal__error">
-                All site guards are already assigned to this shift.
-              </span>
-            )}
-            {errors.guardId && !shiftIsFull && (
-              <span className="assign-shift-modal__error">{errors.guardId}</span>
-            )}
-          </div>
 
           {/* Shift selector */}
           <div className="assign-shift-modal__field">
@@ -208,17 +283,17 @@ export function AssignShiftModal({
               </p>
             ) : (
               <div className="assign-shift-modal__shift-options">
-                {shifts.map((s) => {
-                  const countForShift = assignments.filter((a) => a.shiftId === s.id).length;
-                  const isFull = countForShift >= s.requiredGuards;
-                  return (
-                    <label key={s.id} className={`assign-shift-modal__shift-card${shiftId === s.id ? " assign-shift-modal__shift-card--selected" : ""}${isFull ? " assign-shift-modal__shift-card--full" : ""}`}>
+                {shifts.map((s) => (
+                  <div key={s.id}>
+                    <label
+                      className={`assign-shift-modal__shift-card${shiftId === s.id ? " assign-shift-modal__shift-card--selected" : ""}`}
+                    >
                       <input
                         type="radio"
                         name="shiftId"
                         value={s.id}
                         checked={shiftId === s.id}
-                        onChange={() => { setShiftId(s.id); setGuardId(""); }}
+                        onChange={() => setShiftId(s.id)}
                         disabled={isSaving || todayLocked}
                         className="assign-shift-modal__radio"
                       />
@@ -230,16 +305,99 @@ export function AssignShiftModal({
                         <span className="assign-shift-modal__shift-time">
                           {s.startTime} – {s.endTime}
                         </span>
-                        <span className={`assign-shift-modal__shift-count${isFull ? " assign-shift-modal__shift-count--full" : ""}`}>
-                          {countForShift}/{s.requiredGuards}
+                        <span className="assign-shift-modal__shift-total">
+                          {s.requiredGuards} guards
                         </span>
                       </div>
                     </label>
-                  );
-                })}
+
+                    {/* Gender requirement bar — shown only for selected shift with requirements */}
+                    {shiftId === s.id && s.genderRequirements && (
+                      <div className="assign-shift-modal__gender-bar">
+                        {/* Requirement summary — how many of each gender are needed */}
+                        <div className="assign-shift-modal__gender-bar-row">
+                          <span className="assign-shift-modal__gender-bar-label">Required:</span>
+                          <div className="assign-shift-modal__gender-slots">
+                            {GENDER_KEYS.map((gk) => {
+                              const req = s.genderRequirements![gk];
+                              if (req === 0) return null;
+                              return (
+                                <span
+                                  key={gk}
+                                  className="assign-shift-modal__gender-req-pill"
+                                >
+                                  {GENDER_ICON[gk]} <strong>{req}</strong> {GENDER_LABEL[gk]}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Fill status — how many are already assigned (counts all days) */}
+                        <div className="assign-shift-modal__gender-bar-row">
+                          <span className="assign-shift-modal__gender-bar-label">Filled:</span>
+                          <div className="assign-shift-modal__gender-slots">
+                            {GENDER_KEYS.map((gk) => {
+                              const req  = s.genderRequirements![gk];
+                              const used = filledGenderUsed ? filledGenderUsed[gk] : 0;
+                              const rem  = Math.max(0, req - used);
+                              if (req === 0) return null;
+                              const status =
+                                used >= req ? "full" : used > 0 ? "partial" : "empty";
+                              return (
+                                <span
+                                  key={gk}
+                                  className={`assign-shift-modal__gender-slot assign-shift-modal__gender-slot--${status}`}
+                                  title={`${GENDER_LABEL[gk]}: ${used} assigned of ${req} required, ${rem} remaining`}
+                                >
+                                  {GENDER_ICON[gk]} {used}/{req}
+                                  {rem > 0 && (
+                                    <span className="assign-shift-modal__gender-slot-rem">
+                                      {" "}({rem} open)
+                                    </span>
+                                  )}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
             {errors.shiftId && <span className="assign-shift-modal__error">{errors.shiftId}</span>}
+          </div>
+
+          {/* Guard selector */}
+          <div className="assign-shift-modal__field">
+            <label className="assign-shift-modal__label">Guard</label>
+            {genderCapacity && availableGuards.length === 0 ? (
+              <p className="assign-shift-modal__no-guards-msg">
+                All gender slots for this shift are full on the selected days.
+                Remove an existing guard or select different days.
+              </p>
+            ) : (
+              <select
+                className={`assign-shift-modal__select${errors.guardId ? " assign-shift-modal__select--error" : ""}`}
+                value={guardId}
+                onChange={(e) => setGuardId(e.target.value)}
+                disabled={isSaving || !!existingAssignment}
+              >
+                <option value="">Select a guard…</option>
+                {availableGuards.map((g) => {
+                  const gk = g.gender as GuardGenderKey | undefined;
+                  const genderTag = gk ? ` · ${GENDER_ICON[gk]}` : "";
+                  return (
+                    <option key={g.id} value={g.id}>
+                      {g.fullName} ({g.employeeCode}){genderTag}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+            {errors.guardId && <span className="assign-shift-modal__error">{errors.guardId}</span>}
           </div>
 
           {/* Recurring days */}
@@ -278,6 +436,7 @@ export function AssignShiftModal({
                 type="date"
                 className={`assign-shift-modal__date${errors.effectiveFrom ? " assign-shift-modal__date--error" : ""}`}
                 value={effectiveFrom}
+                min={today()}
                 onChange={(e) => setEffectiveFrom(e.target.value)}
                 disabled={isSaving}
               />
@@ -339,7 +498,7 @@ export function AssignShiftModal({
               <button
                 type="submit"
                 className="assign-shift-modal__save-btn"
-                disabled={isSaving || shifts.length === 0 || shiftIsFull}
+                disabled={isSaving || shifts.length === 0}
               >
                 {isSaving ? "Saving…" : existingAssignment ? "Update" : "Assign"}
               </button>

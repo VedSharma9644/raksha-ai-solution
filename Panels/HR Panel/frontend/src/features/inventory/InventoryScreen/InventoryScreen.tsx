@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import type { InventoryItem } from "@raskha/inventory-management";
+import type { BranchInventoryRow } from "../inventoryHooks";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
+import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
@@ -13,47 +14,52 @@ const STATUS_LABELS = {
 } as const;
 
 export interface InventoryScreenProps {
-  items: InventoryItem[];
+  rows: BranchInventoryRow[];
   isLoading?: boolean;
   onBack: () => void;
+  onAddItem: () => void;
+  onSelectRow: (row: BranchInventoryRow) => void;
 }
 
 export function InventoryScreen({
-  items,
+  rows,
   isLoading = false,
   onBack,
+  onAddItem,
+  onSelectRow,
 }: InventoryScreenProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery]     = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter]   = useState("");
 
   const categories = useMemo(
-    () => [...new Set(items.map((i) => i.category))].sort(),
-    [items],
+    () => [...new Set(rows.map((r) => r.category))].sort(),
+    [rows],
   );
 
-  const filteredItems = useMemo(() => {
+  const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return items.filter((item) => {
-      const matchesQuery =
-        !query ||
-        item.name.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query);
-      const matchesCategory =
-        !categoryFilter || item.category === categoryFilter;
-      const matchesStatus = !statusFilter || item.status === statusFilter;
+    return rows.filter((row) => {
+      const matchesQuery    = !query || row.name.toLowerCase().includes(query) || row.category.toLowerCase().includes(query);
+      const matchesCategory = !categoryFilter || row.category === categoryFilter;
+      const matchesStatus   = !statusFilter || row.status === statusFilter;
       return matchesQuery && matchesCategory && matchesStatus;
     });
-  }, [items, searchQuery, categoryFilter, statusFilter]);
+  }, [rows, searchQuery, categoryFilter, statusFilter]);
 
   return (
     <AppScreenLayout>
       <div className="app-screen-layout__content inventory-screen">
         <PageHeader
-          title="Inventory"
-          subtitle="View current stock levels for uniforms and equipment. Editing is available in the Admin Panel only."
+          title="Branch Inventory"
+          subtitle="Manage allocated stock and guard assignments for your branch."
           onBack={onBack}
           backLabel="Back to dashboard"
+          actions={
+            <Button type="button" onClick={onAddItem}>
+              + Set Stock
+            </Button>
+          }
         />
 
         {isLoading && (
@@ -98,49 +104,56 @@ export function InventoryScreen({
                   <tr>
                     <th scope="col">Item</th>
                     <th scope="col">Category</th>
-                    <th scope="col">Total</th>
-                    <th scope="col">Assigned</th>
+                    <th scope="col">Allocated</th>
+                    <th scope="col">Assigned to Guards</th>
                     <th scope="col">Available</th>
+                    <th scope="col">Threshold</th>
                     <th scope="col">Unit</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.length === 0 ? (
+                  {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="inventory-table__empty">
-                        No inventory items have been added by the admin yet.
+                      <td colSpan={9} className="inventory-table__empty">
+                        No inventory items found. Admin must add master items first.
                       </td>
                     </tr>
-                  ) : filteredItems.length === 0 ? (
+                  ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="inventory-table__empty">
+                      <td colSpan={9} className="inventory-table__empty">
                         No items match your filters.
                       </td>
                     </tr>
                   ) : (
-                    filteredItems.map((item) => {
-                      const availableStock = item.totalStock - (item.assignedStock ?? 0);
-                      return (
-                        <tr key={item.id}>
-                          <td className="inventory-table__name">{item.name}</td>
-                          <td>{item.category}</td>
-                          <td className="inventory-table__stock">{item.totalStock}</td>
-                          <td className="inventory-table__assigned">{item.assignedStock ?? 0}</td>
-                          <td className={`inventory-table__available${availableStock <= 0 ? " inventory-table__available--zero" : ""}`}>
-                            {availableStock}
-                          </td>
-                          <td>{item.unit}</td>
-                          <td>
-                            <span
-                              className={`inventory-table__status inventory-table__status--${item.status}`}
-                            >
-                              {STATUS_LABELS[item.status]}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })
+                    filtered.map((row) => (
+                      <tr key={row.id}>
+                        <td className="inventory-table__name">{row.name}</td>
+                        <td>{row.category}</td>
+                        <td className="inventory-table__stock">{row.allocatedStock}</td>
+                        <td className="inventory-table__assigned">{row.assignedStock}</td>
+                        <td className={`inventory-table__available${row.availableStock <= 0 ? " inventory-table__available--zero" : ""}`}>
+                          {row.availableStock}
+                        </td>
+                        <td className="inventory-table__stock">{row.thresholdStock}</td>
+                        <td>{row.unit}</td>
+                        <td>
+                          <span className={`inventory-table__status inventory-table__status--${row.status}`}>
+                            {STATUS_LABELS[row.status]}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="inventory-table__edit-btn"
+                            onClick={() => onSelectRow(row)}
+                          >
+                            {row.hasBranchStock ? "Edit" : "Set Stock"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>

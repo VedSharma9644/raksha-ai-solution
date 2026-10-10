@@ -4,6 +4,8 @@ import type { HrStaff } from "@raskha/hr-management";
 import { useAuthContext } from "../authentication";
 import { db } from "../../lib/firebase";
 
+// Note: HR staff list is NOT filtered by branch — it shows all HR staff
+// regardless of branch (branch assignment is managed from the HR staff form).
 export function useHrStaffList() {
   const { agency } = useAuthContext();
   const [hrStaff, setHrStaff] = useState<HrStaff[]>([]);

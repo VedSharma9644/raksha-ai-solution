@@ -26,6 +26,8 @@ export interface AttendanceRecord {
   guardEmployeeCode: string;
   siteName: string;
   postName: string;
+  /** Branch the attendance record belongs to (inherited from site). */
+  branchId?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

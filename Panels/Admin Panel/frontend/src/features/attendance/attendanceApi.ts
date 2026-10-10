@@ -32,9 +32,11 @@ async function authHeaders(): Promise<Headers> {
 }
 
 export async function fetchAgencyAttendanceDay(
-  date: string
+  date: string,
+  branchId?: string | null
 ): Promise<AgencyAttendanceDayResponse> {
   const query = new URLSearchParams({ date });
+  if (branchId) query.set("branchId", branchId);
   const response = await fetch(`${API_BASE}/api/attendance?${query.toString()}`, {
     headers: await authHeaders(),
   });

@@ -70,9 +70,18 @@ export function SchedulingScreen({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<GuardShiftAssignment | null>(null);
   const [preselectedShiftId, setPreselectedShiftId] = useState<string>("");
+  const [preselectedDate, setPreselectedDate] = useState<string>("");
 
   const shifts = site.shiftConfig?.shifts ?? [];
-  const siteGuards = guards.filter((g) => g.assignedSiteId === site.id);
+  // Include any guard that appears in an assignment (covers stale assignedSiteId in local state)
+  const assignedGuardIds = useMemo(
+    () => new Set(assignments.map((a) => a.guardId)),
+    [assignments],
+  );
+  const siteGuards = useMemo(
+    () => guards.filter((g) => g.assignedSiteId === site.id || assignedGuardIds.has(g.id)),
+    [guards, site.id, assignedGuardIds],
+  );
 
   const nextWeekCoverage = useMemo(
     () =>
@@ -91,9 +100,10 @@ export function SchedulingScreen({
   const coverageSummary = summarizeSiteCoverageGaps(nextWeekCoverage);
   const previewGaps = nextWeekCoverage.gaps.slice(0, 4);
 
-  function openCreateModal(shiftId?: string) {
+  function openCreateModal(shiftId?: string, date?: string) {
     setEditingAssignment(null);
     setPreselectedShiftId(shiftId ?? "");
+    setPreselectedDate(date ?? "");
     setModalOpen(true);
   }
 
@@ -107,6 +117,7 @@ export function SchedulingScreen({
     setModalOpen(false);
     setEditingAssignment(null);
     setPreselectedShiftId("");
+    setPreselectedDate("");
   }
 
   async function handleSave(params: Parameters<typeof onCreateAssignment>[0]) {
@@ -255,16 +266,19 @@ export function SchedulingScreen({
               <WeeklyRosterView
                 shifts={shifts}
                 assignments={assignments}
+                guards={siteGuards}
                 canEdit={canEdit}
                 onEditAssignment={openEditModal}
-                onAddAssignment={openCreateModal}
+                onAddAssignment={(shiftId, date) => openCreateModal(shiftId, date)}
               />
             ) : (
               <MonthlyRosterView
                 shifts={shifts}
                 assignments={assignments}
+                guards={siteGuards}
                 canEdit={canEdit}
                 onAddAssignment={openCreateModal}
+                onEditAssignment={openEditModal}
               />
             )}
           </div>
@@ -273,9 +287,11 @@ export function SchedulingScreen({
         {modalOpen && (
           <AssignShiftModal
             guards={siteGuards}
+            allGuards={guards}
             assignments={assignments}
             shifts={modalShifts}
             existingAssignment={editingAssignment}
+            prefilledDate={preselectedDate || undefined}
             isSaving={isSaving}
             saveError={saveError}
             onSave={handleSave}

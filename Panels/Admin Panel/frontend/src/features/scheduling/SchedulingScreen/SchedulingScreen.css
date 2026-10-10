@@ -45,11 +45,11 @@
   font-weight: 600;
 }
 
-.scheduling-screen__badge--24h      { background: #dbeafe; color: #1e40af; }
-.scheduling-screen__badge--interval { background: #dcfce7; color: #166534; }
-.scheduling-screen__badge--day      { background: #fef3c7; color: #92400e; }
-.scheduling-screen__badge--night    { background: #ede9fe; color: #4c1d95; }
-.scheduling-screen__badge--custom   { background: #d1fae5; color: #065f46; }
+.scheduling-screen__badge--24h      { background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)); color: var(--color-primary); }
+.scheduling-screen__badge--interval { background: var(--color-success-container); color: var(--color-on-success-container); }
+.scheduling-screen__badge--day      { background: var(--color-warning-container); color: var(--color-on-warning-container); }
+.scheduling-screen__badge--night    { background: color-mix(in srgb, var(--color-secondary) 18%, var(--color-surface)); color: var(--color-secondary); }
+.scheduling-screen__badge--custom   { background: color-mix(in srgb, var(--color-primary) 15%, var(--color-surface)); color: var(--color-primary-dark); }
 
 /* ── No shifts banner ── */
 .scheduling-screen__no-shifts-banner {
@@ -76,10 +76,10 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: #fff7ed;
-  border: 1px solid #fdba74;
+  background: var(--color-warning-container);
+  border: 1px solid color-mix(in srgb, var(--color-on-warning-container) 30%, transparent);
   border-radius: var(--radius-md, 8px);
-  color: #9a3412;
+  color: var(--color-on-warning-container);
   font-size: 0.875rem;
   margin-block-end: 1.25rem;
 }

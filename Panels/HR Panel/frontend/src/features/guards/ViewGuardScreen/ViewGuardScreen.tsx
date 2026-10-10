@@ -1,5 +1,6 @@
 import type { Guard } from "@raskha/guard-management";
-import type { GuardInventoryAssignment, InventoryItem } from "@raskha/inventory-management";
+import type { GuardInventoryAssignment } from "@raskha/inventory-management";
+import type { BranchInventoryRow } from "../../inventory/inventoryHooks";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { GuardInventoryPanel } from "../GuardInventoryPanel";
@@ -8,7 +9,7 @@ import "./ViewGuardScreen.css";
 export interface ViewGuardScreenProps {
   guard: Guard;
   assignments: GuardInventoryAssignment[];
-  inventoryItems: InventoryItem[];
+  inventoryRows: BranchInventoryRow[];
   isAssignmentsLoading?: boolean;
   isSaving?: boolean;
   assignError?: string;
@@ -43,7 +44,7 @@ function getInitials(name: string): string {
 export function ViewGuardScreen({
   guard,
   assignments,
-  inventoryItems,
+  inventoryRows,
   isAssignmentsLoading = false,
   isSaving = false,
   assignError,
@@ -90,6 +91,7 @@ export function ViewGuardScreen({
 
         <div className="view-guard-screen__info-grid">
           <InfoRow label="Employee Code" value={guard.employeeCode} />
+          <InfoRow label="Gender" value={guard.gender ? guard.gender.charAt(0).toUpperCase() + guard.gender.slice(1) : ""} />
           <InfoRow label="Phone" value={guard.phone} />
           <InfoRow label="Email" value={guard.email} />
           <InfoRow label="Post" value={guard.post} />
@@ -100,7 +102,7 @@ export function ViewGuardScreen({
         <div className="view-guard-screen__inventory-section">
           <GuardInventoryPanel
             assignments={assignments}
-            inventoryItems={inventoryItems}
+            inventoryRows={inventoryRows}
             isLoading={isAssignmentsLoading}
             isSaving={isSaving}
             error={assignError}

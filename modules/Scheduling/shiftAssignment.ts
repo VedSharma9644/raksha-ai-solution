@@ -42,6 +42,8 @@ export interface GuardShiftAssignment {
   siteId: string;
   guardId: string;
   guardName: string;
+  /** Gender of the guard at time of assignment — used for gender-quota checks */
+  guardGender?: "male" | "female" | "other" | null;
   /** References SiteShift.id in site.shiftConfig.shifts */
   shiftId: string;
   shiftLabel: string;
@@ -53,6 +55,8 @@ export interface GuardShiftAssignment {
   effectiveFrom: string;
   /** YYYY-MM-DD — null means ongoing */
   effectiveTo?: string | null;
+  /** Branch this assignment belongs to (inherited from site branchId). */
+  branchId?: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   /** True when the guard has an open punch-in for today — roster edits blocked. */

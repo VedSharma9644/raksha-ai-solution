@@ -29,6 +29,8 @@ export interface AddInventoryItemParams {
   totalStock: number;
   thresholdStock: number;
   notes: string;
+  /** Branch this item belongs to. null/undefined = agency-wide. */
+  branchId?: string | null;
 }
 
 export interface UpdateInventoryItemParams {
