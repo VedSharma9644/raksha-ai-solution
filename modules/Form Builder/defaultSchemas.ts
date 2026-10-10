@@ -80,5 +80,7 @@ export const DEFAULT_SITE_FIELDS: FormField[] = [
   { id: "contactPhone",    label: "Contact Phone",    type: "phone",  required: false, locked: false, order: 12 },
   { id: "notes",           label: "Notes",            type: "textarea", required: false, locked: false, order: 13 },
   // Site location (Google Maps + lat/lng) — always present, cannot be removed
-  { id: "location",        label: "Site Location",    type: "location", required: false, locked: true,  order: 14 },
+  { id: "location",        label: "Site Location",       type: "location",   required: false, locked: true,  order: 14 },
+  // Shift configuration — always present, cannot be removed
+  { id: "shiftConfig",     label: "Shift Configuration", type: "shiftConfig", required: false, locked: true,  order: 15 },
 ];

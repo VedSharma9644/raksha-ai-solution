@@ -6,6 +6,8 @@ export type FormFieldType =
   | "number"
   | "date"
   | "select"
+  | "checkbox"
+  | "radio"
   | "file"
   | "phone"
   | "email"
@@ -13,6 +15,8 @@ export type FormFieldType =
   | "password"
   /** Renders SiteLocationPicker (Google Maps + lat/lng) */
   | "location"
+  /** Renders the full shift configuration section (slots, 24h toggle, interval check-in) */
+  | "shiftConfig"
   /** Renders circular profile photo upload with initials fallback */
   | "profilePicture";
 
@@ -33,7 +37,7 @@ export interface FormField {
    */
   locked: boolean;
   placeholder?: string;
-  /** Only used when type === "select" */
+  /** Used when type === "select" | "checkbox" | "radio" */
   options?: SelectOption[];
   /** Display order (1-based, ascending) */
   order: number;

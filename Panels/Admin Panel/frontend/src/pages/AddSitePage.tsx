@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../app/routePaths";
 import { AddSiteScreen, useAddSite } from "../features/sites";
 import type { SiteFormValues } from "../features/sites";
+import { EMPTY_SITE_FORM } from "../features/sites/siteFormTypes";
+import type { SiteShiftRowValues } from "../features/sites/siteFormTypes";
 import { useAuthContext } from "../features/authentication";
 import {
   useFormBuilderStatus,
@@ -73,7 +75,29 @@ export function AddSitePage() {
           isSubmitting={isSubmitting}
           onCancel={goBack}
           onSubmit={async (data) => {
-            const values = data as unknown as SiteFormValues;
+            // Merge with defaults so no field is ever undefined → Firestore rejects undefined
+            const values: SiteFormValues = {
+              ...EMPTY_SITE_FORM,
+              siteName:            (data["siteName"]            as string) ?? "",
+              siteType:            (data["siteType"]            as SiteFormValues["siteType"]) ?? "",
+              clientName:          (data["clientName"]          as string) ?? "",
+              address:             (data["address"]             as string) ?? "",
+              city:                (data["city"]                as string) ?? "",
+              managerName:         (data["managerName"]         as string) ?? "",
+              managerContact:      (data["managerContact"]      as string) ?? "",
+              hrName:              (data["hrName"]              as string) ?? "",
+              hrContact:           (data["hrContact"]           as string) ?? "",
+              siteSupervisor:      (data["siteSupervisor"]      as string) ?? "",
+              contactPerson:       (data["contactPerson"]       as string) ?? "",
+              contactPhone:        (data["contactPhone"]        as string) ?? "",
+              latitude:            (data["latitude"]            as string) ?? "",
+              longitude:           (data["longitude"]           as string) ?? "",
+              notes:               (data["notes"]               as string) ?? "",
+              // Shift config — provided by FormBuilderForm's internal shift state
+              has24hSurveillance:  (data["has24hSurveillance"] === true || data["has24hSurveillance"] === "true"),
+              intervalCheckinMinutes: (data["intervalCheckinMinutes"] as string) ?? "",
+              shifts:              (data["shifts"] as unknown as SiteShiftRowValues[]) ?? [],
+            };
             await saveSite(values);
           }}
         />

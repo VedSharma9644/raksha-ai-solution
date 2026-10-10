@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import type { FormField, FormType } from "@raskha/form-builder";
+import { useEffect, useRef, useState } from "react";
+import type { FormField, FormType, SelectOption } from "@raskha/form-builder";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
 import { PasswordField } from "../../../components/PasswordField";
@@ -10,20 +10,93 @@ import { SelectField } from "../../../components/SelectField";
 import { FileField } from "../../../components/FileField";
 import "./FormBuilderStudio.css";
 
+/** Types that require an options list */
+const OPTION_TYPES = new Set<FormField["type"]>(["select", "checkbox", "radio"]);
+
 const FIELD_TYPE_OPTIONS: { value: FormField["type"]; label: string }[] = [
-  { value: "text", label: "Text" },
-  { value: "textarea", label: "Text area" },
-  { value: "number", label: "Number" },
-  { value: "date", label: "Date" },
-  { value: "select", label: "Dropdown" },
-  { value: "file", label: "File upload" },
-  { value: "phone", label: "Phone" },
-  { value: "email", label: "Email" },
+  { value: "text",        label: "Text" },
+  { value: "textarea",    label: "Text area" },
+  { value: "number",      label: "Number" },
+  { value: "date",        label: "Date" },
+  { value: "select",      label: "Dropdown" },
+  { value: "checkbox",    label: "Checkboxes" },
+  { value: "radio",       label: "Radio buttons" },
+  { value: "file",        label: "File upload" },
+  { value: "phone",       label: "Phone" },
+  { value: "email",       label: "Email" },
+  { value: "shiftConfig", label: "Shift config" },
 ];
 
 function typeLabel(type: FormField["type"]): string {
   return FIELD_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? type;
 }
+
+// ── OptionsEditor — used both in "Add field" and in the inline row editor ────
+
+interface OptionsEditorProps {
+  options: SelectOption[];
+  onChange: (options: SelectOption[]) => void;
+}
+
+function OptionsEditor({ options, onChange }: OptionsEditorProps) {
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function addOption() {
+    const label = draft.trim();
+    if (!label) return;
+    const value = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `opt_${Date.now()}`;
+    onChange([...options, { value: `${value}_${Date.now()}`, label }]);
+    setDraft("");
+    inputRef.current?.focus();
+  }
+
+  function removeOption(idx: number) {
+    onChange(options.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div className="fb-options-editor">
+      <p className="fb-options-editor__label">Options</p>
+      {options.length === 0 && (
+        <p className="fb-options-editor__empty">No options yet — add at least one.</p>
+      )}
+      <ul className="fb-options-editor__list">
+        {options.map((opt, idx) => (
+          <li key={opt.value} className="fb-options-editor__item">
+            <span className="fb-options-editor__dot">•</span>
+            <span className="fb-options-editor__text">{opt.label}</span>
+            <button
+              type="button"
+              className="fb-options-editor__remove"
+              onClick={() => removeOption(idx)}
+              aria-label={`Remove option "${opt.label}"`}
+            >×</button>
+          </li>
+        ))}
+      </ul>
+      <div className="fb-options-editor__add-row">
+        <input
+          ref={inputRef}
+          type="text"
+          className="fb-options-editor__input"
+          placeholder="Option label…"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOption(); } }}
+        />
+        <button
+          type="button"
+          className="fb-options-editor__add-btn"
+          onClick={addOption}
+          disabled={!draft.trim()}
+        >+ Add</button>
+      </div>
+    </div>
+  );
+}
+
+// ── PreviewField ──────────────────────────────────────────────────────────────
 
 function PreviewField({ field }: { field: FormField }) {
   switch (field.type) {
@@ -49,6 +122,36 @@ function PreviewField({ field }: { field: FormField }) {
           required={field.required}
           disabled
         />
+      );
+    case "checkbox":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p style={{ fontSize: "var(--font-size-label, 0.85rem)", fontWeight: 600, margin: "0 0 0.4rem", color: "var(--color-on-surface)" }}>
+            {field.label}{field.required ? " *" : ""}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            {(field.options ?? [{ value: "sample", label: "Sample option" }]).map((opt) => (
+              <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "var(--color-on-surface)", opacity: 0.7 }}>
+                <input type="checkbox" disabled /> {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    case "radio":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p style={{ fontSize: "var(--font-size-label, 0.85rem)", fontWeight: 600, margin: "0 0 0.4rem", color: "var(--color-on-surface)" }}>
+            {field.label}{field.required ? " *" : ""}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            {(field.options ?? [{ value: "sample", label: "Sample option" }]).map((opt) => (
+              <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "var(--color-on-surface)", opacity: 0.7 }}>
+                <input type="radio" disabled /> {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
       );
     case "file":
       return (
@@ -110,6 +213,17 @@ function PreviewField({ field }: { field: FormField }) {
           </p>
         </div>
       );
+    case "shiftConfig":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1", background: "var(--color-surface-secondary, #f9fafb)", border: "1px dashed var(--color-border, #d1d5db)", borderRadius: "0.5rem", padding: "1.5rem", textAlign: "center" }}>
+          <p style={{ margin: 0, fontWeight: 600, color: "var(--color-text-secondary, #6b7280)", fontSize: "0.875rem" }}>
+            🕐 {field.label}
+          </p>
+          <p style={{ margin: "0.35rem 0 0", fontSize: "0.78rem", color: "var(--color-text-secondary, #9ca3af)" }}>
+            24-hour surveillance toggle · Interval check-in (minutes) · Shift slots (name, type, start / end time, guards needed)
+          </p>
+        </div>
+      );
     default:
       return (
         <TextField
@@ -154,6 +268,8 @@ export function FormBuilderStudio({
   const [localFields, setLocalFields] = useState<FormField[]>(fields);
   const [newLabel, setNewLabel] = useState("");
   const [newType, setNewType] = useState<FormField["type"]>("text");
+  const [newOptions, setNewOptions] = useState<SelectOption[]>([]);
+  const [expandedOptionsId, setExpandedOptionsId] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState("");
 
   useEffect(() => {
@@ -161,6 +277,12 @@ export function FormBuilderStudio({
       setLocalFields(fields);
     }
   }, [fields, isSaving]);
+
+  // Reset newOptions when type changes to/from an option-requiring type
+  function handleNewTypeChange(type: FormField["type"]) {
+    setNewType(type);
+    if (!OPTION_TYPES.has(type)) setNewOptions([]);
+  }
 
   const titles: Record<FormType, string> = {
     guard: "Guard form",
@@ -179,19 +301,20 @@ export function FormBuilderStudio({
 
     const maxOrder = localFields.reduce((m, f) => Math.max(m, f.order), 0);
 
-    setLocalFields((prev) => [
-      ...prev,
-      {
-        id: `custom_${id}_${Date.now()}`,
-        label,
-        type: newType,
-        required: false,
-        locked: false,
-        order: maxOrder + 1,
-      },
-    ]);
+    const newField: FormField = {
+      id: `custom_${id}_${Date.now()}`,
+      label,
+      type: newType,
+      required: false,
+      locked: false,
+      order: maxOrder + 1,
+      ...(OPTION_TYPES.has(newType) ? { options: newOptions } : {}),
+    };
+
+    setLocalFields((prev) => [...prev, newField]);
     setNewLabel("");
     setNewType("text");
+    setNewOptions([]);
     setSaveNotice("");
   }
 
@@ -218,6 +341,13 @@ export function FormBuilderStudio({
       prev.map((f) =>
         f.id === fieldId && !f.locked ? { ...f, required: !f.required } : f
       )
+    );
+    setSaveNotice("");
+  }
+
+  function updateFieldOptions(fieldId: string, options: SelectOption[]) {
+    setLocalFields((prev) =>
+      prev.map((f) => (f.id === fieldId ? { ...f, options } : f))
     );
     setSaveNotice("");
   }
@@ -280,10 +410,26 @@ export function FormBuilderStudio({
                       {field.locked ? (
                         <span className="fb-chip fb-chip--muted">Core</span>
                       ) : null}
+                      {OPTION_TYPES.has(field.type) && field.options ? (
+                        <span className="fb-chip fb-chip--muted">
+                          {field.options.length} option{field.options.length !== 1 ? "s" : ""}
+                        </span>
+                      ) : null}
                     </span>
                   </div>
                 </div>
                 <div className="fb-studio__actions">
+                  {/* Options toggle for select / checkbox / radio */}
+                  {OPTION_TYPES.has(field.type) && !field.locked ? (
+                    <button
+                      type="button"
+                      className={`fb-icon-btn${expandedOptionsId === field.id ? " fb-icon-btn--active" : ""}`}
+                      onClick={() => setExpandedOptionsId(expandedOptionsId === field.id ? null : field.id)}
+                      title="Edit options"
+                    >
+                      ⋮
+                    </button>
+                  ) : null}
                   {!field.locked ? (
                     <button
                       type="button"
@@ -332,7 +478,15 @@ export function FormBuilderStudio({
                     ×
                   </button>
                 </div>
-              </li>
+                {/* Inline options editor */}
+                {expandedOptionsId === field.id && OPTION_TYPES.has(field.type) ? (
+                  <div className="fb-studio__inline-options">
+                    <OptionsEditor
+                      options={field.options ?? []}
+                      onChange={(opts) => updateFieldOptions(field.id, opts)}
+                    />
+                  </div>
+                ) : null}              </li>
             ))}
           </ul>
 
@@ -348,17 +502,29 @@ export function FormBuilderStudio({
               label="Type"
               name="newFieldType"
               value={newType}
-              onChange={(e) => setNewType(e.target.value as FormField["type"])}
+              onChange={(e) => handleNewTypeChange(e.target.value as FormField["type"])}
               options={FIELD_TYPE_OPTIONS}
             />
+            {/* Options editor shown when type requires options */}
+            {OPTION_TYPES.has(newType) ? (
+              <div className="fb-studio__add-options">
+                <OptionsEditor
+                  options={newOptions}
+                  onChange={setNewOptions}
+                />
+              </div>
+            ) : null}
             <div className="fb-studio__add-action">
               <Button
                 type="button"
                 onClick={handleAdd}
-                disabled={!newLabel.trim()}
+                disabled={!newLabel.trim() || (OPTION_TYPES.has(newType) && newOptions.length === 0)}
               >
                 Add field
               </Button>
+              {OPTION_TYPES.has(newType) && newOptions.length === 0 ? (
+                <p className="fb-studio__add-hint">Add at least one option above to enable.</p>
+              ) : null}
             </div>
           </div>
         </section>

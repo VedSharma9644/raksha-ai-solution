@@ -105,6 +105,66 @@ function renderField(
         />
       );
 
+    case "checkbox": {
+      const checkedValues = value ? String(value).split(",").filter(Boolean) : [];
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p className="fbf-group-label">
+            {field.label}
+            {field.required ? <span className="fbf-required">*</span> : null}
+          </p>
+          {error ? <p className="fbf-group-error">{error}</p> : null}
+          <div className="fbf-check-group">
+            {(field.options ?? []).map((opt) => (
+              <label key={opt.value} className="fbf-check-item">
+                <input
+                  type="checkbox"
+                  className="fbf-check-input"
+                  disabled={disabled}
+                  checked={checkedValues.includes(opt.value)}
+                  onChange={(e) => {
+                    const next = e.target.checked
+                      ? [...checkedValues, opt.value]
+                      : checkedValues.filter((v) => v !== opt.value);
+                    onChange(next.join(","));
+                  }}
+                />
+                <span className="fbf-check-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "radio": {
+      const radioValue = (value as string) ?? "";
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p className="fbf-group-label">
+            {field.label}
+            {field.required ? <span className="fbf-required">*</span> : null}
+          </p>
+          {error ? <p className="fbf-group-error">{error}</p> : null}
+          <div className="fbf-check-group">
+            {(field.options ?? []).map((opt) => (
+              <label key={opt.value} className="fbf-check-item">
+                <input
+                  type="radio"
+                  className="fbf-check-input"
+                  name={field.id}
+                  disabled={disabled}
+                  checked={radioValue === opt.value}
+                  onChange={() => onChange(opt.value)}
+                />
+                <span className="fbf-check-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     case "file":
       return (
         <FileField

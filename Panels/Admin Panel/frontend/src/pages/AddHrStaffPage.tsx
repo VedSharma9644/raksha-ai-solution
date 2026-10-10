@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { AddHrStaffScreen, useAddHrStaff } from "../features/hrStaff";
 import type { HrStaffFormValues } from "../features/hrStaff";
+import { EMPTY_HR_STAFF_FORM } from "../features/hrStaff/HrStaffForm/HrStaffForm";
 import { useAuthContext } from "../features/authentication";
 import {
   useFormBuilderStatus,
@@ -75,16 +76,21 @@ export function AddHrStaffPage() {
           onCancel={goBack}
           onSubmit={async (data) => {
             setFormError("");
-            const values = data as unknown as HrStaffFormValues;
-            const password =
-              typeof data.password === "string" ? data.password.trim() : "";
+            const password = typeof data["password"] === "string" ? data["password"].trim() : "";
             if (!password || password.length < 8) {
-              setFormError(
-                "Enter a login password with at least 8 characters."
-              );
+              setFormError("Enter a login password with at least 8 characters.");
               return;
             }
-            values.password = password;
+            // Merge with defaults so no field is ever undefined → Firestore rejects undefined
+            const values: HrStaffFormValues = {
+              ...EMPTY_HR_STAFF_FORM,
+              fullName:     (data["fullName"]     as string) ?? "",
+              employeeCode: (data["employeeCode"] as string) ?? "",
+              phone:        (data["phone"]        as string) ?? "",
+              email:        (data["email"]        as string) ?? "",
+              notes:        (data["notes"]        as string) ?? "",
+              password,
+            };
             await saveHrStaff(values);
           }}
         />

@@ -10,6 +10,8 @@ import { TextAreaField } from "../../../components/TextAreaField";
 import { SelectField } from "../../../components/SelectField";
 import { FileField } from "../../../components/FileField";
 import { SiteLocationPicker } from "../../sites/SiteLocationPicker/SiteLocationPicker";
+import type { SiteShiftRowValues } from "../../sites/siteFormTypes";
+import { EMPTY_SHIFT_ROW } from "../../sites/siteFormTypes";
 import "./FormBuilderForm.css";
 
 /** ── Profile picture field renderer ────────────────────────────────────── */
@@ -88,6 +90,172 @@ function renderLocationField(
   );
 }
 
+const SHIFT_TYPE_OPTIONS = [
+  { value: "day",    label: "Day" },
+  { value: "night",  label: "Night" },
+  { value: "custom", label: "Custom" },
+];
+
+/** ── Shift configuration renderer ──────────────────────────────────────── */
+function renderShiftConfigField(
+  has24hSurveillance: boolean,
+  intervalCheckinMinutes: string,
+  shifts: SiteShiftRowValues[],
+  shiftErrors: Record<string, string>,
+  disabled: boolean,
+  onToggle24h: (v: boolean) => void,
+  onIntervalChange: (v: string) => void,
+  onAddShift: () => void,
+  onRemoveShift: (idx: number) => void,
+  onUpdateShift: (idx: number, patch: Partial<SiteShiftRowValues>) => void
+) {
+  return (
+    <div key="shiftConfig" style={{ gridColumn: "1 / -1" }}>
+      <p className="add-site-form__section-label">Shift Configuration</p>
+      <div className="shift-config">
+        {/* 24h surveillance toggle */}
+        <label className="shift-config__toggle-row">
+          <input
+            type="checkbox"
+            className="shift-config__checkbox"
+            checked={has24hSurveillance}
+            onChange={(e) => onToggle24h(e.target.checked)}
+            disabled={disabled}
+          />
+          <span className="shift-config__toggle-label">24-hour surveillance required</span>
+        </label>
+
+        {/* Interval check-in */}
+        <div className="shift-config__interval-row">
+          <label className="shift-config__interval-label" htmlFor="fb_intervalCheckinMinutes">
+            Regular interval check-in every
+          </label>
+          <input
+            id="fb_intervalCheckinMinutes"
+            type="number"
+            className="shift-config__interval-input"
+            min={5}
+            step={5}
+            placeholder="–"
+            value={intervalCheckinMinutes}
+            onChange={(e) => onIntervalChange(e.target.value)}
+            disabled={disabled}
+          />
+          <span className="shift-config__interval-unit">minutes</span>
+          <span className="shift-config__interval-hint">(leave blank to disable)</span>
+        </div>
+
+        {/* Shift list */}
+        <div className="shift-config__shifts-header">
+          <span className="shift-config__shifts-title">Shift Slots</span>
+          <button
+            type="button"
+            className="shift-config__add-btn"
+            onClick={onAddShift}
+            disabled={disabled}
+          >
+            + Add Shift
+          </button>
+        </div>
+
+        {shifts.length === 0 && (
+          <p className="shift-config__empty-hint">
+            No shifts defined. Click "+ Add Shift" to add a Day or Night shift.
+          </p>
+        )}
+
+        {shifts.map((shift, idx) => (
+          <div key={shift.id} className="shift-config__shift-row">
+            <div className="shift-config__shift-row-fields">
+              <div className="shift-config__field shift-config__field--label">
+                <label className="shift-config__field-label">Shift name</label>
+                <input
+                  type="text"
+                  className={`shift-config__input${shiftErrors[`shift_label_${idx}`] ? " shift-config__input--error" : ""}`}
+                  placeholder="e.g. Day Shift"
+                  value={shift.label}
+                  onChange={(e) => onUpdateShift(idx, { label: e.target.value })}
+                  disabled={disabled}
+                />
+                {shiftErrors[`shift_label_${idx}`] && (
+                  <span className="shift-config__field-error">{shiftErrors[`shift_label_${idx}`]}</span>
+                )}
+              </div>
+
+              <div className="shift-config__field shift-config__field--type">
+                <label className="shift-config__field-label">Type</label>
+                <select
+                  className="shift-config__select"
+                  value={shift.shiftType}
+                  onChange={(e) =>
+                    onUpdateShift(idx, {
+                      shiftType: e.target.value as SiteShiftRowValues["shiftType"],
+                      startTime: e.target.value === "day" ? "06:00" : e.target.value === "night" ? "18:00" : shift.startTime,
+                      endTime:   e.target.value === "day" ? "18:00" : e.target.value === "night" ? "06:00" : shift.endTime,
+                    })
+                  }
+                  disabled={disabled}
+                >
+                  {SHIFT_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="shift-config__field shift-config__field--time">
+                <label className="shift-config__field-label">Start</label>
+                <input
+                  type="time"
+                  className={`shift-config__input${shiftErrors[`shift_start_${idx}`] ? " shift-config__input--error" : ""}`}
+                  value={shift.startTime}
+                  onChange={(e) => onUpdateShift(idx, { startTime: e.target.value })}
+                  disabled={disabled}
+                />
+              </div>
+
+              <div className="shift-config__field shift-config__field--time">
+                <label className="shift-config__field-label">End</label>
+                <input
+                  type="time"
+                  className={`shift-config__input${shiftErrors[`shift_end_${idx}`] ? " shift-config__input--error" : ""}`}
+                  value={shift.endTime}
+                  onChange={(e) => onUpdateShift(idx, { endTime: e.target.value })}
+                  disabled={disabled}
+                />
+              </div>
+
+              <div className="shift-config__field shift-config__field--guards">
+                <label className="shift-config__field-label">Guards needed</label>
+                <input
+                  type="number"
+                  className={`shift-config__input${shiftErrors[`shift_guards_${idx}`] ? " shift-config__input--error" : ""}`}
+                  min={1}
+                  value={shift.requiredGuards}
+                  onChange={(e) => onUpdateShift(idx, { requiredGuards: e.target.value })}
+                  disabled={disabled}
+                />
+                {shiftErrors[`shift_guards_${idx}`] && (
+                  <span className="shift-config__field-error">{shiftErrors[`shift_guards_${idx}`]}</span>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="shift-config__remove-btn"
+              onClick={() => onRemoveShift(idx)}
+              disabled={disabled}
+              title="Remove shift"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function renderField(
   field: FormField,
   value: string | File | null,
@@ -124,6 +292,67 @@ function renderField(
           disabled={disabled}
         />
       );
+
+    case "checkbox": {
+      // value is comma-separated string of selected option values
+      const checkedValues = value ? String(value).split(",").filter(Boolean) : [];
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p className="fbf-group-label">
+            {field.label}
+            {field.required ? <span className="fbf-required">*</span> : null}
+          </p>
+          {error ? <p className="fbf-group-error">{error}</p> : null}
+          <div className="fbf-check-group">
+            {(field.options ?? []).map((opt) => (
+              <label key={opt.value} className="fbf-check-item">
+                <input
+                  type="checkbox"
+                  className="fbf-check-input"
+                  disabled={disabled}
+                  checked={checkedValues.includes(opt.value)}
+                  onChange={(e) => {
+                    const next = e.target.checked
+                      ? [...checkedValues, opt.value]
+                      : checkedValues.filter((v) => v !== opt.value);
+                    onChange(next.join(","));
+                  }}
+                />
+                <span className="fbf-check-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "radio": {
+      const radioValue = (value as string) ?? "";
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <p className="fbf-group-label">
+            {field.label}
+            {field.required ? <span className="fbf-required">*</span> : null}
+          </p>
+          {error ? <p className="fbf-group-error">{error}</p> : null}
+          <div className="fbf-check-group">
+            {(field.options ?? []).map((opt) => (
+              <label key={opt.value} className="fbf-check-item">
+                <input
+                  type="radio"
+                  className="fbf-check-input"
+                  name={field.id}
+                  disabled={disabled}
+                  checked={radioValue === opt.value}
+                  onChange={() => onChange(opt.value)}
+                />
+                <span className="fbf-check-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     case "file":
       return (
@@ -195,9 +424,49 @@ export function FormBuilderForm({
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // ── Shift config state (only used when shiftConfig field is present) ─────
+  const hasShiftConfig = fields.some((f) => f.type === "shiftConfig");
+  const [has24hSurveillance, setHas24hSurveillance] = useState<boolean>(
+    () => (initialValues?.["has24hSurveillance"] === true || initialValues?.["has24hSurveillance"] === "true") ?? false
+  );
+  const [intervalCheckinMinutes, setIntervalCheckinMinutes] = useState<string>(
+    () => (initialValues?.["intervalCheckinMinutes"] as string) ?? ""
+  );
+  const [shifts, setShifts] = useState<SiteShiftRowValues[]>(
+    () => (initialValues?.["shifts"] as unknown as SiteShiftRowValues[]) ?? []
+  );
+  const [shiftErrors, setShiftErrors] = useState<Record<string, string>>({});
+
+  function addShift() {
+    setShifts((prev) => [...prev, EMPTY_SHIFT_ROW()]);
+  }
+  function removeShift(idx: number) {
+    setShifts((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function updateShift(idx: number, patch: Partial<SiteShiftRowValues>) {
+    setShifts((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
+    setShiftErrors((prev) => {
+      const next = { ...prev };
+      delete next[`shift_label_${idx}`];
+      delete next[`shift_start_${idx}`];
+      delete next[`shift_end_${idx}`];
+      delete next[`shift_guards_${idx}`];
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (initialValues) {
       setFormData(initialValues);
+      setHas24hSurveillance(
+        initialValues["has24hSurveillance"] === true || initialValues["has24hSurveillance"] === "true"
+      );
+      setIntervalCheckinMinutes((initialValues["intervalCheckinMinutes"] as string) ?? "");
+      setShifts((initialValues["shifts"] as unknown as SiteShiftRowValues[]) ?? []);
     }
   }, [initialValues]);
 
@@ -228,6 +497,22 @@ export function FormBuilderForm({
         }
         continue;
       }
+      if (field.type === "shiftConfig") {
+        // Validate individual shift rows
+        const nextShiftErrors: Record<string, string> = {};
+        shifts.forEach((s, i) => {
+          if (!s.label.trim()) nextShiftErrors[`shift_label_${i}`] = "Enter shift name.";
+          if (!s.startTime)    nextShiftErrors[`shift_start_${i}`] = "Set start time.";
+          if (!s.endTime)      nextShiftErrors[`shift_end_${i}`]   = "Set end time.";
+          const rg = parseInt(s.requiredGuards, 10);
+          if (isNaN(rg) || rg < 1) nextShiftErrors[`shift_guards_${i}`] = "Min 1 guard.";
+        });
+        setShiftErrors(nextShiftErrors);
+        if (Object.keys(nextShiftErrors).length > 0) {
+          nextErrors["shiftConfig"] = "Fix shift errors above.";
+        }
+        continue;
+      }
       if (field.required) {
         const val = formData[field.id];
         if (!val || (typeof val === "string" && !val.trim())) {
@@ -242,7 +527,14 @@ export function FormBuilderForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validate()) return;
-    await onSubmit(formData);
+    // Merge shift config into submit payload when applicable
+    const payload: Record<string, unknown> = { ...formData };
+    if (hasShiftConfig) {
+      payload["has24hSurveillance"] = has24hSurveillance;
+      payload["intervalCheckinMinutes"] = intervalCheckinMinutes;
+      payload["shifts"] = shifts;
+    }
+    await onSubmit(payload as Record<string, string | File | null>);
   }
 
   const defaultLabels: Record<FormType, string> = {
@@ -272,6 +564,20 @@ export function FormBuilderForm({
             }
             if (field.type === "location") {
               return renderLocationField(formData, isSubmitting || isDeleting, handleFieldValue);
+            }
+            if (field.type === "shiftConfig") {
+              return renderShiftConfigField(
+                has24hSurveillance,
+                intervalCheckinMinutes,
+                shifts,
+                shiftErrors,
+                isSubmitting || isDeleting,
+                setHas24hSurveillance,
+                setIntervalCheckinMinutes,
+                addShift,
+                removeShift,
+                updateShift
+              );
             }
             return renderField(
               field,
