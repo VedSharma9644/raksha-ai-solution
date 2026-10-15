@@ -26,7 +26,7 @@ export function AddSitePage() {
   );
 
   function goBack() {
-    navigate(APP_ROUTES.dashboard);
+    navigate(APP_ROUTES.siteList);
   }
 
   if (isStatusLoading) {
@@ -62,7 +62,7 @@ export function AddSitePage() {
           title="Add Site"
           subtitle="Fill in the custom form for this agency."
           onBack={goBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to sites"
         />
         {error ? (
           <p role="alert" style={{ color: "red", padding: "1rem" }}>

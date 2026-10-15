@@ -4,6 +4,7 @@ export interface StaffMemberFormValues {
   // Personal
   fullName: string;
   fatherName: string;
+  motherName: string;
   gender: "male" | "female" | "other" | "";
   phone: string;
   email: string;
@@ -21,6 +22,8 @@ export interface StaffMemberFormValues {
   experience: string;
   education: string;
   assignedSiteId: string;
+  /** Per-guard weekly off weekdays (monday…sunday). */
+  weeklyOffDays: string[];
 
   // Preferences
   guardType: "ex-serviceman" | "civilian" | "";
@@ -62,6 +65,7 @@ export interface StaffMemberFormValues {
 export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   fullName: "",
   fatherName: "",
+  motherName: "",
   gender: "",
   phone: "",
   email: "",
@@ -77,6 +81,7 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   experience: "",
   education: "",
   assignedSiteId: "",
+  weeklyOffDays: [],
   guardType: "",
   interestedCity: "",
   shiftFrom: "",

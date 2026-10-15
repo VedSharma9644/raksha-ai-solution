@@ -49,6 +49,8 @@ function formToPayload(values: ProspectFormValues) {
     expectedGuardCount: values.expectedGuardCount ? Number(values.expectedGuardCount) : null,
     expectedMonthlyValue: values.expectedMonthlyValue.trim(),
     leadSource: values.leadSource,
+    referralName:
+      values.leadSource === "referral" ? values.referralName.trim() : "",
     contactName: values.contactName.trim(),
     contactDesignation: values.contactDesignation.trim(),
     primaryPhone: values.primaryPhone.trim(),

@@ -12,6 +12,8 @@ export interface IntervalCheckin {
   lat: number;
   lng: number;
   accuracyMeters: number;
+  /** Present when guard submitted within/after due window */
+  punctuality?: "on_time" | "late";
 }
 
 export interface AttendanceRecord {

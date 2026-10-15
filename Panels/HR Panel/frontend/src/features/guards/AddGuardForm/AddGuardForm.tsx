@@ -10,13 +10,26 @@ import { TextField } from "../../../components/TextField";
 import type { GuardFormValues } from "../guardTypes";
 import { EMPTY_GUARD_FORM } from "../guardTypes";
 import { useBranchContext } from "../../branches";
+import { useGuardContactAvailability } from "../useGuardContactAvailability";
 import "./AddGuardForm.css";
+
+const WEEKDAY_OPTIONS: { id: string; label: string }[] = [
+  { id: "monday", label: "Monday" },
+  { id: "tuesday", label: "Tuesday" },
+  { id: "wednesday", label: "Wednesday" },
+  { id: "thursday", label: "Thursday" },
+  { id: "friday", label: "Friday" },
+  { id: "saturday", label: "Saturday" },
+  { id: "sunday", label: "Sunday" },
+];
 
 export interface AddGuardFormProps {
   initialValues?: GuardFormValues;
   isSubmitting?: boolean;
   /** Pass true when creating a new guard — makes password required */
   isNew?: boolean;
+  /** When editing, exclude this guard from phone/email uniqueness checks */
+  excludeGuardId?: string;
   onSubmit: (values: GuardFormValues) => void | Promise<void>;
   onCancel: () => void;
 }
@@ -25,6 +38,7 @@ export function AddGuardForm({
   initialValues,
   isSubmitting = false,
   isNew = false,
+  excludeGuardId,
   onSubmit,
   onCancel,
 }: AddGuardFormProps) {
@@ -35,6 +49,12 @@ export function AddGuardForm({
   const [errors, setErrors] = useState<
     Partial<Record<keyof GuardFormValues, string>>
   >({});
+  const { phoneStatus, emailStatus } = useGuardContactAvailability({
+    phone: values.phone,
+    email: values.email,
+    excludeGuardId,
+    enabled: true,
+  });
 
   function updateField<K extends keyof GuardFormValues>(
     field: K,
@@ -84,6 +104,21 @@ export function AddGuardForm({
       nextErrors.confirmPassword = "Passwords do not match.";
     }
 
+    if (phoneStatus.checking || emailStatus.checking) {
+      if (phoneStatus.checking) nextErrors.phone = "Still checking mobile number…";
+      if (emailStatus.checking) nextErrors.email = "Still checking email…";
+    }
+    if (phoneStatus.available === false) {
+      nextErrors.phone =
+        phoneStatus.message ||
+        "This mobile number is already registered to another guard.";
+    }
+    if (emailStatus.available === false) {
+      nextErrors.email =
+        emailStatus.message ||
+        "This email is already registered to another guard.";
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -96,6 +131,7 @@ export function AddGuardForm({
       ...values,
       fullName: values.fullName.trim(),
       fatherName: values.fatherName.trim(),
+      motherName: values.motherName.trim(),
       phone: values.phone.trim(),
       email: values.email.trim(),
       address: values.address.trim(),
@@ -108,6 +144,7 @@ export function AddGuardForm({
       salary: values.salary.trim(),
       experience: values.experience.trim(),
       education: values.education.trim(),
+      weeklyOffDays: values.weeklyOffDays,
       bankAccount: values.bankAccount.trim(),
       esiNumber: values.esiNumber.trim(),
       pfNumber: values.pfNumber.trim(),
@@ -117,7 +154,7 @@ export function AddGuardForm({
 
   return (
     <form className="add-guard-form" onSubmit={handleSubmit} noValidate>
-      <FormPanel>
+      <FormPanel className="form-panel--wide">
         <p className="add-guard-form__note">
           Site assignment is handled by the Agency Panel. HR can create the
           guard profile only.
@@ -156,12 +193,30 @@ export function AddGuardForm({
             disabled={isSubmitting}
           />
           <TextField
+            label="Mother's name"
+            name="motherName"
+            value={values.motherName}
+            onChange={(e) => updateField("motherName", e.target.value)}
+            errorMessage={errors.motherName}
+            disabled={isSubmitting}
+          />
+          <TextField
             label="Mobile number"
             name="phone"
             type="tel"
             value={values.phone}
             onChange={(e) => updateField("phone", e.target.value)}
-            errorMessage={errors.phone}
+            errorMessage={
+              errors.phone ||
+              (phoneStatus.available === false ? phoneStatus.message : undefined)
+            }
+            hint={
+              !errors.phone && phoneStatus.available === true
+                ? phoneStatus.message
+                : phoneStatus.checking
+                  ? "Checking availability…"
+                  : undefined
+            }
             required
             disabled={isSubmitting}
           />
@@ -171,7 +226,17 @@ export function AddGuardForm({
             type="email"
             value={values.email}
             onChange={(e) => updateField("email", e.target.value)}
-            errorMessage={errors.email}
+            errorMessage={
+              errors.email ||
+              (emailStatus.available === false ? emailStatus.message : undefined)
+            }
+            hint={
+              !errors.email && emailStatus.available === true
+                ? emailStatus.message
+                : emailStatus.checking
+                  ? "Checking availability…"
+                  : undefined
+            }
             required
             disabled={isSubmitting}
           />
@@ -379,6 +444,39 @@ export function AddGuardForm({
             errorMessage={errors.shiftTo}
             disabled={isSubmitting}
           />
+        </div>
+
+        <p className="add-guard-form__section-label">Weekly offs</p>
+        <p className="add-guard-form__section-hint">
+          Which day(s) is this guard off each week? Different guards can have
+          different offs.
+        </p>
+        <div className="add-guard-form__weekdays" role="group" aria-label="Weekly offs">
+          {WEEKDAY_OPTIONS.map((day) => {
+            const on = values.weeklyOffDays.includes(day.id);
+            return (
+              <button
+                key={day.id}
+                type="button"
+                className={`add-guard-form__day${on ? " add-guard-form__day--on" : ""}`}
+                aria-pressed={on}
+                disabled={isSubmitting}
+                onClick={() => {
+                  const next = on
+                    ? values.weeklyOffDays.filter((d) => d !== day.id)
+                    : [...values.weeklyOffDays, day.id];
+                  updateField(
+                    "weeklyOffDays",
+                    WEEKDAY_OPTIONS.map((o) => o.id).filter((id) =>
+                      next.includes(id)
+                    )
+                  );
+                }}
+              >
+                {day.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Section: Documents ── */}

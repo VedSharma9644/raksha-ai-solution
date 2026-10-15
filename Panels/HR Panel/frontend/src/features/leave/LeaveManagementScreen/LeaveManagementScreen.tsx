@@ -68,7 +68,7 @@ export function LeaveManagementScreen({
           title="Manage Leave"
           subtitle="Review upcoming and pending leave requests for guards."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to manage schedule"
         />
 
         <div className="leave-management-screen__filters">

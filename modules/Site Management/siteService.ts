@@ -105,6 +105,8 @@ export interface AddSiteParams {
   geofenceRadiusMeters?: number | null;
   intervalCheckinMinutes?: number | null;
   shiftConfig?: SiteShiftConfig | null;
+  clientRateMaleMonthly?: number;
+  clientRateFemaleMonthly?: number;
 }
 
 export interface UpdateSiteParams {
@@ -127,6 +129,8 @@ export interface UpdateSiteParams {
   geofenceRadiusMeters?: number | null;
   intervalCheckinMinutes?: number | null;
   shiftConfig?: SiteShiftConfig | null;
+  clientRateMaleMonthly?: number;
+  clientRateFemaleMonthly?: number;
 }
 
 export async function addSite(

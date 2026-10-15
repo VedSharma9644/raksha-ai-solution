@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { fetchTodayShift, type TodayShiftStatus } from '../api/guard-api';
@@ -48,6 +48,35 @@ export type GuardDutyAssignmentView = {
   refresh: () => Promise<void>;
 };
 
+/** Fields that affect Home / duty UI — ignore volatile noise. */
+function todaySignature(data: TodayShiftStatus | null): string {
+  if (!data) {
+    return '';
+  }
+  return [
+    data.shiftActive ? '1' : '0',
+    data.openPunchInId ?? '',
+    data.punchedAt ?? '',
+    data.punchInStatus ?? '',
+    data.siteName ?? '',
+    data.postName ?? '',
+    data.assignedSiteId ?? '',
+    data.shiftFrom ?? '',
+    data.shiftTo ?? '',
+    data.shiftLabel ?? '',
+    data.dutySource ?? '',
+    data.assignmentId ?? '',
+    data.hasLaterReplacement ? '1' : '0',
+    data.intervalCheckinMinutes ?? '',
+    data.intervalCheckin?.status ?? '',
+    data.intervalCheckin?.dueAt ?? '',
+    data.intervalCheckin?.nextDueAt ?? '',
+    data.intervalCheckin?.completedCount ?? '',
+    data.punchInWindow?.open === false ? '0' : '1',
+    data.punchInWindow?.message ?? '',
+  ].join('|');
+}
+
 export function useGuardDutyAssignment(): GuardDutyAssignmentView {
   const {
     authToken,
@@ -59,58 +88,81 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
   const [today, setToday] = useState<TodayShiftStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [tick, setTick] = useState(0);
+  const signatureRef = useRef('');
+  const hasLoadedRef = useRef(false);
 
-  const refresh = useCallback(async () => {
-    if (!authToken) {
-      setToday(null);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const data = await fetchTodayShift(authToken);
-      setToday(data);
-      setShiftActive(Boolean(data.shiftActive));
-      // Keep session user aligned with live roster — never leave login stale times on screen.
-      if (data.shiftFrom || data.shiftTo || data.siteName || data.postName) {
-        patchGuardUser({
-          ...(data.shiftFrom ? { shiftFrom: data.shiftFrom } : {}),
-          ...(data.shiftTo ? { shiftTo: data.shiftTo } : {}),
-          ...(data.siteName ? { siteName: data.siteName } : {}),
-          ...(data.postName ? { postName: data.postName } : {}),
-          ...(data.assignedSiteId ? { assignedSiteId: data.assignedSiteId } : {}),
-        });
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!authToken) {
+        setToday(null);
+        signatureRef.current = '';
+        hasLoadedRef.current = false;
+        return;
       }
-    } catch {
-      // Keep last known assignment on transient errors
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authToken, patchGuardUser, setShiftActive]);
+      const silent = opts?.silent === true && hasLoadedRef.current;
+      if (!silent) {
+        setIsLoading(true);
+      }
+      try {
+        const data = await fetchTodayShift(authToken);
+        const nextSig = todaySignature(data);
+        if (nextSig !== signatureRef.current) {
+          signatureRef.current = nextSig;
+          setToday(data);
+          setShiftActive(Boolean(data.shiftActive));
+          if (data.shiftFrom || data.shiftTo || data.siteName || data.postName) {
+            patchGuardUser({
+              ...(data.shiftFrom ? { shiftFrom: data.shiftFrom } : {}),
+              ...(data.shiftTo ? { shiftTo: data.shiftTo } : {}),
+              ...(data.siteName ? { siteName: data.siteName } : {}),
+              ...(data.postName ? { postName: data.postName } : {}),
+              ...(data.assignedSiteId
+                ? { assignedSiteId: data.assignedSiteId }
+                : {}),
+            });
+          }
+        }
+        hasLoadedRef.current = true;
+      } catch {
+        // Keep last known assignment on transient errors
+      } finally {
+        if (!silent) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [authToken, patchGuardUser, setShiftActive],
+  );
 
   useEffect(() => {
-    void refresh();
+    void refresh({ silent: false });
   }, [refresh]);
 
   useEffect(() => {
     return subscribeRosterSync(() => {
-      void refresh();
+      void refresh({ silent: true });
     });
   }, [refresh]);
 
   useEffect(() => {
     const onState = (state: AppStateStatus) => {
       if (state === 'active') {
-        void refresh();
+        void refresh({ silent: true });
       }
     };
     const sub = AppState.addEventListener('change', onState);
-    const interval = setInterval(() => {
-      void refresh();
-      setTick((value) => value + 1);
+    // Background data poll — never toggles loading UI.
+    const poll = setInterval(() => {
+      void refresh({ silent: true });
     }, ROSTER_FOREGROUND_POLL_MS);
+    // Countdown / delay labels only — once a minute, no network.
+    const clock = setInterval(() => {
+      setTick((value) => value + 1);
+    }, 60_000);
     return () => {
       sub.remove();
-      clearInterval(interval);
+      clearInterval(poll);
+      clearInterval(clock);
     };
   }, [refresh]);
 
@@ -127,7 +179,8 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
     const punchInStatus = today?.punchInStatus ?? null;
     const hasLaterReplacement = Boolean(today?.hasLaterReplacement);
     const dutySource = today?.dutySource === 'roster' ? 'roster' : 'profile';
-    const delayedWaiting = !shiftActive && isWithinShiftAfterStart({ shiftFrom, shiftTo });
+    const delayedWaiting =
+      !shiftActive && isWithinShiftAfterStart({ shiftFrom, shiftTo });
     const minutesLate = delayedWaiting
       ? minutesPastShiftStart({ shiftFrom, shiftTo })
       : 0;
@@ -201,7 +254,7 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       hasLaterReplacement,
       assignmentId: today?.assignmentId ?? null,
       isLoading,
-      refresh,
+      refresh: () => refresh({ silent: false }),
     };
   }, [guardUser, isLoading, navShiftActive, refresh, tick, today]);
 }

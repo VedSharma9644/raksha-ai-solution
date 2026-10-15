@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { Button } from "../../../components/Button";
+import { useConfirmDialog } from "../../../components/ConfirmDialog";
 // SelectField not needed here — status is changed via a native <select> in the header
 import type { ProspectClient, ProspectNote } from "@raskha/client-management";
 import { AddProspectModal } from "../AddProspectModal/AddProspectModal";
@@ -100,6 +101,7 @@ export function ProspectDetailScreen({
   onDeleteNote,
   onDeleteProspect,
 }: ProspectDetailScreenProps) {
+  const { confirm } = useConfirmDialog();
   const [showEditModal, setShowEditModal] = useState(false);
   const [newNote, setNewNote] = useState("");
 
@@ -140,9 +142,16 @@ export function ProspectDetailScreen({
               </Button>
               <Button
                 onClick={() => {
-                  if (confirm(`Delete "${prospect.orgName}"? All notes will also be deleted. This cannot be undone.`)) {
-                    onDeleteProspect();
-                  }
+                  void (async () => {
+                    const ok = await confirm({
+                      title: "Delete prospect?",
+                      message: `Delete "${prospect.orgName}"? All notes will also be deleted. This cannot be undone.`,
+                      confirmLabel: "Delete",
+                      cancelLabel: "Cancel",
+                      tone: "danger",
+                    });
+                    if (ok) onDeleteProspect();
+                  })();
                 }}
                 variant="ghost"
                 size="medium"
@@ -186,6 +195,12 @@ export function ProspectDetailScreen({
                 <InfoRow label="Guards Needed" value={prospect.expectedGuardCount != null ? String(prospect.expectedGuardCount) : "—"} />
                 <InfoRow label="Monthly Value" value={prospect.expectedMonthlyValue ? `₹ ${prospect.expectedMonthlyValue}` : "—"} />
                 <InfoRow label="Lead Source"   value={leadSourceLabel(prospect.leadSource)} />
+                {prospect.leadSource === "referral" ? (
+                  <InfoRow
+                    label="Referral Name"
+                    value={prospect.referralName?.trim() || "—"}
+                  />
+                ) : null}
               </div>
             </section>
 
@@ -270,7 +285,16 @@ export function ProspectDetailScreen({
                           className="prospect-timeline-item__delete"
                           title="Delete note"
                           onClick={() => {
-                            if (confirm("Delete this note?")) onDeleteNote(note.id);
+                            void (async () => {
+                              const ok = await confirm({
+                                title: "Delete note?",
+                                message: "Delete this note? This cannot be undone.",
+                                confirmLabel: "Delete",
+                                cancelLabel: "Cancel",
+                                tone: "danger",
+                              });
+                              if (ok) onDeleteNote(note.id);
+                            })();
                           }}
                         >
                           ✕

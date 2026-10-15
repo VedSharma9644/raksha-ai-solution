@@ -15,6 +15,17 @@ import { AddHrStaffPage } from "../pages/AddHrStaffPage";
 import { EditHrStaffPage } from "../pages/EditHrStaffPage";
 import { HrStaffListPage } from "../pages/HrStaffListPage";
 import { FormBuilderPage } from "../pages/FormBuilderPage";
+import { GeneralSettingsPage } from "../pages/GeneralSettingsPage";
+import { PayrollPage } from "../pages/PayrollPage";
+import { PayrollRunDetailPage } from "../pages/PayrollRunDetailPage";
+import { EarningsPage } from "../pages/EarningsPage";
+import { EarningsSiteDetailPage } from "../pages/EarningsSiteDetailPage";
+import { InvoicesPage } from "../pages/InvoicesPage";
+import { InvoiceDetailPage } from "../pages/InvoiceDetailPage";
+import { InvoiceSettingsPage } from "../pages/InvoiceSettingsPage";
+import { MoneyOutPage } from "../pages/MoneyOutPage";
+import { PaymentManagementPage } from "../pages/PaymentManagementPage";
+import { ManageSchedulePage } from "../pages/ManageSchedulePage";
 import { InventoryListPage } from "../pages/InventoryListPage";
 import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
 import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
@@ -23,6 +34,7 @@ import { AttendancePage } from "../pages/AttendancePage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SchedulingPage } from "../pages/SchedulingPage";
+import { ProspectLeadsPage } from "../pages/ProspectLeadsPage";
 import { ProspectsPage } from "../pages/ProspectsPage";
 import { ProspectDetailPage } from "../pages/ProspectDetailPage";
 import { ProspectGuardsPage } from "../pages/ProspectGuardsPage";
@@ -94,6 +106,94 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <FormBuilderPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.generalSettings}
+        element={
+          <ModuleRoute>
+            <GeneralSettingsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.paymentManagement}
+        element={
+          <ModuleRoute>
+            <PaymentManagementPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.manageSchedule}
+        element={
+          <ModuleRoute>
+            <ManageSchedulePage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.payroll}
+        element={
+          <ModuleRoute>
+            <PayrollPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.payrollRunDetail}
+        element={
+          <ModuleRoute>
+            <PayrollRunDetailPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.earnings}
+        element={
+          <ModuleRoute>
+            <EarningsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.earningsSiteDetail}
+        element={
+          <ModuleRoute>
+            <EarningsSiteDetailPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.invoiceSettings}
+        element={
+          <ModuleRoute>
+            <InvoiceSettingsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.invoices}
+        element={
+          <ModuleRoute>
+            <InvoicesPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.invoiceDetail}
+        element={
+          <ModuleRoute>
+            <InvoiceDetailPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.moneyOut}
+        element={
+          <ModuleRoute>
+            <MoneyOutPage />
           </ModuleRoute>
         }
       />
@@ -246,6 +346,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <SchedulingPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.prospectLeads}
+        element={
+          <ModuleRoute>
+            <ProspectLeadsPage />
           </ModuleRoute>
         }
       />

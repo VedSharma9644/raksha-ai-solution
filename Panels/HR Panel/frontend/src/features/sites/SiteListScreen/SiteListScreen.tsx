@@ -49,6 +49,7 @@ export interface SiteListScreenProps {
   understaffedSiteIds?: string[];
   coverageSummary?: string;
   onBack: () => void;
+  backLabel?: string;
   onAssignGuards: (siteId: string) => void;
   onSchedule: (siteId: string) => void;
 }
@@ -59,6 +60,7 @@ export function SiteListScreen({
   understaffedSiteIds = [],
   coverageSummary,
   onBack,
+  backLabel = "Back to dashboard",
   onAssignGuards,
   onSchedule,
 }: SiteListScreenProps) {
@@ -94,10 +96,10 @@ export function SiteListScreen({
     <AppScreenLayout>
       <div className="app-screen-layout__content site-list-screen">
         <PageHeader
-          title="Site List"
-          subtitle="View all client sites and manage guard assignments."
+          title="Sites"
+          subtitle="View client sites and manage guard assignments."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel={backLabel}
         />
 
         {coverageSummary ? (

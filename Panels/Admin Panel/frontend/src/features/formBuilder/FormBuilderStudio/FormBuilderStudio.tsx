@@ -14,6 +14,7 @@ import "./FormBuilderStudio.css";
 const OPTION_TYPES = new Set<FormField["type"]>(["select", "checkbox", "radio"]);
 
 const FIELD_TYPE_OPTIONS: { value: FormField["type"]; label: string }[] = [
+  { value: "section",     label: "Section heading" },
   { value: "text",        label: "Text" },
   { value: "textarea",    label: "Text area" },
   { value: "number",      label: "Number" },
@@ -100,6 +101,12 @@ function OptionsEditor({ options, onChange }: OptionsEditorProps) {
 
 function PreviewField({ field }: { field: FormField }) {
   switch (field.type) {
+    case "section":
+      return (
+        <p key={field.id} className="fb-studio__section-heading">
+          {field.label || "Section"}
+        </p>
+      );
     case "textarea":
       return (
         <TextAreaField
@@ -300,9 +307,10 @@ export function FormBuilderStudio({
       .replace(/^_|_$/g, "");
 
     const maxOrder = localFields.reduce((m, f) => Math.max(m, f.order), 0);
+    const isSection = newType === "section";
 
     const newField: FormField = {
-      id: `custom_${id}_${Date.now()}`,
+      id: `${isSection ? "section" : "custom"}_${id}_${Date.now()}`,
       label,
       type: newType,
       required: false,
@@ -315,6 +323,13 @@ export function FormBuilderStudio({
     setNewLabel("");
     setNewType("text");
     setNewOptions([]);
+    setSaveNotice("");
+  }
+
+  function renameField(fieldId: string, label: string) {
+    setLocalFields((prev) =>
+      prev.map((f) => (f.id === fieldId ? { ...f, label } : f))
+    );
     setSaveNotice("");
   }
 
@@ -387,26 +402,45 @@ export function FormBuilderStudio({
             {titles[formType]}
           </h2>
           <p className="fb-studio__hint">
-            Add, reorder, or remove fields. Core fields stay locked. Preview
-            updates on the right.
+            Add section headings (e.g. Personal Details), then fields under
+            them. Reorder freely; core fields stay locked. Preview updates on
+            the right.
           </p>
 
           <ul className="fb-studio__list">
             {localFields.map((field, index) => (
-              <li key={field.id} className="fb-studio__row">
+              <li
+                key={field.id}
+                className={`fb-studio__row${field.type === "section" ? " fb-studio__row--section" : ""}`}
+              >
                 <div className="fb-studio__row-main">
                   <span className="fb-studio__order">{index + 1}</span>
                   <div className="fb-studio__meta">
-                    <span className="fb-studio__name">
-                      {field.label}
-                      {field.required ? (
-                        <span className="fb-studio__req" aria-hidden>
-                          *
-                        </span>
-                      ) : null}
-                    </span>
+                    {field.type === "section" ? (
+                      <input
+                        className="fb-studio__section-input"
+                        type="text"
+                        value={field.label}
+                        onChange={(e) => renameField(field.id, e.target.value)}
+                        aria-label="Section name"
+                        placeholder="Section name"
+                      />
+                    ) : (
+                      <span className="fb-studio__name">
+                        {field.label}
+                        {field.required ? (
+                          <span className="fb-studio__req" aria-hidden>
+                            *
+                          </span>
+                        ) : null}
+                      </span>
+                    )}
                     <span className="fb-studio__chips">
-                      <span className="fb-chip">{typeLabel(field.type)}</span>
+                      <span
+                        className={`fb-chip${field.type === "section" ? " fb-chip--section" : ""}`}
+                      >
+                        {typeLabel(field.type)}
+                      </span>
                       {field.locked ? (
                         <span className="fb-chip fb-chip--muted">Core</span>
                       ) : null}
@@ -430,7 +464,7 @@ export function FormBuilderStudio({
                       ⋮
                     </button>
                   ) : null}
-                  {!field.locked ? (
+                  {!field.locked && field.type !== "section" ? (
                     <button
                       type="button"
                       className={`fb-icon-btn${field.required ? " fb-icon-btn--active" : ""}`}
@@ -492,11 +526,15 @@ export function FormBuilderStudio({
 
           <div className="fb-studio__add">
             <TextField
-              label="New field label"
+              label={newType === "section" ? "Section name" : "New field label"}
               name="newFieldLabel"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="e.g. Emergency contact"
+              placeholder={
+                newType === "section"
+                  ? "e.g. Personal Details"
+                  : "e.g. Emergency contact"
+              }
             />
             <SelectField
               label="Type"
@@ -520,7 +558,7 @@ export function FormBuilderStudio({
                 onClick={handleAdd}
                 disabled={!newLabel.trim() || (OPTION_TYPES.has(newType) && newOptions.length === 0)}
               >
-                Add field
+                {newType === "section" ? "Add section" : "Add field"}
               </Button>
               {OPTION_TYPES.has(newType) && newOptions.length === 0 ? (
                 <p className="fb-studio__add-hint">Add at least one option above to enable.</p>
@@ -538,7 +576,7 @@ export function FormBuilderStudio({
             <p className="fb-studio__hint">
               This is what staff will fill on Add / Edit screens.
             </p>
-            <FormPanel>
+            <FormPanel className="form-panel--wide">
               <div className="form-panel__grid">
                 {localFields.map((field) => (
                   <PreviewField key={field.id} field={field} />

@@ -1,5 +1,7 @@
 .add-hr-staff-screen {
   animation: add-hr-staff-enter 360ms ease both;
+  width: 100%;
+  max-width: none;
 }
 
 @keyframes add-hr-staff-enter {

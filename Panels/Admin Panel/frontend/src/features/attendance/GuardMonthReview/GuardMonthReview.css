@@ -1,0 +1,224 @@
+.att-month-review {
+  margin: 0 0 1.75rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: var(--radius-lg, 14px);
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+}
+
+.att-month-review__head {
+  margin-bottom: 0.85rem;
+}
+
+.att-month-review__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-on-surface, #111827);
+}
+
+.att-month-review__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--color-on-surface-variant, #6b7280);
+}
+
+.att-month-review__filters {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.6fr) 6rem 6rem auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.85rem;
+}
+
+.att-month-review__filter-action {
+  padding-bottom: 0.1rem;
+}
+
+.att-month-review__error {
+  margin: 0 0 0.75rem;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.att-month-review__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--color-on-surface-variant, #6b7280);
+}
+
+.att-month-review__stats strong {
+  color: var(--color-on-surface, #111827);
+  margin-right: 0.2rem;
+}
+
+.att-month-review__cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  max-width: 22rem;
+  margin-bottom: 1rem;
+}
+
+.att-month-review__cal-head {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-on-surface-variant, #6b7280);
+}
+
+.att-month-review__cal-empty {
+  min-height: 2rem;
+}
+
+.att-month-review__cal-day {
+  min-height: 2rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.4rem;
+  background: #f8fafc;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-on-surface, #111827);
+  cursor: default;
+}
+
+.att-month-review__cal-day--missed {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.att-month-review__cal-day--half {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.att-month-review__cal-day--full,
+.att-month-review__cal-day--present,
+.att-month-review__cal-day--today {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.att-month-review__cal-day--leave {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.att-month-review__cal-day--relief {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+.att-month-review__cal-day--off {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.att-month-review__cal-day--actionable {
+  cursor: pointer;
+}
+
+.att-month-review__cal-day--actionable:hover:not(:disabled) {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.att-month-review__cal-day:disabled {
+  opacity: 1;
+}
+
+.att-month-review__problems-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.att-month-review__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.att-month-review__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.att-month-review__item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.att-month-review__badge {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.35rem;
+}
+
+.att-month-review__badge--missed {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.att-month-review__badge--half {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.att-month-review__badge--relief {
+  background: #f5f3ff;
+  color: #5b21b6;
+}
+
+.att-month-review__item-date {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.att-month-review__item-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-on-surface-variant, #6b7280);
+}
+
+.att-month-review__corrected {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .att-month-review__filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .att-month-review__filter-action {
+    grid-column: 1 / -1;
+  }
+}

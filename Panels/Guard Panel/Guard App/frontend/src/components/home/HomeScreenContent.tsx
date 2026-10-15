@@ -7,6 +7,7 @@ import { firstNameFromFullName } from '../../utils/shift-display';
 import { DutyQuickActionsGrid } from './DutyQuickActionsGrid';
 import { EmergencySosPanel } from './EmergencySosPanel';
 import { GuardGreetingBanner } from './GuardGreetingBanner';
+import { IntervalCheckinBanner } from './IntervalCheckinBanner';
 import { MarkAttendanceHero } from './MarkAttendanceHero';
 import { TodayShiftStatusCard } from './TodayShiftStatusCard';
 
@@ -40,6 +41,7 @@ export function HomeScreenContent() {
         hrPhone={hrPhone}
       />
       <TodayShiftStatusCard />
+      <IntervalCheckinBanner />
       <MarkAttendanceHero />
       <DutyQuickActionsGrid />
       <EmergencySosPanel />

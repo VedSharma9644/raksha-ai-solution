@@ -79,6 +79,11 @@ export interface SiteFormValues {
 
   /** Branch this site belongs to. "" = unassigned (follows active branch on create). */
   branchId: string;
+
+  /** Client ₹ / male guard / month (string for input). */
+  clientRateMaleMonthly: string;
+  /** Client ₹ / female guard / month (string for input). */
+  clientRateFemaleMonthly: string;
 }
 
 export const EMPTY_SITE_FORM: SiteFormValues = {
@@ -101,6 +106,8 @@ export const EMPTY_SITE_FORM: SiteFormValues = {
   intervalCheckinMinutes: "",
   shifts: [],
   branchId: "",
+  clientRateMaleMonthly: "",
+  clientRateFemaleMonthly: "",
 };
 
 export const SITE_TYPE_OPTIONS = [

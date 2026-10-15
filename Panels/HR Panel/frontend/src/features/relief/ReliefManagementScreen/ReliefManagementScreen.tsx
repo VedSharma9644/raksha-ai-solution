@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
+import { SearchableSelect } from "../../../components/SearchableSelect";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
 import type { ReliefRequest, ReliefRequestStatus } from "../reliefTypes";
@@ -71,7 +72,7 @@ export function ReliefManagementScreen({
           title="Manage Relief"
           subtitle="Review remaining-shift handovers and assign a replacement guard."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to manage schedule"
         />
 
         <div className="relief-management-screen__filters">
@@ -164,26 +165,25 @@ export function ReliefManagementScreen({
                   {request.status === "pending" ? (
                     <>
                       <div className="relief-request-card__assign">
-                        <label htmlFor={`assignee-${request.id}`}>
-                          Assign replacement guard
-                        </label>
-                        <select
-                          id={`assignee-${request.id}`}
+                        <SearchableSelect
+                          label="Assign replacement guard"
+                          name={`assignee-${request.id}`}
                           value={selectedAssignee}
-                          onChange={(event) =>
+                          options={[
+                            { value: "", label: "Select guard…" },
+                            ...eligibleAssignees.map((guard) => ({
+                              value: guard.id,
+                              label: `${guard.fullName} (${guard.employeeCode})`,
+                            })),
+                          ]}
+                          onChange={(next) =>
                             setAssigneeByRequest((current) => ({
                               ...current,
-                              [request.id]: event.target.value,
+                              [request.id]: next,
                             }))
                           }
-                        >
-                          <option value="">Select guard…</option>
-                          {eligibleAssignees.map((guard) => (
-                            <option key={guard.id} value={guard.id}>
-                              {guard.fullName} ({guard.employeeCode})
-                            </option>
-                          ))}
-                        </select>
+                          searchPlaceholder="Search guard name or code…"
+                        />
                       </div>
                       <div className="relief-request-card__actions">
                         <Button

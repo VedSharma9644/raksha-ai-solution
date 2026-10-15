@@ -1,0 +1,333 @@
+.earnings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.earnings-list__panel {
+  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.earnings-list__panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.earnings-list__panel-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-on-surface, #111827);
+}
+
+.earnings-list__panel-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.earnings-list__period-chip {
+  margin: 0;
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 12%, #fff);
+  color: var(--color-primary, #0b6e4f);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.earnings-list__period {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 11rem) minmax(12rem, 16rem);
+  gap: 0.9rem;
+  align-items: start;
+  max-width: 30rem;
+  z-index: 2;
+}
+
+.earnings-list__exports {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+.earnings-list__exports-label {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.earnings-list__export-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.earnings-list__export-chip {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #f8fafc;
+  color: var(--color-on-surface, #111827);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.earnings-list__export-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 10%, #fff);
+  border-color: color-mix(in srgb, var(--color-primary, #0b6e4f) 35%, #e5e7eb);
+  color: var(--color-primary, #0b6e4f);
+}
+
+.earnings-list__export-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.earnings-list__error {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.earnings-list__hint {
+  margin: 0;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 0.9rem;
+}
+
+.earnings-list__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.earnings-list__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+  min-height: 7.25rem;
+}
+
+.earnings-list__kpi--in {
+  background: linear-gradient(160deg, #ecfdf5 0%, #fff 58%);
+  border-color: #a7f3d0;
+}
+
+.earnings-list__kpi--out {
+  background: linear-gradient(160deg, #fff7ed 0%, #fff 58%);
+  border-color: #fed7aa;
+}
+
+.earnings-list__kpi--profit {
+  background: linear-gradient(160deg, #ecfdf5 0%, #fff 55%);
+  border-color: #6ee7b7;
+}
+
+.earnings-list__kpi--loss {
+  background: linear-gradient(160deg, #fef2f2 0%, #fff 55%);
+  border-color: #fca5a5;
+}
+
+.earnings-list__kpi--break_even {
+  background: linear-gradient(160deg, #f8fafc 0%, #fff 55%);
+}
+
+.earnings-list__kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.earnings-list__kpi-value {
+  font-size: 1.45rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--color-on-surface, #111827);
+  line-height: 1.15;
+}
+
+.earnings-list__kpi-meta {
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.earnings-list__sites {
+  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+}
+
+.earnings-list__sites-head {
+  margin-bottom: 0.9rem;
+}
+
+.earnings-list__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.85rem;
+}
+
+.earnings-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.earnings-list__table th,
+.earnings-list__table td {
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  vertical-align: middle;
+}
+
+.earnings-list__table th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+  background: #f8fafc;
+  white-space: nowrap;
+}
+
+.earnings-list__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.earnings-list__table tbody tr:hover td {
+  background: color-mix(in srgb, #f8fafc 80%, transparent);
+}
+
+.earnings-list__row--loss td {
+  background: color-mix(in srgb, #fef2f2 45%, transparent);
+}
+
+.earnings-list__empty {
+  color: var(--color-text-secondary, #6b7280);
+  text-align: center !important;
+  padding: 1.5rem 1rem !important;
+}
+
+.earnings-list__site-link {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--color-primary, #0b6e4f);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.earnings-list__site-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.earnings-list__assigned {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.earnings-list__assigned span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  background: #f1f5f9;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #334155;
+}
+
+.earnings-list__num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.earnings-list__num--net {
+  font-weight: 700;
+}
+
+.earnings-list__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.earnings-list__badge--profit {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.earnings-list__badge--loss {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.earnings-list__badge--break_even {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+@media (max-width: 900px) {
+  .earnings-list__kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .earnings-list__period {
+    grid-template-columns: 1fr 1fr;
+    max-width: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .earnings-list__panel-head {
+    flex-direction: column;
+  }
+
+  .earnings-list__period {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,12 +1,13 @@
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
-import { AddSiteForm } from "../AddSiteForm";
+import { AddSiteForm, type AssignedGenderCounts } from "../AddSiteForm";
 import type { SiteFormValues } from "../siteFormTypes";
 import "./EditSiteScreen.css";
 
 export interface EditSiteScreenProps {
   initialValues: SiteFormValues;
+  assignedCounts?: AssignedGenderCounts | null;
   isSubmitting?: boolean;
   isDeleting?: boolean;
   onBack: () => void;
@@ -17,6 +18,7 @@ export interface EditSiteScreenProps {
 
 export function EditSiteScreen({
   initialValues,
+  assignedCounts = null,
   isSubmitting,
   isDeleting,
   onBack,
@@ -46,6 +48,7 @@ export function EditSiteScreen({
         <AddSiteForm
           isSubmitting={isSubmitting}
           initialValues={initialValues}
+          assignedCounts={assignedCounts}
           onCancel={onCancel}
           onSubmit={onSubmit}
         />

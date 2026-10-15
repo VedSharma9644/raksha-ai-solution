@@ -24,6 +24,11 @@ export default defineConfig({
       "@raskha/site-management": path.resolve(projectRoot, "../../../modules/Site Management/index.ts"),
       // Resolve @raskha/form-builder from TypeScript source
       "@raskha/form-builder": path.resolve(projectRoot, "../../../modules/Form Builder/index.ts"),
+      // Client-safe entry only (no firebase-admin / Node APIs in the browser)
+      "@raskha/payroll": path.resolve(projectRoot, "../../../modules/Payroll/client.ts"),
+      "@raskha/earnings": path.resolve(projectRoot, "../../../modules/Earnings/client.ts"),
+      "@raskha/invoices": path.resolve(projectRoot, "../../../modules/Invoices/client.ts"),
+      "@raskha/money-out": path.resolve(projectRoot, "../../../modules/MoneyOut/client.ts"),
       // Resolve @raskha/inventory-management from TypeScript source
       "@raskha/inventory-management": path.resolve(projectRoot, "../../../modules/Inventory Management/index.ts"),
       // Resolve @raskha/scheduling from TypeScript source

@@ -1,0 +1,180 @@
+.payroll-detail__error {
+  color: #b91c1c;
+  margin: 0 0 1rem;
+}
+
+.payroll-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.payroll-detail__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.4rem;
+}
+
+.payroll-detail__badge--finalized {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.payroll-detail__badge--paid {
+  color: #065f46;
+  background: #ecfdf5;
+}
+
+.payroll-detail__note {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.payroll-detail__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.payroll-detail__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.payroll-detail__table th,
+.payroll-detail__table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  white-space: nowrap;
+}
+
+.payroll-detail__table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #6b7280);
+  background: #f8fafc;
+}
+
+.payroll-detail__table tr:last-child td {
+  border-bottom: none;
+}
+
+.payroll-detail__pay-btn {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.payroll-detail__pay-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.payroll-detail__pay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payroll-detail__paid-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.payroll-detail__row--needs-fix td {
+  background: color-mix(in srgb, #fef3c7 55%, transparent);
+}
+
+.payroll-detail__fix-att {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.payroll-detail__fix-att:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.payroll-detail__fix-att:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payroll-detail__fix-att--alert {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.payroll-detail__salary-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.payroll-detail__salary-input {
+  width: 6.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+.payroll-detail__salary-save {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.payroll-detail__salary-save:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.payroll-detail__salary-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.payroll-detail__salary-print-only {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .payroll-detail__salary-print-only {
+    display: inline !important;
+  }
+
+  .payroll-detail__table-wrap {
+    border: none;
+  }
+}

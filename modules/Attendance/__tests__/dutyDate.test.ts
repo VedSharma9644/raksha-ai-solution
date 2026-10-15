@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertPunchInWithinLateWindow,
   evaluatePunchInPunctuality,
   formatIstPunchTime,
   toDutyDateKey,
@@ -41,5 +42,23 @@ describe("evaluatePunchInPunctuality", () => {
     });
     expect(result.punchInStatus).toBe("Late");
     expect(result.minutesLate).toBe(12);
+  });
+
+  it("allows punch-in within 15 minutes after shift start", () => {
+    expect(() =>
+      assertPunchInWithinLateWindow({
+        punchedAt: new Date("2026-10-08T02:45:00.000Z"), // 08:15 IST
+        shiftFrom: "08:00",
+      })
+    ).not.toThrow();
+  });
+
+  it("blocks punch-in more than 15 minutes after shift start", () => {
+    expect(() =>
+      assertPunchInWithinLateWindow({
+        punchedAt: new Date("2026-10-08T02:46:00.000Z"), // 08:16 IST
+        shiftFrom: "08:00",
+      })
+    ).toThrow(/Punch-in closed/i);
   });
 });

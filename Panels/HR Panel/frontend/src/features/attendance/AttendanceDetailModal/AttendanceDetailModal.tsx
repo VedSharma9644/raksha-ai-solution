@@ -117,6 +117,11 @@ function TlIntervalRow({ ci, onExpand }: TlIntervalProps) {
           <div className="att-tl-content__info">
             <span className="att-tl-event">Check-in #{ci.sequenceNumber}</span>
             <span className="att-tl-time">{ci.checkinTime}</span>
+            {ci.punctuality === "late" ? (
+              <span className="att-tl-geo att-tl-geo--failed">Late</span>
+            ) : (
+              <span className="att-tl-geo att-tl-geo--passed">On time</span>
+            )}
             <span className={`att-tl-geo att-tl-geo--${ci.geofenceStatus}`}>
               {GEO_LABEL[ci.geofenceStatus]}
             </span>

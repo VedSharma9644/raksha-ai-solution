@@ -76,10 +76,12 @@ export interface PunchInResult {
   geofenceResult: string;
   selfieUrl: string;
   shiftStatus: ShiftStatus;
-  /** Present when this DTO represents a completed punch-out. */
-  mode?: "punch_in" | "punch_out";
+  /** Present when this DTO represents a completed punch-out or interval check-in. */
+  mode?: "punch_in" | "punch_out" | "interval_checkin";
   punchOutTime?: string;
   durationLabel?: string;
+  checkinPunctuality?: "on_time" | "late";
+  sequenceNumber?: number;
 }
 
 export type PunchOutResult = PunchInResult;

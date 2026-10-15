@@ -6,6 +6,8 @@ import type { SiteGeofenceInput } from "./geofence";
 export type SiteGeofenceContext = SiteGeofenceInput & {
   siteId: string;
   siteName: string;
+  /** Minutes between required mid-shift photo check-ins; null = disabled. */
+  intervalCheckinMinutes: number | null;
 };
 
 function toNumber(value: unknown): number | null {
@@ -40,6 +42,7 @@ export async function getSiteGeofenceById(
   }
 
   const data = snap.data() ?? {};
+  const intervalRaw = toNumber(data.intervalCheckinMinutes);
   return {
     siteId: snap.id,
     siteName:
@@ -49,5 +52,7 @@ export async function getSiteGeofenceById(
     latitude: toNumber(data.latitude),
     longitude: toNumber(data.longitude),
     geofenceRadiusMeters: toNumber(data.geofenceRadiusMeters),
+    intervalCheckinMinutes:
+      intervalRaw !== null && intervalRaw >= 5 ? Math.floor(intervalRaw) : null,
   };
 }

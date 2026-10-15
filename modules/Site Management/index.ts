@@ -1,5 +1,7 @@
 export {
   SITES_COLLECTION,
+  computeSiteClientRevenueMonthly,
+  sumShiftGenderRequirements,
   type Site,
   type SiteStatus,
   type SiteType,

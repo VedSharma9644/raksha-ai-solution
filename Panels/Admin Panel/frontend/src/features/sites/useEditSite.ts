@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { listGuardsByAgency } from "@raskha/guard-management";
 import { getSiteById } from "@raskha/site-management";
 import type { Site, SiteShiftConfig, SiteShift } from "@raskha/site-management";
 import { db, auth } from "../../lib/firebase";
+import type { AssignedGenderCounts } from "./AddSiteForm/AddSiteForm";
 import type { SiteFormValues, SiteShiftRowValues } from "./siteFormTypes";
 
 const ADMIN_BACKEND_URL =
@@ -37,6 +39,8 @@ function buildShiftConfig(values: SiteFormValues): SiteShiftConfig | null {
 export function useEditSite(siteId: string) {
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
+  const [assignedCounts, setAssignedCounts] =
+    useState<AssignedGenderCounts | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -49,9 +53,31 @@ export function useEditSite(siteId: string) {
     setLoadError("");
 
     getSiteById(db, siteId)
-      .then((data) => {
-        if (!data) setLoadError("Site not found.");
-        else setSite(data);
+      .then(async (data) => {
+        if (!data) {
+          setLoadError("Site not found.");
+          setAssignedCounts(null);
+          return;
+        }
+        setSite(data);
+        try {
+          const guards = await listGuardsByAgency(db, data.agencyId);
+          const assigned = guards.filter((g) => g.assignedSiteId === siteId);
+          const counts: AssignedGenderCounts = {
+            male: 0,
+            female: 0,
+            other: 0,
+          };
+          for (const g of assigned) {
+            const gender = String(g.gender ?? "").toLowerCase();
+            if (gender === "female") counts.female += 1;
+            else if (gender === "other") counts.other += 1;
+            else counts.male += 1;
+          }
+          setAssignedCounts(counts);
+        } catch {
+          setAssignedCounts(null);
+        }
       })
       .catch((err: unknown) => {
         const e = err as { message?: string };
@@ -95,6 +121,13 @@ export function useEditSite(siteId: string) {
           intervalCheckinMinutes: intervalMin,
           shiftConfig: buildShiftConfig(values),
           branchId: values.branchId || null,
+          clientRateMaleMonthly:
+            Number(String(values.clientRateMaleMonthly).replace(/[^\d.]/g, "")) ||
+            0,
+          clientRateFemaleMonthly:
+            Number(
+              String(values.clientRateFemaleMonthly).replace(/[^\d.]/g, "")
+            ) || 0,
         }),
       });
 
@@ -135,6 +168,14 @@ export function useEditSite(siteId: string) {
           site.intervalCheckinMinutes != null
             ? String(site.intervalCheckinMinutes)
             : "",
+        clientRateMaleMonthly:
+          site.clientRateMaleMonthly != null
+            ? String(site.clientRateMaleMonthly)
+            : "",
+        clientRateFemaleMonthly:
+          site.clientRateFemaleMonthly != null
+            ? String(site.clientRateFemaleMonthly)
+            : "",
         shifts: (site.shiftConfig?.shifts ?? []).map(
           (s): SiteShiftRowValues => ({
             id: s.id,
@@ -151,5 +192,14 @@ export function useEditSite(siteId: string) {
       }
     : undefined;
 
-  return { site, initialValues, isLoading, isSubmitting, loadError, saveError, saveSite };
+  return {
+    site,
+    initialValues,
+    assignedCounts,
+    isLoading,
+    isSubmitting,
+    loadError,
+    saveError,
+    saveSite,
+  };
 }

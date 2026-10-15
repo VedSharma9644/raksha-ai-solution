@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { Button } from "../../../components/Button";
+import { useConfirmDialog } from "../../../components/ConfirmDialog";
 import type { ProspectGuard } from "@raskha/guard-management";
 import { AddProspectGuardModal } from "../AddProspectGuardModal/AddProspectGuardModal";
 import type { ProspectGuardFormValues } from "../prospectGuardFormTypes";
@@ -91,6 +92,7 @@ export function ProspectGuardDetailScreen({
   onDeleteNote,
   onDeleteGuard,
 }: ProspectGuardDetailScreenProps) {
+  const { confirm } = useConfirmDialog();
   const [showEditModal, setShowEditModal] = useState(false);
   const [newNote, setNewNote] = useState("");
 
@@ -127,9 +129,16 @@ export function ProspectGuardDetailScreen({
               </Button>
               <Button
                 onClick={() => {
-                  if (confirm(`Delete "${guard.fullName}"? All notes will also be deleted. This cannot be undone.`)) {
-                    onDeleteGuard();
-                  }
+                  void (async () => {
+                    const ok = await confirm({
+                      title: "Delete prospect guard?",
+                      message: `Delete "${guard.fullName}"? All notes will also be deleted. This cannot be undone.`,
+                      confirmLabel: "Delete",
+                      cancelLabel: "Cancel",
+                      tone: "danger",
+                    });
+                    if (ok) onDeleteGuard();
+                  })();
                 }}
                 variant="ghost"
                 size="medium"
@@ -279,7 +288,16 @@ export function ProspectGuardDetailScreen({
                           className="guard-timeline-item__delete"
                           title="Delete note"
                           onClick={() => {
-                            if (confirm("Delete this note?")) onDeleteNote(note.id);
+                            void (async () => {
+                              const ok = await confirm({
+                                title: "Delete note?",
+                                message: "Delete this note? This cannot be undone.",
+                                confirmLabel: "Delete",
+                                cancelLabel: "Cancel",
+                                tone: "danger",
+                              });
+                              if (ok) onDeleteNote(note.id);
+                            })();
                           }}
                         >
                           ✕

@@ -1,5 +1,19 @@
 .add-site-form {
   width: 100%;
+  max-width: none;
+}
+
+.add-site-form .form-panel--wide {
+  width: 100%;
+}
+
+.add-site-form .text-area-field {
+  grid-column: 1 / -1;
+}
+
+.add-site-form .shift-config,
+.add-site-form .site-location-picker {
+  width: 100%;
 }
 
 .add-site-form__section-label {
@@ -8,10 +22,44 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-secondary, #6b7280);
-  margin-block-start: 1.5rem;
-  margin-block-end: 0.25rem;
-  padding-block-end: 0.5rem;
+  margin-block-start: 0.75rem;
+  margin-block-end: 0.15rem;
+  padding-block-end: 0.4rem;
   border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.add-site-form__hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.add-site-form__revenue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.35rem 0 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, #ecfdf5 55%, transparent);
+}
+
+.add-site-form__revenue-label {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.add-site-form__revenue-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-on-surface, #111827);
+}
+
+.add-site-form__revenue-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #6b7280);
 }
 
 /* ── Shift Configuration ──────────────────────────────────────────────────── */

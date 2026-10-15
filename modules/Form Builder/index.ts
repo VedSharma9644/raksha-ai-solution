@@ -1,5 +1,6 @@
 // Form field types
 export type { FormFieldType, SelectOption, FormField } from "./formField";
+export { isLayoutField } from "./formField";
 
 // Form schema model
 export type { FormType, FormSchema } from "./formSchema";

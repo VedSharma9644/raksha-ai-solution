@@ -7,6 +7,7 @@ import "./AddGuardScreen.css";
 export interface AddGuardScreenProps {
   isSubmitting?: boolean;
   isNew?: boolean;
+  excludeGuardId?: string;
   onBack: () => void;
   onCancel: () => void;
   onSubmit: (values: GuardFormValues) => void | Promise<void>;
@@ -15,6 +16,7 @@ export interface AddGuardScreenProps {
 export function AddGuardScreen({
   isSubmitting,
   isNew = false,
+  excludeGuardId,
   onBack,
   onCancel,
   onSubmit,
@@ -26,10 +28,11 @@ export function AddGuardScreen({
           title="Add Guard"
           subtitle="Create a guard profile. Site assignment is managed by the Agency Panel."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to guards"
         />
         <AddGuardForm
           isNew={isNew}
+          excludeGuardId={excludeGuardId}
           isSubmitting={isSubmitting}
           onCancel={onCancel}
           onSubmit={onSubmit}

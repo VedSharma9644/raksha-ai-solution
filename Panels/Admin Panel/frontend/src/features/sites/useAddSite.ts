@@ -86,6 +86,13 @@ export function useAddSite() {
           intervalCheckinMinutes: intervalMin,
           shiftConfig: buildShiftConfig(values),
           branchId: values.branchId || activeBranchId || null,
+          clientRateMaleMonthly:
+            Number(String(values.clientRateMaleMonthly).replace(/[^\d.]/g, "")) ||
+            0,
+          clientRateFemaleMonthly:
+            Number(
+              String(values.clientRateFemaleMonthly).replace(/[^\d.]/g, "")
+            ) || 0,
         }),
       });
 

@@ -2,6 +2,7 @@ export interface GuardFormValues {
   // Personal
   fullName: string;
   fatherName: string;
+  motherName: string;
   gender: "male" | "female" | "other" | "";
   phone: string;
   email: string;
@@ -21,6 +22,7 @@ export interface GuardFormValues {
   experience: string;
   education: string;
   assignedSiteId: string;
+  weeklyOffDays: string[];
 
   // Preferences
   guardType: "ex-serviceman" | "civilian" | "";
@@ -59,6 +61,7 @@ export interface GuardFormValues {
 export const EMPTY_GUARD_FORM: GuardFormValues = {
   fullName: "",
   fatherName: "",
+  motherName: "",
   gender: "",
   phone: "",
   email: "",
@@ -74,6 +77,7 @@ export const EMPTY_GUARD_FORM: GuardFormValues = {
   experience: "",
   education: "",
   assignedSiteId: "",
+  weeklyOffDays: [],
   guardType: "",
   interestedCity: "",
   shiftFrom: "",

@@ -43,7 +43,7 @@ export function ProspectGuardsPage() {
         guards={guards}
         isLoading={loading}
         error={error}
-        onBack={() => navigate(APP_ROUTES.dashboard)}
+        onBack={() => navigate(APP_ROUTES.prospectLeads)}
         onAdd={() => setModalGuard(null)}
         onView={(id) => navigate(prospectGuardDetailPath(id))}
         onEdit={(g) => setModalGuard(g)}

@@ -19,7 +19,9 @@ import { AttendancePage } from "../pages/AttendancePage";
 import { SchedulingPage } from "../pages/SchedulingPage";
 import { ProspectGuardsPage } from "../pages/ProspectGuardsPage";
 import { ProspectGuardDetailPage } from "../pages/ProspectGuardDetailPage";
+import { ManageSchedulePage } from "../pages/ManageSchedulePage";
 import { LoginPage } from "../pages/LoginPage";
+import { GeneralSettingsPage } from "../pages/GeneralSettingsPage";
 import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -101,6 +103,14 @@ export function AppRouter() {
         }
       />
       <Route
+        path={APP_ROUTES.generalSettings}
+        element={
+          <ModuleRoute>
+            <GeneralSettingsPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
         path={APP_ROUTES.addGuard}
         element={
           <ModuleRoute>
@@ -145,6 +155,14 @@ export function AppRouter() {
         element={
           <ModuleRoute>
             <EditInventoryItemPage />
+          </ModuleRoute>
+        }
+      />
+      <Route
+        path={APP_ROUTES.manageSchedule}
+        element={
+          <ModuleRoute>
+            <ManageSchedulePage />
           </ModuleRoute>
         }
       />

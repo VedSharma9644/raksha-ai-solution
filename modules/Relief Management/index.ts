@@ -30,3 +30,5 @@ export {
   type DecideReliefParams,
   type DecideReliefResult,
 } from "./agencyRelief";
+
+export { assertReliefAssigneeAvailable } from "./reliefAssigneeAvailability";

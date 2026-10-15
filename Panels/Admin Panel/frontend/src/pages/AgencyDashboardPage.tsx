@@ -11,26 +11,21 @@ const DASHBOARD_ACTION_ROUTES: Partial<
   Record<DashboardActionId, string>
 > = {
   "form-builder": APP_ROUTES.formBuilder,
-  "add-guard": APP_ROUTES.addGuard,
-  "add-site": APP_ROUTES.addSite,
   "site-list": APP_ROUTES.siteList,
   "employee-guard-list": APP_ROUTES.employeeList,
-  "add-hr": APP_ROUTES.addHrStaff,
   "hr-list": APP_ROUTES.hrList,
   "manage-inventory": APP_ROUTES.inventoryList,
-  attendance: APP_ROUTES.attendance,
-  "manage-leave": APP_ROUTES.manageLeave,
-  "manage-relief": APP_ROUTES.manageRelief,
-  scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
-  "prospect-clients": APP_ROUTES.prospects,
-  "prospect-guards": APP_ROUTES.prospectGuards,
+  "manage-schedule": APP_ROUTES.manageSchedule,
+  "prospect-leads": APP_ROUTES.prospectLeads,
   branches: APP_ROUTES.branchList,
+  "payment-management": APP_ROUTES.paymentManagement,
 };
 
 export function AgencyDashboardPage() {
   const navigate = useNavigate();
   const { refreshAgency } = useAuthContext();
-  const { isActionEnabled, isNotificationActionEnabled } = useEnabledModules();
+  const { hasModule, isActionEnabled, isNotificationActionEnabled } =
+    useEnabledModules();
   const {
     notifications,
     markRead,
@@ -48,8 +43,21 @@ export function AgencyDashboardPage() {
   }, [refreshAgency]);
 
   const visibleActions = useMemo(
-    () => DASHBOARD_ACTIONS.filter((action) => isActionEnabled(action.id)),
-    [isActionEnabled],
+    () =>
+      DASHBOARD_ACTIONS.filter((action) => {
+        if (action.id === "payment-management") {
+          return hasModule("payroll") || hasModule("site_management");
+        }
+        if (action.id === "manage-schedule") {
+          return (
+            hasModule("attendance") ||
+            hasModule("leave") ||
+            hasModule("site_management")
+          );
+        }
+        return isActionEnabled(action.id);
+      }),
+    [hasModule, isActionEnabled],
   );
 
   const visibleNotifications = useMemo(

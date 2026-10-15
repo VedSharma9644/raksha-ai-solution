@@ -1,0 +1,147 @@
+.earnings-period-select {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+}
+
+.earnings-period-select__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.earnings-period-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.55rem 0.85rem 0.55rem 1rem;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: var(--color-on-surface, #111827);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+
+.earnings-period-select__trigger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary, #0b6e4f) 35%, #e5e7eb);
+  background: #fff;
+}
+
+.earnings-period-select__trigger:focus-visible {
+  outline: none;
+  border-color: var(--color-primary, #0b6e4f);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #0b6e4f) 18%, transparent);
+}
+
+.earnings-period-select--open .earnings-period-select__trigger {
+  border-color: var(--color-primary, #0b6e4f);
+  background: #fff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #0b6e4f) 14%, transparent);
+}
+
+.earnings-period-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.earnings-period-select__chevron {
+  display: inline-flex;
+  color: var(--color-text-secondary, #6b7280);
+  transition: transform 160ms ease;
+  flex-shrink: 0;
+}
+
+.earnings-period-select--open .earnings-period-select__chevron {
+  transform: rotate(180deg);
+  color: var(--color-primary, #0b6e4f);
+}
+
+.earnings-period-select__menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.9rem;
+  background: #fff;
+  box-shadow:
+    0 12px 28px rgb(15 23 42 / 12%),
+    0 2px 6px rgb(15 23 42 / 6%);
+  animation: earnings-period-menu-in 160ms ease both;
+}
+
+@keyframes earnings-period-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.earnings-period-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--color-on-surface, #111827);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.earnings-period-select__option:hover,
+.earnings-period-select__option:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 10%, #fff);
+}
+
+.earnings-period-select__option--selected {
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 12%, #fff);
+  color: var(--color-primary, #0b6e4f);
+  font-weight: 700;
+}
+
+.earnings-period-select__check {
+  font-size: 0.85rem;
+  color: var(--color-primary, #0b6e4f);
+}
+
+.earnings-period-select--disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

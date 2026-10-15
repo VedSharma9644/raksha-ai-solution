@@ -22,6 +22,16 @@ export {
 } from "./guardAuth";
 
 export {
+  normalizeGuardPhone,
+  normalizeGuardEmail,
+  guardPhoneLookupVariants,
+  checkGuardPhoneAvailability,
+  checkGuardEmailAvailability,
+  assertGuardContactUnique,
+  type GuardContactAvailability,
+} from "./guardUniqueness";
+
+export {
   PROSPECT_GUARDS_COLLECTION,
   PROSPECT_GUARD_NOTES_SUBCOLLECTION,
   type ProspectGuard,

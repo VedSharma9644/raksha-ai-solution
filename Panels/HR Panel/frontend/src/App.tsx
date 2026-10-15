@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
 import { AppRouter } from "./app/AppRouter";
+import { ConfirmDialogProvider } from "./components/ConfirmDialog";
 import { AuthProvider } from "./features/authentication";
 import { BranchProvider } from "./features/branches";
 
@@ -8,7 +9,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <BranchProvider>
-          <AppRouter />
+          <ConfirmDialogProvider>
+            <AppRouter />
+          </ConfirmDialogProvider>
         </BranchProvider>
       </AuthProvider>
     </BrowserRouter>

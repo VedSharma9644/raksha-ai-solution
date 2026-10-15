@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { APP_ROUTES } from "../app/routePaths";
 import { AddHrStaffScreen, useAddHrStaff } from "../features/hrStaff";
 import type { HrStaffFormValues } from "../features/hrStaff";
 import { EMPTY_HR_STAFF_FORM } from "../features/hrStaff/HrStaffForm/HrStaffForm";
@@ -26,7 +27,7 @@ export function AddHrStaffPage() {
   );
 
   function goBack() {
-    navigate("/dashboard");
+    navigate(APP_ROUTES.hrList);
   }
 
   if (isStatusLoading) {
@@ -62,7 +63,7 @@ export function AddHrStaffPage() {
           title="Add HR Staff"
           subtitle="Fill in the custom form for this agency."
           onBack={goBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to HR"
         />
         {error || formError ? (
           <p role="alert" style={{ color: "red", padding: "1rem" }}>

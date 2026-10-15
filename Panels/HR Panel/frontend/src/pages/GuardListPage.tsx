@@ -54,6 +54,7 @@ export function GuardListPage() {
       <GuardListScreen
         guards={guards}
         onBack={() => navigate(APP_ROUTES.dashboard)}
+        onAddGuard={() => navigate(APP_ROUTES.addGuard)}
         onViewGuard={(guardId) => navigate(viewGuardPath(guardId))}
         onDeleteGuard={(guardId) => {
           const guard = guards.find((g) => g.id === guardId);

@@ -1,0 +1,134 @@
+.att-correction-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.att-correction-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: att-correction-in 220ms ease both;
+}
+
+@keyframes att-correction-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.att-correction-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.att-correction-modal__title {
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-on-surface);
+  margin: 0 0 0.35rem;
+}
+
+.att-correction-modal__subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-on-surface-variant);
+}
+
+.att-correction-modal__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--color-on-surface-variant);
+  padding: 0.25rem;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.att-correction-modal__close:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-on-surface);
+}
+
+.att-correction-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.5rem;
+}
+
+.att-correction-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.att-correction-modal__date-label {
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--color-on-surface);
+}
+
+.att-correction-modal__date-input {
+  font: inherit;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+.att-correction-modal__existing {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+}
+
+.att-correction-modal__error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.att-correction-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.att-correction-modal__actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}

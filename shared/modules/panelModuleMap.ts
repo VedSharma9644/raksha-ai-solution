@@ -23,29 +23,20 @@ export type PlatformModuleId = (typeof PLATFORM_MODULE_IDS)[number];
  */
 export const ADMIN_DASHBOARD_ACTION_MODULE: Record<string, PlatformModuleId> = {
   "form-builder": "form_builder",
-  "add-guard": "employee_management",
   "employee-guard-list": "employee_management",
-  "add-hr": "employee_management",
   "hr-list": "employee_management",
-  "add-site": "site_management",
   "site-list": "site_management",
   "manage-inventory": "inventory",
-  attendance: "attendance",
-  "manage-leave": "leave",
-  "manage-relief": "leave",
 };
 
 /**
  * HR dashboard action id → required module.
  */
 export const HR_DASHBOARD_ACTION_MODULE: Record<string, PlatformModuleId> = {
-  "add-guard": "employee_management",
   "guard-list": "employee_management",
   "site-list": "site_management",
   "manage-inventory": "inventory",
-  "manage-leave": "leave",
-  "manage-relief": "leave",
-  attendance: "attendance",
+  "prospect-guards": "employee_management",
 };
 
 /** Admin app paths (path patterns) → required module. */
@@ -79,6 +70,22 @@ export const ADMIN_ROUTE_MODULE: Array<{
     match: (p) => p.startsWith("/relief"),
     moduleId: "leave",
   },
+  {
+    match: (p) => p === "/general-settings" || p.startsWith("/payroll"),
+    moduleId: "payroll",
+  },
+  {
+    match: (p) => p.startsWith("/earnings"),
+    moduleId: "site_management",
+  },
+  {
+    match: (p) => p.startsWith("/invoices"),
+    moduleId: "site_management",
+  },
+  {
+    match: (p) => p.startsWith("/money-out"),
+    moduleId: "site_management",
+  },
 ];
 
 /** HR app paths → required module. */
@@ -109,6 +116,10 @@ export const HR_ROUTE_MODULE: Array<{
   {
     match: (p) => p === "/attendance",
     moduleId: "attendance",
+  },
+  {
+    match: (p) => p === "/general-settings",
+    moduleId: "payroll",
   },
 ];
 

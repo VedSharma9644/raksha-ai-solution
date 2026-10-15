@@ -113,7 +113,8 @@ export function GuardProfileModal({ guard, onClose }: GuardProfileModalProps) {
         <div className="guard-profile-modal__body">
           <SectionHeading title="Personal Details" />
           <div className="guard-profile-modal__info-grid">
-            <InfoRow label="Father's Name" value={guard.fatherName} />
+            <InfoRow label="Father's Name" value={guard.fatherName ?? ""} />
+            <InfoRow label="Mother's Name" value={guard.motherName ?? ""} />
             <InfoRow label="Mobile" value={guard.phone} />
             <InfoRow label="Email" value={guard.email} />
             <InfoRow label="Caste" value={guard.caste} />

@@ -1,5 +1,8 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  computeSiteClientRevenueMonthly,
+} from "@raskha/site-management";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
 import { SelectField } from "../../../components/SelectField";
@@ -17,16 +20,30 @@ const SHIFT_TYPE_OPTIONS = [
   { value: "custom", label: "Custom" },
 ];
 
+export type AssignedGenderCounts = {
+  male: number;
+  female: number;
+  other: number;
+};
+
 export interface AddSiteFormProps {
   isSubmitting?: boolean;
   initialValues?: SiteFormValues;
+  /** When editing a site with assigned guards, prefer these for the revenue total. */
+  assignedCounts?: AssignedGenderCounts | null;
   onSubmit: (values: SiteFormValues) => void | Promise<void>;
   onCancel: () => void;
+}
+
+function parseMoneyInput(raw: string): number {
+  const n = Number(String(raw).replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : NaN;
 }
 
 export function AddSiteForm({
   isSubmitting = false,
   initialValues,
+  assignedCounts = null,
   onSubmit,
   onCancel,
 }: AddSiteFormProps) {
@@ -70,6 +87,15 @@ export function AddSiteForm({
     if (!values.managerName.trim()) nextErrors.managerName = "Enter the manager name.";
     if (!values.managerContact.trim()) nextErrors.managerContact = "Enter the manager contact number.";
 
+    const maleRate = parseMoneyInput(values.clientRateMaleMonthly);
+    const femaleRate = parseMoneyInput(values.clientRateFemaleMonthly);
+    if (!Number.isFinite(maleRate) || maleRate < 0) {
+      nextErrors.clientRateMaleMonthly = "Enter a valid male rate (₹ / month).";
+    }
+    if (!Number.isFinite(femaleRate) || femaleRate < 0) {
+      nextErrors.clientRateFemaleMonthly = "Enter a valid female rate (₹ / month).";
+    }
+
     // Validate shift rows
     values.shifts.forEach((s, i) => {
       if (!s.label.trim()) nextErrors[`shift_label_${i}`] = "Enter shift name.";
@@ -101,12 +127,45 @@ export function AddSiteForm({
       contactPerson: values.contactPerson.trim(),
       contactPhone: values.contactPhone.trim(),
       notes: values.notes.trim(),
+      clientRateMaleMonthly: String(parseMoneyInput(values.clientRateMaleMonthly) || 0),
+      clientRateFemaleMonthly: String(
+        parseMoneyInput(values.clientRateFemaleMonthly) || 0
+      ),
     });
   }
 
+  const requiredCounts = useMemo(() => {
+    let male = 0;
+    let female = 0;
+    let other = 0;
+    for (const s of values.shifts) {
+      male += parseInt(s.requiredMale, 10) || 0;
+      female += parseInt(s.requiredFemale, 10) || 0;
+      other += parseInt(s.requiredOther, 10) || 0;
+    }
+    return { male, female, other };
+  }, [values.shifts]);
+
+  const useAssigned =
+    assignedCounts != null &&
+    assignedCounts.male + assignedCounts.female + assignedCounts.other > 0;
+  const headcount = useAssigned ? assignedCounts! : requiredCounts;
+  const maleRate = parseMoneyInput(values.clientRateMaleMonthly);
+  const femaleRate = parseMoneyInput(values.clientRateFemaleMonthly);
+  const monthlyClientPay =
+    Number.isFinite(maleRate) && Number.isFinite(femaleRate)
+      ? computeSiteClientRevenueMonthly({
+          maleRate,
+          femaleRate,
+          maleCount: headcount.male,
+          femaleCount: headcount.female,
+          otherCount: headcount.other,
+        })
+      : 0;
+
   return (
     <form className="add-site-form" onSubmit={handleSubmit} noValidate>
-      <FormPanel>
+      <FormPanel className="form-panel--wide">
 
         {/* ── Site Details ── */}
         <p className="add-site-form__section-label">Site Details</p>
@@ -162,6 +221,53 @@ export function AddSiteForm({
           required
           disabled={isSubmitting}
         />
+
+        <p className="add-site-form__section-label">Client billing</p>
+        <p className="add-site-form__hint">
+          What the client pays per guard each month. Total uses required
+          strength until guards are assigned, then switches to assigned counts.
+        </p>
+        <div className="form-panel__grid">
+          <TextField
+            label="Male rate (₹ / month)"
+            name="clientRateMaleMonthly"
+            value={values.clientRateMaleMonthly}
+            onChange={(e) => updateField("clientRateMaleMonthly", e.target.value)}
+            errorMessage={errors.clientRateMaleMonthly}
+            required
+            disabled={isSubmitting}
+            inputMode="decimal"
+          />
+          <TextField
+            label="Female rate (₹ / month)"
+            name="clientRateFemaleMonthly"
+            value={values.clientRateFemaleMonthly}
+            onChange={(e) =>
+              updateField("clientRateFemaleMonthly", e.target.value)
+            }
+            errorMessage={errors.clientRateFemaleMonthly}
+            required
+            disabled={isSubmitting}
+            inputMode="decimal"
+          />
+        </div>
+        <div className="add-site-form__revenue" aria-live="polite">
+          <span className="add-site-form__revenue-label">
+            {useAssigned
+              ? "Monthly client pay (based on assigned guards)"
+              : "Estimated monthly client pay (required strength)"}
+          </span>
+          <strong className="add-site-form__revenue-value">
+            ₹
+            {monthlyClientPay.toLocaleString("en-IN", {
+              maximumFractionDigits: 2,
+            })}
+          </strong>
+          <span className="add-site-form__revenue-meta">
+            {headcount.male} male · {headcount.female} female
+            {headcount.other > 0 ? ` · ${headcount.other} other` : ""}
+          </span>
+        </div>
 
         {/* ── Section: Location ── */}
         <p className="add-site-form__section-label">Location</p>

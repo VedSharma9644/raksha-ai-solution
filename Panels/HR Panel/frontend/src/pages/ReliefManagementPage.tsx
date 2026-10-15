@@ -28,7 +28,7 @@ export function ReliefManagementPage() {
       isLoading={isLoading || guardsLoading}
       error={error}
       updatingId={isUpdatingId}
-      onBack={() => navigate(APP_ROUTES.dashboard)}
+      onBack={() => navigate(APP_ROUTES.manageSchedule)}
       onUpdateStatus={(reliefId, status, assignedGuardId) => {
         void updateStatus(reliefId, status, assignedGuardId);
       }}

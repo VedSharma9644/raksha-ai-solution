@@ -5,6 +5,7 @@
   "main": "index.ts",
   "dependencies": {
     "@raskha/attendance": "1.0.0",
+    "@raskha/scheduling": "1.0.0",
     "firebase-admin": "^14.5.0"
   }
 }

@@ -18,7 +18,12 @@ export type FormFieldType =
   /** Renders the full shift configuration section (slots, 24h toggle, interval check-in) */
   | "shiftConfig"
   /** Renders circular profile photo upload with initials fallback */
-  | "profilePicture";
+  | "profilePicture"
+  /**
+   * Visual section heading only (e.g. "Personal Details").
+   * Not collected as form data and never required.
+   */
+  | "section";
 
 export interface SelectOption {
   value: string;
@@ -41,4 +46,9 @@ export interface FormField {
   options?: SelectOption[];
   /** Display order (1-based, ascending) */
   order: number;
+}
+
+/** True for layout-only entries that do not store a value. */
+export function isLayoutField(field: Pick<FormField, "type">): boolean {
+  return field.type === "section";
 }

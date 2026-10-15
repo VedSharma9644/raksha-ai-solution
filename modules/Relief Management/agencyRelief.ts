@@ -9,6 +9,7 @@ import {
   type ReliefRequestRecord,
   type ReliefRequestStatus,
 } from "./relief";
+import { assertReliefAssigneeAvailable } from "./reliefAssigneeAvailability";
 import { asData, isReliefMethod, isReliefReason, mapRecord } from "./reliefService";
 
 /**
@@ -266,6 +267,14 @@ export async function decideReliefRequest(
 
   const assignedGuardName = String(assignee.fullName ?? "").trim() || "Guard";
   const assignedEmployeeCode = String(assignee.employeeCode ?? "").trim();
+
+  await assertReliefAssigneeAvailable({
+    agencyId,
+    assignedGuardId,
+    dutyDate,
+    reliefSiteId: String(data.siteId ?? ""),
+    reliefSiteName: String(data.siteName ?? ""),
+  });
 
   await ref.update({
     status: "approved",

@@ -27,6 +27,7 @@ export interface AddStaffMemberScreenProps {
   initialValues?: StaffMemberFormValues;
   isSubmitting?: boolean;
   isNew?: boolean;
+  excludeGuardId?: string;
   onBack: () => void;
   onCancel: () => void;
   onSubmit: (values: StaffMemberFormValues) => void | Promise<void>;
@@ -37,6 +38,7 @@ export function AddStaffMemberScreen({
   initialValues,
   isSubmitting,
   isNew = false,
+  excludeGuardId,
   onBack,
   onCancel,
   onSubmit,
@@ -50,13 +52,20 @@ export function AddStaffMemberScreen({
           title={copy.title}
           subtitle={copy.subtitle}
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel={
+            role === "guard"
+              ? "Back to guards"
+              : role === "hr"
+                ? "Back to HR"
+                : "Back to dashboard"
+          }
         />
         <StaffMemberForm
           role={role}
           initialValues={initialValues}
           isSubmitting={isSubmitting}
           isNew={isNew}
+          excludeGuardId={excludeGuardId}
           onCancel={onCancel}
           onSubmit={onSubmit}
         />

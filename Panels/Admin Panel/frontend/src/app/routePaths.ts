@@ -2,6 +2,17 @@ export const APP_ROUTES = {
   login: "/",
   dashboard: "/dashboard",
   formBuilder: "/form-builder",
+  generalSettings: "/general-settings",
+  payroll: "/payroll",
+  payrollRunDetail: "/payroll/:runId",
+  earnings: "/earnings",
+  earningsSiteDetail: "/earnings/sites/:siteId",
+  invoices: "/invoices",
+  invoiceDetail: "/invoices/:invoiceId",
+  invoiceSettings: "/invoices/settings",
+  moneyOut: "/money-out",
+  paymentManagement: "/payment-management",
+  manageSchedule: "/manage-schedule",
   // Guards
   addGuard: "/guards/add",
   viewGuard: "/guards/:id",
@@ -29,6 +40,8 @@ export const APP_ROUTES = {
   manageRelief: "/relief",
   // Scheduling
   scheduling: "/scheduling/:siteId",
+  // Prospect leads hub
+  prospectLeads: "/prospect-leads",
   // Prospect Clients
   prospects: "/prospects",
   prospectDetail: "/prospects/:id",
@@ -95,4 +108,48 @@ export function prospectGuardDetailPath(guardId: string): string {
 /** Build the edit-branch URL for a specific branch */
 export function editBranchPath(branchId: string): string {
   return `/branches/${branchId}/edit`;
+}
+
+/** Build the payroll run detail URL */
+export function payrollRunPath(runId: string): string {
+  return `/payroll/${runId}`;
+}
+
+/** Build earnings site detail URL with optional month query. */
+export function earningsSitePath(
+  siteId: string,
+  opts?: { year?: number; month?: number }
+): string {
+  const base = `/earnings/sites/${encodeURIComponent(siteId)}`;
+  if (opts?.year == null || opts?.month == null) return base;
+  const qs = new URLSearchParams({
+    year: String(opts.year),
+    month: String(opts.month),
+  });
+  return `${base}?${qs}`;
+}
+
+/** Build invoice detail URL */
+export function invoiceDetailPath(invoiceId: string): string {
+  return `/invoices/${encodeURIComponent(invoiceId)}`;
+}
+
+/**
+ * Deep-link into attendance "Fix missed / half days" with optional
+ * guard + month preselected. `returnTo` is used for Back after fixing
+ * (e.g. while working payroll).
+ */
+export function attendanceFixPath(params?: {
+  guardId?: string;
+  year?: number;
+  month?: number;
+  returnTo?: string;
+}): string {
+  const query = new URLSearchParams();
+  if (params?.guardId) query.set("guardId", params.guardId);
+  if (params?.year != null) query.set("year", String(params.year));
+  if (params?.month != null) query.set("month", String(params.month));
+  if (params?.returnTo) query.set("returnTo", params.returnTo);
+  const qs = query.toString();
+  return qs ? `${APP_ROUTES.attendance}?${qs}` : APP_ROUTES.attendance;
 }

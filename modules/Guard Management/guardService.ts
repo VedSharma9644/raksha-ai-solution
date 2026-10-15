@@ -14,11 +14,16 @@ import {
 import type { Firestore } from "firebase/firestore";
 import { GUARDS_COLLECTION } from "./guard";
 import type { Guard, GuardStatus, GuardGender } from "./guard";
+import {
+  assertGuardContactUnique,
+  normalizeGuardEmail,
+} from "./guardUniqueness";
 
 export interface AddGuardParams {
   agencyId: string;
   fullName: string;
   fatherName: string;
+  motherName: string;
   gender: GuardGender;
   phone: string;
   email: string;
@@ -34,6 +39,7 @@ export interface AddGuardParams {
   experience: string;
   education: string;
   assignedSiteId: string;
+  weeklyOffDays?: string[];
   guardType: "ex-serviceman" | "civilian";
   interestedCity: string;
   shiftFrom: string;
@@ -51,6 +57,7 @@ export interface AddGuardParams {
 export interface UpdateGuardParams {
   fullName?: string;
   fatherName?: string;
+  motherName?: string;
   gender?: GuardGender;
   phone?: string;
   email?: string;
@@ -66,6 +73,7 @@ export interface UpdateGuardParams {
   experience?: string;
   education?: string;
   assignedSiteId?: string;
+  weeklyOffDays?: string[];
   guardType?: "ex-serviceman" | "civilian";
   interestedCity?: string;
   shiftFrom?: string;
@@ -86,8 +94,15 @@ export async function addGuard(
   db: Firestore,
   params: AddGuardParams
 ): Promise<Guard> {
+  const email = normalizeGuardEmail(params.email);
+  await assertGuardContactUnique(db, { phone: params.phone, email });
+
   const guardData = {
     ...params,
+    email,
+    weeklyOffDays: Array.isArray(params.weeklyOffDays)
+      ? params.weeklyOffDays
+      : [],
     status: "active" as GuardStatus,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -134,8 +149,22 @@ export async function updateGuard(
   updates: UpdateGuardParams
 ): Promise<void> {
   const ref = doc(db, GUARDS_COLLECTION, guardId);
+  const nextUpdates = { ...updates };
+  if (typeof nextUpdates.email === "string") {
+    nextUpdates.email = normalizeGuardEmail(nextUpdates.email);
+  }
+
+  if (nextUpdates.phone || nextUpdates.email) {
+    const existing = await getGuardById(db, guardId);
+    await assertGuardContactUnique(db, {
+      phone: nextUpdates.phone ?? existing?.phone ?? "",
+      email: nextUpdates.email ?? existing?.email ?? "",
+      excludeGuardId: guardId,
+    });
+  }
+
   await updateDoc(ref, {
-    ...updates,
+    ...nextUpdates,
     updatedAt: serverTimestamp(),
   });
 }

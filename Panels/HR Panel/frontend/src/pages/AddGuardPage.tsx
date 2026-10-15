@@ -24,7 +24,7 @@ export function AddGuardPage() {
   );
 
   function goBack() {
-    navigate(APP_ROUTES.dashboard);
+    navigate(APP_ROUTES.guardList);
   }
 
   if (isStatusLoading) {
@@ -69,7 +69,7 @@ export function AddGuardPage() {
           title="Add Guard"
           subtitle="Complete the custom form set by your agency admin."
           onBack={goBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to guards"
         />
         {error ? (
           <p

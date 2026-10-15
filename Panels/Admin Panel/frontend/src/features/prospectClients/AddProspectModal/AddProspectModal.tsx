@@ -31,6 +31,9 @@ function validate(v: ProspectFormValues): FieldErrors {
   if (!v.orgName.trim())      errors.orgName      = "Organisation name is required.";
   if (!v.contactName.trim())  errors.contactName  = "Contact person name is required.";
   if (!v.primaryPhone.trim()) errors.primaryPhone = "Primary phone is required.";
+  if (v.leadSource === "referral" && !v.referralName.trim()) {
+    errors.referralName = "Referral name is required when lead source is Referral.";
+  }
   if (v.expectedGuardCount && isNaN(Number(v.expectedGuardCount))) {
     errors.expectedGuardCount = "Must be a number.";
   }
@@ -47,6 +50,7 @@ function prospectToFormValues(p: ProspectClient): ProspectFormValues {
     expectedGuardCount: p.expectedGuardCount != null ? String(p.expectedGuardCount) : "",
     expectedMonthlyValue: p.expectedMonthlyValue,
     leadSource: p.leadSource,
+    referralName: p.referralName ?? "",
     contactName: p.contactName,
     contactDesignation: p.contactDesignation,
     primaryPhone: p.primaryPhone,
@@ -162,10 +166,24 @@ export function AddProspectModal({
               label="Lead Source"
               name="leadSource"
               value={values.leadSource}
-              onChange={(e) => set("leadSource", e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                set("leadSource", next);
+                if (next !== "referral") set("referralName", "");
+              }}
               options={LEAD_SOURCE_OPTIONS}
             />
           </div>
+          {values.leadSource === "referral" ? (
+            <TextField
+              label="Referral name *"
+              name="referralName"
+              value={values.referralName}
+              onChange={(e) => set("referralName", e.target.value)}
+              errorMessage={errors.referralName}
+              placeholder="Who referred this lead?"
+            />
+          ) : null}
 
           {/* === Section: Contact === */}
           <p className="add-prospect-modal__section-label">Contact Person</p>

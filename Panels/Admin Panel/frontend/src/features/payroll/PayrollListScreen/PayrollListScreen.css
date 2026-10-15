@@ -1,0 +1,268 @@
+.payroll-list__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.payroll-list__row--needs-fix td {
+  background: color-mix(in srgb, #fef3c7 55%, transparent);
+}
+
+.payroll-list__guard-link {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--color-primary, #0b6e4f);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.payroll-list__guard-link:hover {
+  color: var(--color-on-surface);
+}
+
+.payroll-list__fix-att {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-on-surface, #111827);
+}
+
+.payroll-list__fix-att:hover {
+  background: #f8fafc;
+}
+
+.payroll-list__fix-att--alert {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.payroll-list__generate {
+  margin-bottom: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+}
+
+.payroll-list__section-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.payroll-list__hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.payroll-list__gen-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(14rem, auto);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.payroll-list__gen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.1rem;
+  align-items: end;
+}
+
+.payroll-list__preview {
+  margin-bottom: 1.75rem;
+}
+
+.payroll-list__preview-head {
+  margin-bottom: 0.75rem;
+}
+
+.payroll-list__preview-totals {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.payroll-list__preview-totals strong {
+  color: var(--color-text-primary, #111827);
+}
+
+.payroll-list__advance-cut {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.payroll-list__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.payroll-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.payroll-list__table th,
+.payroll-list__table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  white-space: nowrap;
+}
+
+.payroll-list__table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #6b7280);
+  background: #f8fafc;
+}
+
+.payroll-list__table tr:last-child td {
+  border-bottom: none;
+}
+
+.payroll-list__period-hint {
+  margin-top: 0.75rem;
+}
+
+.payroll-list__salary-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.payroll-list__salary-input {
+  width: 6.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+.payroll-list__salary-save {
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #fff;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.payroll-list__salary-save:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.payroll-list__salary-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.payroll-list__error {
+  color: #b91c1c;
+  margin: 0 0 1rem;
+}
+
+.payroll-list__runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.payroll-list__run {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.payroll-list__run:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.payroll-list__run-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.payroll-list__run-title {
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+}
+
+.payroll-list__run-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.payroll-list__badge {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.4rem;
+}
+
+.payroll-list__badge--finalized {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.payroll-list__badge--paid {
+  color: #065f46;
+  background: #ecfdf5;
+}
+
+@media (max-width: 900px) {
+  .payroll-list__gen-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .payroll-list__gen-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .payroll-list__gen-row {
+    grid-template-columns: 1fr;
+  }
+}

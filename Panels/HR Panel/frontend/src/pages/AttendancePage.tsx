@@ -26,7 +26,7 @@ export function AttendancePage() {
       onDateFilterChange={setDate}
       isLoading={isLoading}
       error={error}
-      onBack={() => navigate(APP_ROUTES.dashboard)}
+      onBack={() => navigate(APP_ROUTES.manageSchedule)}
     />
   );
 }

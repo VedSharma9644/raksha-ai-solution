@@ -29,9 +29,30 @@ export type PunchInResult = {
   geofenceResult: string;
   selfieUrl: string;
   shiftStatus: string;
-  mode?: 'punch_in' | 'punch_out';
+  mode?: 'punch_in' | 'punch_out' | 'interval_checkin';
   punchOutTime?: string;
   durationLabel?: string;
+  checkinPunctuality?: 'on_time' | 'late';
+  sequenceNumber?: number;
+};
+
+export type IntervalCheckinWindowStatus =
+  | 'inactive'
+  | 'waiting'
+  | 'due'
+  | 'late'
+  | 'missed';
+
+export type IntervalCheckinStatus = {
+  enabled: boolean;
+  intervalMinutes: number | null;
+  status: IntervalCheckinWindowStatus;
+  dueAt: string | null;
+  graceEndsAt: string | null;
+  nextDueAt: string | null;
+  completedCount: number;
+  lastCheckinAt: string | null;
+  graceMinutes: number;
 };
 
 export type TodayShiftStatus = {
@@ -50,8 +71,16 @@ export type TodayShiftStatus = {
   earlierShiftCount?: number;
   hasLaterReplacement?: boolean;
   assignmentId?: string | null;
+  intervalCheckinMinutes?: number | null;
+  intervalCheckin?: IntervalCheckinStatus;
+  punchInWindow?: {
+    open: boolean;
+    graceMinutes: number;
+    minutesPastStart: number | null;
+    closesAt: string | null;
+    message: string | null;
+  };
 };
-
 export type GeofenceCheckResult = {
   unlocked: boolean;
   cameraUnlocked: boolean;
@@ -243,7 +272,7 @@ export type PunchSelfieParams = {
 
 async function createSelfieUploadTicket(
   token: string,
-  purpose: 'punch_in_selfie' | 'punch_out_selfie',
+  purpose: 'punch_in_selfie' | 'punch_out_selfie' | 'interval_checkin_selfie',
 ): Promise<SelfieUploadTicket> {
   const response = await fetch(
     `${guardApiConfig.baseUrl}/api/attendance/selfie-upload-url`,
@@ -279,7 +308,7 @@ function selfieBase64ToBytes(selfieBase64: string): Uint8Array {
  */
 export async function punchWithSelfieUpload(
   token: string,
-  mode: 'punch_in' | 'punch_out',
+  mode: 'punch_in' | 'punch_out' | 'interval_checkin',
   params: {
     lat: number;
     lng: number;
@@ -289,11 +318,17 @@ export async function punchWithSelfieUpload(
   },
 ): Promise<PunchInResult> {
   const purpose =
-    mode === 'punch_out' ? 'punch_out_selfie' : 'punch_in_selfie';
+    mode === 'punch_out'
+      ? 'punch_out_selfie'
+      : mode === 'interval_checkin'
+        ? 'interval_checkin_selfie'
+        : 'punch_in_selfie';
   const endpoint =
     mode === 'punch_out'
       ? `${guardApiConfig.baseUrl}/api/attendance/punch-out`
-      : `${guardApiConfig.baseUrl}/api/attendance/punch-in`;
+      : mode === 'interval_checkin'
+        ? `${guardApiConfig.baseUrl}/api/attendance/interval-checkin`
+        : `${guardApiConfig.baseUrl}/api/attendance/punch-in`;
 
   let storagePath: string | undefined;
   let selfieUrl: string | undefined;
@@ -388,6 +423,33 @@ export async function punchOutAttendance(
     },
     body: JSON.stringify(params),
   });
+  return parseJson(response);
+}
+
+export async function intervalCheckinAttendance(
+  token: string,
+  params: PunchSelfieParams & { selfieBase64?: string; selfieUri?: string },
+): Promise<PunchInResult> {
+  if (params.selfieUri && params.selfieBase64) {
+    return punchWithSelfieUpload(token, 'interval_checkin', {
+      lat: params.lat,
+      lng: params.lng,
+      accuracyMeters: params.accuracyMeters,
+      selfieUri: params.selfieUri,
+      selfieBase64: params.selfieBase64,
+    });
+  }
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/attendance/interval-checkin`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(params),
+    },
+  );
   return parseJson(response);
 }
 

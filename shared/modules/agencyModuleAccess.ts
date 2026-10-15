@@ -19,6 +19,9 @@ export const AGENCY_MODULE_ACCESS_COLLECTION = "agencyModuleAccess";
 /** Canonical module id for Form Builder (custom forms). */
 export const FORM_BUILDER_MODULE_ID = "form_builder";
 
+/** Canonical module id for Payroll (general settings + future runs). */
+export const PAYROLL_MODULE_ID = "payroll";
+
 /** Defaults when an agency has never been configured. */
 export const DEFAULT_ENABLED_FEATURE_IDS: string[] = [
   "employee_management",
@@ -37,6 +40,12 @@ export function isFormBuilderModuleEnabled(
   enabledModules: string[] | undefined | null
 ): boolean {
   return isModuleEnabled(enabledModules, FORM_BUILDER_MODULE_ID);
+}
+
+export function isPayrollModuleEnabled(
+  enabledModules: string[] | undefined | null
+): boolean {
+  return isModuleEnabled(enabledModules, PAYROLL_MODULE_ID);
 }
 
 export async function getAgencyModuleAccess(

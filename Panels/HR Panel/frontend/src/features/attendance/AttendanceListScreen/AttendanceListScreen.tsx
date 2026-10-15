@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
+import { SearchableSelect } from "../../../components/SearchableSelect";
 import { TextField } from "../../../components/TextField";
-import { SelectField } from "../../../components/SelectField";
 import type {
   AttendanceRecord,
   AttendanceStats,
@@ -70,7 +70,7 @@ export function AttendanceListScreen({
           title="Guard Attendance"
           subtitle="View daily punch-in and punch-out records for all guards."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to manage schedule"
         />
 
         {/* ── Stat Cards ── */}
@@ -136,12 +136,13 @@ export function AttendanceListScreen({
           </div>
 
           <div className="att-filters__site">
-            <SelectField
+            <SearchableSelect
               label="Site"
               name="attSite"
               value={siteFilter}
               options={siteOptions}
-              onChange={(e) => setSiteFilter(e.target.value)}
+              onChange={setSiteFilter}
+              searchPlaceholder="Search site name…"
             />
           </div>
         </div>

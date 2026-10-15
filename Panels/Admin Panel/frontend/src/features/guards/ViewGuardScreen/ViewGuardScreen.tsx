@@ -94,7 +94,8 @@ export function ViewGuardScreen({
           <InfoRow label="Gender" value={guard.gender ? guard.gender.charAt(0).toUpperCase() + guard.gender.slice(1) : undefined} />
           <InfoRow label="Phone" value={guard.phone} />
           <InfoRow label="Email" value={guard.email} />
-          <InfoRow label="Father's Name" value={guard.fatherName} />
+          <InfoRow label="Father's Name" value={guard.fatherName ?? ""} />
+          <InfoRow label="Mother's Name" value={guard.motherName ?? ""} />
           <InfoRow label="Post" value={guard.post} />
           <InfoRow label="Joining Date" value={guard.joiningDate} />
           <InfoRow label="Experience" value={guard.experience} />

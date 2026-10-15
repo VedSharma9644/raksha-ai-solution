@@ -23,6 +23,9 @@ export function MarkAttendanceHero() {
   const [checking, setChecking] = useState(false);
   const [loadingShift, setLoadingShift] = useState(true);
   const [punchedAtLabel, setPunchedAtLabel] = useState<string | null>(null);
+  const [punchInClosedMessage, setPunchInClosedMessage] = useState<string | null>(
+    null,
+  );
 
   const refreshShift = useCallback(async () => {
     if (!authToken) {
@@ -32,19 +35,26 @@ export function MarkAttendanceHero() {
     try {
       const today = await fetchTodayShift(authToken);
       setShiftActive(today.shiftActive);
-      if (today.punchedAt) {
-        const punched = new Date(today.punchedAt);
-        setPunchedAtLabel(
-          punched.toLocaleTimeString('en-IN', {
+      const nextPunchedLabel = today.punchedAt
+        ? new Date(today.punchedAt).toLocaleTimeString('en-IN', {
             timeZone: 'Asia/Kolkata',
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
-          }),
-        );
-      } else {
-        setPunchedAtLabel(null);
-      }
+          })
+        : null;
+      setPunchedAtLabel((current) =>
+        current === nextPunchedLabel ? current : nextPunchedLabel,
+      );
+      const windowClosed =
+        !today.shiftActive && today.punchInWindow && !today.punchInWindow.open;
+      const nextClosedMessage = windowClosed
+        ? today.punchInWindow?.message ||
+          'Punch-in closed. Check-in is only allowed within 15 minutes of your shift start.'
+        : null;
+      setPunchInClosedMessage((current) =>
+        current === nextClosedMessage ? current : nextClosedMessage,
+      );
     } catch {
       // Keep last known shift state if /today fails
     } finally {
@@ -124,6 +134,11 @@ export function MarkAttendanceHero() {
       return;
     }
 
+    if (punchInClosedMessage) {
+      Alert.alert('Punch-in closed', punchInClosedMessage);
+      return;
+    }
+
     if (cameraUnlocked) {
       openPatrolSession('punch_in');
       return;
@@ -142,9 +157,16 @@ export function MarkAttendanceHero() {
   }
 
   const isEndShift = shiftActive;
+  const punchInBlocked = !isEndShift && Boolean(punchInClosedMessage);
 
   return (
-    <View style={[styles.card, isEndShift && { backgroundColor: '#5c3d2e' }]}>
+    <View
+      style={[
+        styles.card,
+        isEndShift && { backgroundColor: '#5c3d2e' },
+        punchInBlocked && { backgroundColor: '#4b5563' },
+      ]}
+    >
       <View style={[styles.blob, styles.blobTopRight]} />
       <View style={[styles.blob, styles.blobBottomLeft]} />
 
@@ -157,9 +179,11 @@ export function MarkAttendanceHero() {
         <Text style={styles.pillText}>
           {isEndShift
             ? 'SHIFT ACTIVE • ON DUTY'
-            : cameraUnlocked
-              ? 'CAMERA UNLOCKED • READY'
-              : 'GEO-FENCED SITE CAMERA'}
+            : punchInBlocked
+              ? 'PUNCH-IN WINDOW CLOSED'
+              : cameraUnlocked
+                ? 'CAMERA UNLOCKED • READY'
+                : 'GEO-FENCED SITE CAMERA'}
         </Text>
       </View>
 
@@ -168,7 +192,9 @@ export function MarkAttendanceHero() {
           <ActivityIndicator size="large" color={appColors.primary} />
         ) : (
           <MaterialIcons
-            name={isEndShift ? 'logout' : 'photo-camera'}
+            name={
+              isEndShift ? 'logout' : punchInBlocked ? 'timer-off' : 'photo-camera'
+            }
             size={42}
             color={appColors.primary}
           />
@@ -176,16 +202,18 @@ export function MarkAttendanceHero() {
       </View>
 
       <Text style={[styles.title, isEndShift && styles.titleOnDuty]}>
-        {isEndShift ? 'END SHIFT' : 'MARK ATTENDANCE'}
+        {isEndShift ? 'END SHIFT' : punchInBlocked ? 'CHECK-IN CLOSED' : 'MARK ATTENDANCE'}
       </Text>
       <Text style={[styles.subtitle, isEndShift && styles.subtitleOnDuty]}>
         {isEndShift
           ? punchedAtLabel
             ? `On duty since ${punchedAtLabel}. Verify site GPS and capture a selfie to end your shift.`
             : 'You are on duty. Verify site GPS and capture a selfie to end your shift.'
-          : cameraUnlocked
-            ? 'Location verified. Take a live selfie to punch in and start your shift.'
-            : 'Verify GPS at your site first — camera unlocks only after geofence pass.'}
+          : punchInBlocked
+            ? punchInClosedMessage
+            : cameraUnlocked
+              ? 'Location verified. Take a live selfie to punch in and start your shift.'
+              : 'Verify GPS at your site first — camera unlocks only after geofence pass. Late check-in allowed up to 15 minutes after shift start.'}
       </Text>
 
       <View style={styles.lockRow}>
@@ -213,18 +241,22 @@ export function MarkAttendanceHero() {
               ? cameraUnlocked
                 ? 'Open Camera to End Shift'
                 : 'Verify Site & End Shift'
-              : cameraUnlocked
-                ? 'Tap to Open Camera'
-                : 'Verify Location & Unlock'
+              : punchInBlocked
+                ? 'Punch-in unavailable'
+                : cameraUnlocked
+                  ? 'Tap to Open Camera'
+                  : 'Verify Location & Unlock'
         }
         icon={
           isEndShift
             ? cameraUnlocked
               ? 'photo-camera'
               : 'my-location'
-            : cameraUnlocked
-              ? 'center-focus-strong'
-              : 'my-location'
+            : punchInBlocked
+              ? 'block'
+              : cameraUnlocked
+                ? 'center-focus-strong'
+                : 'my-location'
         }
         onPress={() => {
           void handlePress();

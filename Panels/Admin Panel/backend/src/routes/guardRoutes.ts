@@ -29,6 +29,7 @@ export function createGuardRoutes(db: Firestore): Router {
         agencyId,
         fullName,
         fatherName: req.body.fatherName ?? "",
+        motherName: req.body.motherName ?? "",
         gender: (req.body.gender as "male" | "female" | "other") ?? "male",
         employeeCode,
         phone,
@@ -58,8 +59,14 @@ export function createGuardRoutes(db: Firestore): Router {
 
       res.status(201).json(guard);
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      res.status(500).json({ error: err.message ?? "Failed to add guard." });
+      const err = error as { message?: string; statusCode?: number; code?: string };
+      const status =
+        typeof err.statusCode === "number"
+          ? err.statusCode
+          : err.code === "guard/phone-taken" || err.code === "guard/email-taken"
+            ? 409
+            : 500;
+      res.status(status).json({ error: err.message ?? "Failed to add guard." });
     }
   });
 

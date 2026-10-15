@@ -11,21 +11,18 @@ const ACTION_ROUTES: Record<
   HrDashboardActionId,
   (typeof APP_ROUTES)[keyof typeof APP_ROUTES]
 > = {
-  "add-guard": APP_ROUTES.addGuard,
   "guard-list": APP_ROUTES.guardList,
   "manage-inventory": APP_ROUTES.manageInventory,
-  "manage-leave": APP_ROUTES.manageLeave,
-  "manage-relief": APP_ROUTES.manageRelief,
   "site-list": APP_ROUTES.siteList,
-  attendance: APP_ROUTES.attendance,
-  scheduling: APP_ROUTES.siteList, // scheduling starts from site list → schedule button
+  "manage-schedule": APP_ROUTES.manageSchedule,
   "prospect-guards": APP_ROUTES.prospectGuards,
 };
 
 export function HrDashboardPage() {
   const navigate = useNavigate();
   const { refreshModules } = useAuthContext();
-  const { isActionEnabled, isNotificationActionEnabled } = useEnabledModules();
+  const { hasModule, isActionEnabled, isNotificationActionEnabled } =
+    useEnabledModules();
   const {
     notifications,
     markRead,
@@ -43,8 +40,18 @@ export function HrDashboardPage() {
   }, [refreshModules]);
 
   const visibleActions = useMemo(
-    () => HR_DASHBOARD_ACTIONS.filter((action) => isActionEnabled(action.id)),
-    [isActionEnabled],
+    () =>
+      HR_DASHBOARD_ACTIONS.filter((action) => {
+        if (action.id === "manage-schedule") {
+          return (
+            hasModule("attendance") ||
+            hasModule("leave") ||
+            hasModule("site_management")
+          );
+        }
+        return isActionEnabled(action.id);
+      }),
+    [hasModule, isActionEnabled],
   );
 
   const visibleNotifications = useMemo(
@@ -85,7 +92,17 @@ export function HrDashboardPage() {
       }}
       onMarkAllNotificationsRead={markAllRead}
       onActionClick={(actionId) => {
-        if (!isActionEnabled(actionId)) {
+        if (actionId === "manage-schedule") {
+          if (
+            !(
+              hasModule("attendance") ||
+              hasModule("leave") ||
+              hasModule("site_management")
+            )
+          ) {
+            return;
+          }
+        } else if (!isActionEnabled(actionId)) {
           return;
         }
         navigate(ACTION_ROUTES[actionId]);

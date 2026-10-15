@@ -4,6 +4,7 @@ import type { GuardShiftAssignment, DayOfWeek } from "@raskha/scheduling";
 import { ALL_DAYS, DAY_LABELS } from "@raskha/scheduling";
 import type { SiteShift } from "@raskha/site-management";
 import type { Guard } from "@raskha/guard-management";
+import { SearchableSelect } from "../../../components/SearchableSelect";
 import "./AssignShiftModal.css";
 
 // ── Gender helpers ────────────────────────────────────────────────────────────
@@ -372,32 +373,36 @@ export function AssignShiftModal({
 
           {/* Guard selector */}
           <div className="assign-shift-modal__field">
-            <label className="assign-shift-modal__label">Guard</label>
             {genderCapacity && availableGuards.length === 0 ? (
-              <p className="assign-shift-modal__no-guards-msg">
-                All gender slots for this shift are full on the selected days.
-                Remove an existing guard or select different days.
-              </p>
+              <>
+                <label className="assign-shift-modal__label">Guard</label>
+                <p className="assign-shift-modal__no-guards-msg">
+                  All gender slots for this shift are full on the selected days.
+                  Remove an existing guard or select different days.
+                </p>
+              </>
             ) : (
-              <select
-                className={`assign-shift-modal__select${errors.guardId ? " assign-shift-modal__select--error" : ""}`}
+              <SearchableSelect
+                label="Guard"
+                name="assignShiftGuard"
                 value={guardId}
-                onChange={(e) => setGuardId(e.target.value)}
+                options={[
+                  { value: "", label: "Select a guard…" },
+                  ...availableGuards.map((g) => {
+                    const gk = g.gender as GuardGenderKey | undefined;
+                    const genderTag = gk ? ` · ${GENDER_ICON[gk]}` : "";
+                    return {
+                      value: g.id,
+                      label: `${g.fullName} (${g.employeeCode})${genderTag}`,
+                    };
+                  }),
+                ]}
+                onChange={setGuardId}
                 disabled={isSaving || !!existingAssignment}
-              >
-                <option value="">Select a guard…</option>
-                {availableGuards.map((g) => {
-                  const gk = g.gender as GuardGenderKey | undefined;
-                  const genderTag = gk ? ` · ${GENDER_ICON[gk]}` : "";
-                  return (
-                    <option key={g.id} value={g.id}>
-                      {g.fullName} ({g.employeeCode}){genderTag}
-                    </option>
-                  );
-                })}
-              </select>
+                searchPlaceholder="Search guard name or code…"
+                errorMessage={errors.guardId}
+              />
             )}
-            {errors.guardId && <span className="assign-shift-modal__error">{errors.guardId}</span>}
           </div>
 
           {/* Recurring days */}

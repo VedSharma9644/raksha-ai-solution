@@ -24,7 +24,7 @@ export function AddSiteScreen({
           title="Add Site"
           subtitle="Register a client location for attendance, patrols, and staffing."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to sites"
         />
         <AddSiteForm
           isSubmitting={isSubmitting}

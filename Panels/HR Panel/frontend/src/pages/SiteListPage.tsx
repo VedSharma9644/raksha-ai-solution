@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { APP_ROUTES, assignGuardsPath, schedulingPath } from "../app/routePaths";
 import { SiteListScreen } from "../features/sites/SiteListScreen";
 import { useSiteList } from "../features/sites/useSiteList";
@@ -8,6 +8,9 @@ import { useAgencyRosterCoverage } from "../features/scheduling/useAgencyRosterC
 
 export function SiteListPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromManageSchedule =
+    (location.state as { from?: string } | null)?.from === "manage-schedule";
   const { sites, isLoading, error } = useSiteList();
   const { guards } = useGuardList();
   const { report } = useAgencyRosterCoverage(7);
@@ -38,7 +41,18 @@ export function SiteListPage() {
       guards={guards}
       understaffedSiteIds={understaffedSiteIds}
       coverageSummary={coverageSummary}
-      onBack={() => navigate(APP_ROUTES.dashboard)}
+      onBack={() =>
+        navigate(
+          fromManageSchedule
+            ? APP_ROUTES.manageSchedule
+            : APP_ROUTES.dashboard
+        )
+      }
+      backLabel={
+        fromManageSchedule
+          ? "Back to manage schedule"
+          : "Back to dashboard"
+      }
       onAssignGuards={(id) => navigate(assignGuardsPath(id))}
       onSchedule={(id) => navigate(schedulingPath(id))}
     />

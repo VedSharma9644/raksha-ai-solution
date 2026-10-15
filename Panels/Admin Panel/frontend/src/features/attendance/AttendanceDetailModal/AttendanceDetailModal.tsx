@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Button } from "../../../components/Button";
 import type { AttendanceRecord, IntervalCheckin, GeofenceStatus } from "../attendanceTypes";
 import { formatDuration } from "../attendanceTypes";
 import "./AttendanceDetailModal.css";
@@ -6,6 +7,7 @@ import "./AttendanceDetailModal.css";
 export interface AttendanceDetailModalProps {
   record: AttendanceRecord;
   onClose: () => void;
+  onCorrect?: () => void;
 }
 
 const GEO_LABEL: Record<GeofenceStatus, string> = {
@@ -117,6 +119,11 @@ function TlIntervalRow({ ci, onExpand }: TlIntervalProps) {
           <div className="att-tl-content__info">
             <span className="att-tl-event">Check-in #{ci.sequenceNumber}</span>
             <span className="att-tl-time">{ci.checkinTime}</span>
+            {ci.punctuality === "late" ? (
+              <span className="att-tl-geo att-tl-geo--failed">Late</span>
+            ) : (
+              <span className="att-tl-geo att-tl-geo--passed">On time</span>
+            )}
             <span className={`att-tl-geo att-tl-geo--${ci.geofenceStatus}`}>
               {GEO_LABEL[ci.geofenceStatus]}
             </span>
@@ -144,7 +151,11 @@ function TlIntervalRow({ ci, onExpand }: TlIntervalProps) {
 }
 
 // ── Main modal ──────────────────────────────────────────────────────────────
-export function AttendanceDetailModal({ record, onClose }: AttendanceDetailModalProps) {
+export function AttendanceDetailModal({
+  record,
+  onClose,
+  onCorrect,
+}: AttendanceDetailModalProps) {
   const [expandedPhotoUrl, setExpandedPhotoUrl] = useState<string | null>(null);
 
   const isOnShift = record.punchOutTime === null;
@@ -404,6 +415,24 @@ export function AttendanceDetailModal({ record, onClose }: AttendanceDetailModal
                 Live map will be available once app data structure is finalised.
               </p>
             </div>
+
+            {onCorrect ? (
+              <div className="att-modal__correction">
+                <p className="att-modal__section-label">Technical failure?</p>
+                <p className="att-modal__correction-hint">
+                  Override this day&apos;s status for payroll and history without
+                  creating a fake punch.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="medium"
+                  onClick={onCorrect}
+                >
+                  Correct this day
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

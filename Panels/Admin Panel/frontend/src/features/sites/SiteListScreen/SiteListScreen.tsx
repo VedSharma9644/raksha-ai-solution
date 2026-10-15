@@ -64,6 +64,7 @@ export interface SiteListScreenProps {
   understaffedSiteIds?: string[];
   coverageSummary?: string;
   onBack: () => void;
+  backLabel?: string;
   onAddSite: () => void;
   onSelectSite: (siteId: string) => void;
   onAssignGuards: (siteId: string) => void;
@@ -76,6 +77,7 @@ export function SiteListScreen({
   understaffedSiteIds = [],
   coverageSummary,
   onBack,
+  backLabel = "Back to dashboard",
   onAddSite,
   onSelectSite,
   onAssignGuards,
@@ -114,10 +116,10 @@ export function SiteListScreen({
     <AppScreenLayout>
       <div className="app-screen-layout__content site-list-screen">
         <PageHeader
-          title="Site List"
-          subtitle="View and manage all client sites registered under this agency."
+          title="Sites"
+          subtitle="Browse, manage, and add client sites for this agency."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel={backLabel}
           actions={
             <Button type="button" onClick={onAddSite}>
               + Add Site

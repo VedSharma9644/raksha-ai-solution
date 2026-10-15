@@ -27,6 +27,8 @@ export interface ProspectClient {
   expectedGuardCount: number | null;
   expectedMonthlyValue: string;  // stored as string to avoid float precision issues
   leadSource: LeadSource | string;
+  /** Set when leadSource is "referral"; empty otherwise. */
+  referralName: string;
 
   // Contact
   contactName: string;

@@ -1,12 +1,8 @@
 export type HrDashboardActionId =
-  | "add-guard"
   | "guard-list"
   | "manage-inventory"
-  | "manage-leave"
-  | "manage-relief"
   | "site-list"
-  | "attendance"
-  | "scheduling"
+  | "manage-schedule"
   | "prospect-guards";
 
 export interface HrDashboardAction {
@@ -18,16 +14,16 @@ export interface HrDashboardAction {
 
 export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
   {
-    id: "add-guard",
-    title: "Add Guard",
-    description: "Create a new guard profile for staffing and attendance.",
+    id: "guard-list",
+    title: "Guards",
+    description: "Browse, search, and add guards managed by HR.",
     iconLabel: "G",
   },
   {
-    id: "guard-list",
-    title: "Guard List",
-    description: "Browse and search guards managed by HR.",
-    iconLabel: "L",
+    id: "site-list",
+    title: "Sites",
+    description: "View client sites and assign guards to each location.",
+    iconLabel: "S",
   },
   {
     id: "manage-inventory",
@@ -36,40 +32,17 @@ export const HR_DASHBOARD_ACTIONS: HrDashboardAction[] = [
     iconLabel: "I",
   },
   {
-    id: "manage-leave",
-    title: "Manage Leave",
-    description: "Review upcoming and pending leave requests.",
-    iconLabel: "V",
-  },
-  {
-    id: "manage-relief",
-    title: "Manage Relief",
+    id: "manage-schedule",
+    title: "Manage schedule",
     description:
-      "Approve remaining-shift handovers and assign a replacement guard.",
-    iconLabel: "R",
-  },
-  {
-    id: "site-list",
-    title: "Site List",
-    description: "View all client sites and assign guards to each location.",
-    iconLabel: "S",
-  },
-  {
-    id: "attendance",
-    title: "Attendance",
-    description: "View daily punch-in and punch-out records for all guards.",
-    iconLabel: "📋",
-  },
-  {
-    id: "scheduling",
-    title: "Scheduling",
-    description: "Assign guards to shifts and view weekly or monthly rosters per site.",
+      "Attendance, leave, relief, and site scheduling in one place.",
     iconLabel: "📅",
   },
   {
     id: "prospect-guards",
-    title: "Prospect Guards",
-    description: "Track and manage prospective guard candidates through the hiring pipeline.",
+    title: "Prospect guards",
+    description:
+      "Track and manage prospective guard candidates through the hiring pipeline.",
     iconLabel: "🛡️",
   },
 ];

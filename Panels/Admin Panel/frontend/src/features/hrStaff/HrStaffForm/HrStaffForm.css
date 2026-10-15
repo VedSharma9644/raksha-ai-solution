@@ -1,5 +1,14 @@
 .hr-staff-form {
   width: 100%;
+  max-width: none;
+}
+
+.hr-staff-form .form-panel--wide {
+  width: 100%;
+}
+
+.hr-staff-form .text-area-field {
+  grid-column: 1 / -1;
 }
 
 .hr-staff-form__section-label {

@@ -12,11 +12,16 @@ import { initializeApp, deleteApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { GUARDS_COLLECTION } from "./guard";
 import type { Guard, GuardStatus, GuardGender } from "./guard";
+import {
+  assertGuardContactUnique,
+  normalizeGuardEmail,
+} from "./guardUniqueness";
 
 export interface CreateGuardAccountParams {
   agencyId: string;
   fullName: string;
   fatherName: string;
+  motherName: string;
   gender: GuardGender;
   phone: string;
   email: string;
@@ -33,6 +38,7 @@ export interface CreateGuardAccountParams {
   experience: string;
   education: string;
   assignedSiteId: string;
+  weeklyOffDays?: string[];
   guardType: "ex-serviceman" | "civilian";
   interestedCity: string;
   shiftFrom: string;
@@ -62,6 +68,12 @@ export async function createGuardAccount(
   params: CreateGuardAccountParams
 ): Promise<Guard> {
   const { password, email, agencyId, ...rest } = params;
+  const normalizedEmail = normalizeGuardEmail(email);
+
+  await assertGuardContactUnique(db, {
+    phone: params.phone,
+    email: normalizedEmail,
+  });
 
   // Use a secondary app so the signed-in admin/HR stays logged in
   const appName = `guard-creation-${Date.now()}`;
@@ -73,10 +85,19 @@ export async function createGuardAccount(
     const secondaryAuth = getAuth(secondaryApp);
     const credential = await createUserWithEmailAndPassword(
       secondaryAuth,
-      email,
+      normalizedEmail,
       password
     );
     uid = credential.user.uid;
+  } catch (error: unknown) {
+    const code = (error as { code?: string }).code ?? "";
+    if (code === "auth/email-already-in-use") {
+      throw Object.assign(
+        new Error("This email is already registered to another account."),
+        { code: "guard/email-taken", statusCode: 409 }
+      );
+    }
+    throw error;
   } finally {
     if (secondaryApp) {
       await deleteApp(secondaryApp);
@@ -86,8 +107,9 @@ export async function createGuardAccount(
   const guardData = {
     id: uid,
     agencyId,
-    email,
+    email: normalizedEmail,
     ...rest,
+    weeklyOffDays: Array.isArray(rest.weeklyOffDays) ? rest.weeklyOffDays : [],
     status: "active" as GuardStatus,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

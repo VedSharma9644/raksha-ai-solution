@@ -249,6 +249,9 @@ export function FormBuilderForm({
   function validate(): boolean {
     const nextErrors: Record<string, string> = {};
     for (const field of fields) {
+      if (field.type === "section") {
+        continue;
+      }
       if (field.type === "password") {
         const pw = (formData["password"] as string) ?? "";
         const confirm = (formData["confirmPassword"] as string) ?? "";
@@ -295,9 +298,16 @@ export function FormBuilderForm({
         </p>
       </div>
 
-      <FormPanel>
+      <FormPanel className="form-panel--wide">
         <div className="form-panel__grid">
           {fields.map((field) => {
+            if (field.type === "section") {
+              return (
+                <p key={field.id} className="fb-fill__section-label">
+                  {field.label}
+                </p>
+              );
+            }
             if (field.type === "profilePicture") {
               return renderProfilePictureField(formData, isSubmitting || isDeleting, handleFieldValue);
             }

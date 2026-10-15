@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { deleteGuard } from "@raskha/guard-management";
+import { useConfirmDialog } from "../../components/ConfirmDialog";
 import { db } from "../../lib/firebase";
 
 export function useDeleteGuard() {
+  const { confirm } = useConfirmDialog();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
@@ -11,9 +13,13 @@ export function useDeleteGuard() {
     guardName: string,
     onSuccess?: () => void,
   ): Promise<void> {
-    const confirmed = window.confirm(
-      `Delete "${guardName}"? This action cannot be undone.`,
-    );
+    const confirmed = await confirm({
+      title: "Delete guard?",
+      message: `Delete "${guardName}"? This action cannot be undone.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      tone: "danger",
+    });
     if (!confirmed) return;
 
     setError("");

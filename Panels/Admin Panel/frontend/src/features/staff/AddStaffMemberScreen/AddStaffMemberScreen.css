@@ -1,5 +1,7 @@
 .add-staff-member-screen {
   animation: add-staff-enter 360ms ease both;
+  width: 100%;
+  max-width: none;
 }
 
 @keyframes add-staff-enter {

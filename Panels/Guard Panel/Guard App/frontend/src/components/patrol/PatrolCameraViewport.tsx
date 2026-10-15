@@ -9,7 +9,11 @@ import {
   View,
 } from 'react-native';
 
-import { punchInAttendance, punchOutAttendance } from '../../api/guard-api';
+import {
+  intervalCheckinAttendance,
+  punchInAttendance,
+  punchOutAttendance,
+} from '../../api/guard-api';
 import { patrolSessionDefaults } from '../../constants/patrol-session-defaults';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { patrolCameraViewportStyles as styles } from '../../styles/patrol-camera-viewport.styles';
@@ -28,6 +32,7 @@ export function PatrolCameraViewport() {
     patrolMode,
   } = useGuardAppNavigation();
   const isPunchOut = patrolMode === 'punch_out';
+  const isIntervalCheckin = patrolMode === 'interval_checkin';
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('front');
@@ -104,7 +109,9 @@ export function PatrolCameraViewport() {
       };
       const result = isPunchOut
         ? await punchOutAttendance(authToken, payload)
-        : await punchInAttendance(authToken, payload);
+        : isIntervalCheckin
+          ? await intervalCheckinAttendance(authToken, payload)
+          : await punchInAttendance(authToken, payload);
 
       openAttendanceMarked(result);
     } catch (error: unknown) {
@@ -113,7 +120,9 @@ export function PatrolCameraViewport() {
           ? error.message
           : isPunchOut
             ? 'Punch-out failed.'
-            : 'Punch-in failed.';
+            : isIntervalCheckin
+              ? 'Interval check-in failed.'
+              : 'Punch-in failed.';
       Alert.alert('Attendance', message);
     } finally {
       setSubmitting(false);
@@ -123,6 +132,7 @@ export function PatrolCameraViewport() {
     cameraReady,
     cameraUnlocked,
     goBack,
+    isIntervalCheckin,
     isPunchOut,
     lastKnownLocation,
     openAttendanceMarked,
@@ -147,7 +157,9 @@ export function PatrolCameraViewport() {
         <Text style={styles.permissionBody}>
           {isPunchOut
             ? 'Allow the camera to capture your end-of-shift selfie.'
-            : 'Allow the camera to capture your live punch-in selfie.'}
+            : isIntervalCheckin
+              ? 'Allow the camera to capture your interval check-in selfie.'
+              : 'Allow the camera to capture your live punch-in selfie.'}
         </Text>
         <Pressable
           style={styles.permissionButton}
@@ -219,11 +231,17 @@ export function PatrolCameraViewport() {
         <Text style={styles.captureHint}>
           {isPunchOut
             ? 'End shift selfie • Must be inside site geofence • No gallery upload'
-            : patrolSessionDefaults.securityNotice}
+            : isIntervalCheckin
+              ? 'Interval check-in selfie • Must be inside site geofence • No gallery upload'
+              : patrolSessionDefaults.securityNotice}
         </Text>
         <Pressable
           accessibilityLabel={
-            isPunchOut ? 'Capture end shift photo' : 'Capture attendance punch photo'
+            isPunchOut
+              ? 'Capture end shift photo'
+              : isIntervalCheckin
+                ? 'Capture interval check-in photo'
+                : 'Capture attendance punch photo'
           }
           disabled={submitting || !cameraReady}
           onPress={() => {
@@ -250,7 +268,9 @@ export function PatrolCameraViewport() {
               : cameraReady
                 ? isPunchOut
                   ? 'Capture & End Shift'
-                  : 'Capture & Punch In'
+                  : isIntervalCheckin
+                    ? 'Capture & Check In'
+                    : 'Capture & Punch In'
                 : 'Starting camera…'}
           </Text>
         </Pressable>

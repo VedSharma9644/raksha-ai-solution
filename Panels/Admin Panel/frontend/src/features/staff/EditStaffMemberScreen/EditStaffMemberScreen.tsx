@@ -26,6 +26,7 @@ export interface EditStaffMemberScreenProps {
   initialValues: StaffMemberFormValues;
   isSubmitting?: boolean;
   isDeleting?: boolean;
+  excludeGuardId?: string;
   /** Optional inventory assignment panel rendered beside the form (guards only). */
   guardInventoryPanel?: ReactNode;
   onBack: () => void;
@@ -39,6 +40,7 @@ export function EditStaffMemberScreen({
   initialValues,
   isSubmitting,
   isDeleting,
+  excludeGuardId,
   guardInventoryPanel,
   onBack,
   onCancel,
@@ -78,6 +80,7 @@ export function EditStaffMemberScreen({
               role={role}
               initialValues={initialValues}
               isSubmitting={isSubmitting}
+              excludeGuardId={excludeGuardId}
               onCancel={onCancel}
               onSubmit={onSubmit}
             />

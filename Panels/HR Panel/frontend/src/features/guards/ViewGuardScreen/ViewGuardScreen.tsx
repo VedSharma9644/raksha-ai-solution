@@ -91,6 +91,8 @@ export function ViewGuardScreen({
 
         <div className="view-guard-screen__info-grid">
           <InfoRow label="Employee Code" value={guard.employeeCode} />
+          <InfoRow label="Father's Name" value={guard.fatherName ?? ""} />
+          <InfoRow label="Mother's Name" value={guard.motherName ?? ""} />
           <InfoRow label="Gender" value={guard.gender ? guard.gender.charAt(0).toUpperCase() + guard.gender.slice(1) : ""} />
           <InfoRow label="Phone" value={guard.phone} />
           <InfoRow label="Email" value={guard.email} />

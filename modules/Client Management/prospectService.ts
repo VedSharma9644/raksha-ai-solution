@@ -33,6 +33,7 @@ export interface AddProspectParams {
   expectedGuardCount: number | null;
   expectedMonthlyValue: string;
   leadSource: LeadSource | string;
+  referralName: string;
   contactName: string;
   contactDesignation: string;
   primaryPhone: string;
@@ -49,6 +50,7 @@ export interface UpdateProspectParams {
   expectedGuardCount?: number | null;
   expectedMonthlyValue?: string;
   leadSource?: LeadSource | string;
+  referralName?: string;
   contactName?: string;
   contactDesignation?: string;
   primaryPhone?: string;

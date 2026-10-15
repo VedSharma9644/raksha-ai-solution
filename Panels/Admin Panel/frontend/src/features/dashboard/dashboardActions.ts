@@ -1,19 +1,13 @@
 export type DashboardActionId =
-  | "add-guard"
-  | "add-site"
   | "site-list"
   | "manage-inventory"
   | "employee-guard-list"
-  | "add-hr"
   | "hr-list"
   | "form-builder"
-  | "attendance"
-  | "manage-leave"
-  | "manage-relief"
-  | "scheduling"
-  | "prospect-clients"
-  | "prospect-guards"
-  | "branches";
+  | "manage-schedule"
+  | "prospect-leads"
+  | "branches"
+  | "payment-management";
 
 export interface DashboardAction {
   id: DashboardActionId;
@@ -30,22 +24,11 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
     iconLabel: "FB",
   },
   {
-    id: "add-guard",
-    title: "Add Guard",
-    description: "Create a new guard profile and assign them to duty.",
-    iconLabel: "G",
-  },
-  {
-    id: "add-site",
-    title: "Add Site",
-    description: "Register a new client site for patrol and attendance.",
-    iconLabel: "S",
-  },
-  {
     id: "site-list",
-    title: "Site List",
-    description: "View, edit, and manage all registered client sites.",
-    iconLabel: "SL",
+    title: "Sites",
+    description:
+      "Browse, manage, and add client sites for patrol and attendance.",
+    iconLabel: "S",
   },
   {
     id: "manage-inventory",
@@ -55,63 +38,43 @@ export const DASHBOARD_ACTIONS: DashboardAction[] = [
   },
   {
     id: "employee-guard-list",
-    title: "Employee / Guard List",
-    description: "Browse and search everyone working under this agency.",
-    iconLabel: "L",
-  },
-  {
-    id: "add-hr",
-    title: "Add HR",
-    description: "Add an HR user to manage leave, payroll, and records.",
-    iconLabel: "H",
+    title: "Guards",
+    description:
+      "Browse, search, and add guards working under this agency.",
+    iconLabel: "G",
   },
   {
     id: "hr-list",
-    title: "HR List",
-    description: "View and manage all HR users in your agency.",
-    iconLabel: "R",
-  },
-  {
-    id: "attendance",
-    title: "Attendance",
-    description: "View daily punch-in and punch-out records for all guards.",
-    iconLabel: "📋",
-  },
-  {
-    id: "manage-leave",
-    title: "Manage Leave",
-    description: "Review, approve, or reject leave requests from guards.",
-    iconLabel: "V",
-  },
-  {
-    id: "manage-relief",
-    title: "Manage Relief",
+    title: "HR",
     description:
-      "Approve remaining-shift handovers and assign a replacement guard.",
-    iconLabel: "R",
+      "Browse, manage, and add HR users for leave, payroll, and records.",
+    iconLabel: "H",
   },
   {
-    id: "scheduling",
-    title: "Scheduling",
-    description: "Manage guard shift assignments and view weekly or monthly rosters per site.",
+    id: "manage-schedule",
+    title: "Manage schedule",
+    description:
+      "Attendance, leave, relief, and site scheduling in one place.",
     iconLabel: "📅",
   },
   {
-    id: "prospect-clients",
-    title: "Prospect Clients",
-    description: "Track and manage prospective client leads through your sales pipeline.",
-    iconLabel: "🤝",
-  },
-  {
-    id: "prospect-guards",
-    title: "Prospect Guards",
-    description: "Track and manage prospective guard candidates through your hiring pipeline.",
-    iconLabel: "🛡️",
+    id: "prospect-leads",
+    title: "Prospect leads",
+    description:
+      "Open client sales leads or guard hiring candidates from one place.",
+    iconLabel: "PL",
   },
   {
     id: "branches",
     title: "Branches",
     description: "Create and manage your agency's branch offices across cities.",
     iconLabel: "🏢",
+  },
+  {
+    id: "payment-management",
+    title: "Payment management",
+    description:
+      "Payroll, invoices, earnings, and money out in one place.",
+    iconLabel: "₹",
   },
 ];

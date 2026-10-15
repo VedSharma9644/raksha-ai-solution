@@ -7,12 +7,23 @@ import { PasswordField } from "../../../components/PasswordField";
 import { SelectField } from "../../../components/SelectField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
+import { useGuardContactAvailability } from "../../guards/useGuardContactAvailability";
 import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
 import {
   EMPTY_STAFF_MEMBER_FORM,
 } from "../staffFormTypes";
 import { useBranchContext } from "../../branches";
 import "./StaffMemberForm.css";
+
+const WEEKDAY_OPTIONS: { id: string; label: string }[] = [
+  { id: "monday", label: "Monday" },
+  { id: "tuesday", label: "Tuesday" },
+  { id: "wednesday", label: "Wednesday" },
+  { id: "thursday", label: "Thursday" },
+  { id: "friday", label: "Friday" },
+  { id: "saturday", label: "Saturday" },
+  { id: "sunday", label: "Sunday" },
+];
 
 const ROLE_COPY: Record<StaffRole, { submitLabel: string }> = {
   guard:      { submitLabel: "Save Guard" },
@@ -26,6 +37,8 @@ export interface StaffMemberFormProps {
   isSubmitting?: boolean;
   /** Pass true when creating a new guard — makes password required */
   isNew?: boolean;
+  /** When editing, exclude this guard from phone/email uniqueness checks */
+  excludeGuardId?: string;
   onSubmit: (values: StaffMemberFormValues) => void | Promise<void>;
   onCancel: () => void;
 }
@@ -35,6 +48,7 @@ export function StaffMemberForm({
   initialValues,
   isSubmitting = false,
   isNew = false,
+  excludeGuardId,
   onSubmit,
   onCancel,
 }: StaffMemberFormProps) {
@@ -44,6 +58,13 @@ export function StaffMemberForm({
   );
   const [errors, setErrors] = useState<Partial<Record<keyof StaffMemberFormValues, string>>>({});
   const roleCopy = ROLE_COPY[role];
+  const checkContacts = role === "guard";
+  const { phoneStatus, emailStatus } = useGuardContactAvailability({
+    phone: values.phone,
+    email: values.email,
+    excludeGuardId,
+    enabled: checkContacts,
+  });
 
   function updateField<K extends keyof StaffMemberFormValues>(
     field: K,
@@ -92,7 +113,29 @@ export function StaffMemberForm({
       nextErrors.confirmPassword = "Passwords do not match.";
     }
 
-    setErrors(nextErrors);    return Object.keys(nextErrors).length === 0;
+    if (checkContacts) {
+      if (phoneStatus.checking || emailStatus.checking) {
+        nextErrors.phone = phoneStatus.checking
+          ? "Still checking mobile number…"
+          : nextErrors.phone;
+        nextErrors.email = emailStatus.checking
+          ? "Still checking email…"
+          : nextErrors.email;
+      }
+      if (phoneStatus.available === false) {
+        nextErrors.phone =
+          phoneStatus.message ||
+          "This mobile number is already registered to another guard.";
+      }
+      if (emailStatus.available === false) {
+        nextErrors.email =
+          emailStatus.message ||
+          "This email is already registered to another guard.";
+      }
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -103,6 +146,7 @@ export function StaffMemberForm({
       ...values,
       fullName: values.fullName.trim(),
       fatherName: values.fatherName.trim(),
+      motherName: values.motherName.trim(),
       phone: values.phone.trim(),
       email: values.email.trim(),
       address: values.address.trim(),
@@ -115,6 +159,7 @@ export function StaffMemberForm({
       salary: values.salary.trim(),
       experience: values.experience.trim(),
       education: values.education.trim(),
+      weeklyOffDays: values.weeklyOffDays,
       bankAccount: values.bankAccount.trim(),
       esiNumber: values.esiNumber.trim(),
       pfNumber: values.pfNumber.trim(),
@@ -124,7 +169,7 @@ export function StaffMemberForm({
 
   return (
     <form className="staff-member-form" onSubmit={handleSubmit} noValidate>
-      <FormPanel>
+      <FormPanel className="form-panel--wide">
         {/* ── Profile Picture ── */}
         <ProfilePictureUpload
           name={values.fullName}
@@ -160,12 +205,32 @@ export function StaffMemberForm({
             disabled={isSubmitting}
           />
           <TextField
+            label="Mother's name"
+            name="motherName"
+            value={values.motherName}
+            onChange={(e) => updateField("motherName", e.target.value)}
+            errorMessage={errors.motherName}
+            disabled={isSubmitting}
+          />
+          <TextField
             label="Mobile number"
             name="phone"
             type="tel"
             value={values.phone}
             onChange={(e) => updateField("phone", e.target.value)}
-            errorMessage={errors.phone}
+            errorMessage={
+              errors.phone ||
+              (checkContacts && phoneStatus.available === false
+                ? phoneStatus.message
+                : undefined)
+            }
+            hint={
+              checkContacts && !errors.phone && phoneStatus.available === true
+                ? phoneStatus.message
+                : checkContacts && phoneStatus.checking
+                  ? "Checking availability…"
+                  : undefined
+            }
             required
             disabled={isSubmitting}
           />
@@ -175,7 +240,19 @@ export function StaffMemberForm({
             type="email"
             value={values.email}
             onChange={(e) => updateField("email", e.target.value)}
-            errorMessage={errors.email}
+            errorMessage={
+              errors.email ||
+              (checkContacts && emailStatus.available === false
+                ? emailStatus.message
+                : undefined)
+            }
+            hint={
+              checkContacts && !errors.email && emailStatus.available === true
+                ? emailStatus.message
+                : checkContacts && emailStatus.checking
+                  ? "Checking availability…"
+                  : undefined
+            }
             required
             disabled={isSubmitting}
           />
@@ -383,6 +460,39 @@ export function StaffMemberForm({
             errorMessage={errors.shiftTo}
             disabled={isSubmitting}
           />
+        </div>
+
+        <p className="staff-member-form__section-label">Weekly offs</p>
+        <p className="staff-member-form__section-hint">
+          Which day(s) is this guard off each week? Different guards can have
+          different offs.
+        </p>
+        <div className="staff-member-form__weekdays" role="group" aria-label="Weekly offs">
+          {WEEKDAY_OPTIONS.map((day) => {
+            const on = values.weeklyOffDays.includes(day.id);
+            return (
+              <button
+                key={day.id}
+                type="button"
+                className={`staff-member-form__day${on ? " staff-member-form__day--on" : ""}`}
+                aria-pressed={on}
+                disabled={isSubmitting}
+                onClick={() => {
+                  const next = on
+                    ? values.weeklyOffDays.filter((d) => d !== day.id)
+                    : [...values.weeklyOffDays, day.id];
+                  updateField(
+                    "weeklyOffDays",
+                    WEEKDAY_OPTIONS.map((o) => o.id).filter((id) =>
+                      next.includes(id)
+                    )
+                  );
+                }}
+              >
+                {day.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Section: Documents ── */}

@@ -10,6 +10,8 @@ export interface ProspectFormValues {
   expectedGuardCount: string;   // string for input, parsed to number on save
   expectedMonthlyValue: string;
   leadSource: LeadSource | string;
+  /** Shown when leadSource is "referral". */
+  referralName: string;
 
   // Contact
   contactName: string;
@@ -30,6 +32,7 @@ export const EMPTY_PROSPECT_FORM: ProspectFormValues = {
   expectedGuardCount: "",
   expectedMonthlyValue: "",
   leadSource: "other",
+  referralName: "",
   contactName: "",
   contactDesignation: "",
   primaryPhone: "",

@@ -37,5 +37,5 @@ export function requestRosterSync(reason = 'manual'): void {
   });
 }
 
-/** Foreground poll interval while the Guard app is open (ms). */
-export const ROSTER_FOREGROUND_POLL_MS = 15_000;
+/** Silent background poll while the Guard app is open (ms). */
+export const ROSTER_FOREGROUND_POLL_MS = 30_000;

@@ -47,8 +47,8 @@ export function HrDashboardScreen({
           People operations
         </h1>
         <p className="hr-dashboard__support">
-          Manage guards, leave, and inventory stock. Site setup and financial
-          details stay outside this panel.
+          Manage guards, leave, and inventory stock. Site setup and payroll editing
+          stay with the agency admin.
         </p>
       </section>
 

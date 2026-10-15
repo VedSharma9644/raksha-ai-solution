@@ -1,15 +1,21 @@
 import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
+import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
+import { SearchableSelect } from "../../../components/SearchableSelect";
 import { TextField } from "../../../components/TextField";
-import { SelectField } from "../../../components/SelectField";
 import type {
   AttendanceRecord,
   AttendanceStats,
   GeofenceStatus,
 } from "../attendanceTypes";
 import { formatDuration } from "../attendanceTypes";
+import {
+  AttendanceCorrectionModal,
+  type CorrectionGuardOption,
+} from "../AttendanceCorrectionModal";
 import { AttendanceDetailModal } from "../AttendanceDetailModal";
+import { GuardMonthReview } from "../GuardMonthReview";
 import "./AttendanceListScreen.css";
 
 const GEOFENCE_LABELS: Record<GeofenceStatus, string> = {
@@ -22,26 +28,44 @@ export interface AttendanceListScreenProps {
   records: AttendanceRecord[];
   stats: AttendanceStats;
   sites: { siteId: string; siteName: string }[];
+  guards: CorrectionGuardOption[];
   onBack: () => void;
+  backLabel?: string;
   dateFilter: string;
   onDateFilterChange: (date: string) => void;
   isLoading?: boolean;
   error?: string | null;
+  onCorrectionSaved?: () => void;
+  /** Prefill "Fix missed / half days" (e.g. from payroll). */
+  initialReviewGuardId?: string;
+  initialReviewYear?: number;
+  initialReviewMonth?: number;
 }
 
 export function AttendanceListScreen({
   records,
   stats,
   sites,
+  guards,
   onBack,
+  backLabel = "Back to dashboard",
   dateFilter,
   onDateFilterChange,
   isLoading = false,
   error = null,
+  onCorrectionSaved,
+  initialReviewGuardId,
+  initialReviewYear,
+  initialReviewMonth,
 }: AttendanceListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [correctionSeed, setCorrectionSeed] = useState<{
+    guardId?: string;
+    dutyDate: string;
+  } | null>(null);
+  const [monthReviewKey, setMonthReviewKey] = useState(0);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -68,9 +92,40 @@ export function AttendanceListScreen({
       <div className="att-list-screen">
         <PageHeader
           title="Guard Attendance"
-          subtitle="Track daily punch-in and punch-out records for all guards."
+          subtitle="Track daily punches, review missed or half days, and correct technical failures."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel={backLabel}
+          actions={
+            <Button
+              type="button"
+              variant="secondary"
+              size="medium"
+              onClick={() =>
+                setCorrectionSeed({ dutyDate: dateFilter })
+              }
+            >
+              Correct attendance
+            </Button>
+          }
+        />
+
+        {backLabel.toLowerCase().includes("payroll") ? (
+          <p className="att-list-screen__payroll-banner" role="status">
+            Fixing attendance for payroll. When you&apos;re done, use{" "}
+            <strong>Back to payroll</strong>, then re-check the month (or
+            re-save the run) so pay picks up the corrected days.
+          </p>
+        ) : null}
+
+        <GuardMonthReview
+          guards={guards}
+          refreshKey={monthReviewKey}
+          initialGuardId={initialReviewGuardId}
+          initialYear={initialReviewYear}
+          initialMonth={initialReviewMonth}
+          onCorrectDay={({ guardId, dutyDate }) =>
+            setCorrectionSeed({ guardId, dutyDate })
+          }
         />
 
         {/* ── Stat Cards ── */}
@@ -136,12 +191,13 @@ export function AttendanceListScreen({
           </div>
 
           <div className="att-filters__site">
-            <SelectField
+            <SearchableSelect
               label="Site"
               name="attSite"
               value={siteFilter}
               options={siteOptions}
-              onChange={(e) => setSiteFilter(e.target.value)}
+              onChange={setSiteFilter}
+              searchPlaceholder="Search site name…"
             />
           </div>
         </div>
@@ -311,6 +367,26 @@ export function AttendanceListScreen({
         <AttendanceDetailModal
           record={selectedRecord}
           onClose={() => setSelectedRecord(null)}
+          onCorrect={() => {
+            setCorrectionSeed({
+              guardId: selectedRecord.guardId,
+              dutyDate: selectedRecord.punchInDate || dateFilter,
+            });
+            setSelectedRecord(null);
+          }}
+        />
+      )}
+
+      {correctionSeed !== null && (
+        <AttendanceCorrectionModal
+          guards={guards}
+          initialGuardId={correctionSeed.guardId}
+          initialDutyDate={correctionSeed.dutyDate}
+          onClose={() => setCorrectionSeed(null)}
+          onSaved={() => {
+            setMonthReviewKey((k) => k + 1);
+            onCorrectionSaved?.();
+          }}
         />
       )}
     </AppScreenLayout>

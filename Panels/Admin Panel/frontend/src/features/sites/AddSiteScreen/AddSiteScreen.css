@@ -1,5 +1,7 @@
 .add-site-screen {
   animation: add-site-enter 360ms ease both;
+  width: 100%;
+  max-width: none;
 }
 
 @keyframes add-site-enter {

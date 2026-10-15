@@ -14,6 +14,10 @@ import {
   toDutyDateKey,
 } from "./dutyDate";
 import { withSelfieUploadSlot } from "./uploadQueue";
+import {
+  computeIntervalCheckinStatus,
+  evaluateIntervalCheckinPunctuality,
+} from "./intervalCheckin";
 
 export {
   formatIstPunchDate,
@@ -56,7 +60,7 @@ function buildSelfieStoragePath(params: {
   agencyId: string;
   siteId: string;
   guardId: string;
-  purpose: "punch_in_selfie" | "punch_out_selfie";
+  purpose: "punch_in_selfie" | "punch_out_selfie" | "interval_checkin_selfie";
   loadTestId?: string;
 }): string {
   const agencyId = params.agencyId || "unassigned-agency";
@@ -77,7 +81,7 @@ async function uploadSelfie(params: {
   siteId: string;
   guardId: string;
   selfieBase64: string;
-  purpose?: "punch_in_selfie" | "punch_out_selfie";
+  purpose?: "punch_in_selfie" | "punch_out_selfie" | "interval_checkin_selfie";
   loadTestId?: string;
 }): Promise<{ selfieUrl: string; storagePath: string }> {
   const purpose = params.purpose ?? "punch_in_selfie";
@@ -130,7 +134,7 @@ export async function createSelfieUploadUrl(params: {
   agencyId: string;
   siteId: string;
   guardId: string;
-  purpose?: "punch_in_selfie" | "punch_out_selfie";
+  purpose?: "punch_in_selfie" | "punch_out_selfie" | "interval_checkin_selfie";
   loadTestId?: string;
 }): Promise<{
   uploadUrl: string;
@@ -190,6 +194,9 @@ function parseShiftHhMm(value: string): { hours: number; minutes: number } | nul
   return { hours, minutes };
 }
 
+/** How long after shift start a guard may still punch in (late). */
+export const PUNCH_IN_LATE_GRACE_MINUTES = 15;
+
 /**
  * Compare punch time against scheduled shift start in Asia/Kolkata.
  * Returns Late when punch is after shift start.
@@ -215,6 +222,76 @@ export function evaluatePunchInPunctuality(params: {
     return { punchInStatus: "Late", minutesLate };
   }
   return { punchInStatus: "On Time", minutesLate: 0 };
+}
+
+/**
+ * Hard cutoff: punch-in is rejected more than
+ * {@link PUNCH_IN_LATE_GRACE_MINUTES} after shift start (IST).
+ */
+export function assertPunchInWithinLateWindow(params: {
+  punchedAt: Date;
+  shiftFrom: string;
+}): void {
+  const punctuality = evaluatePunchInPunctuality(params);
+  if (punctuality.minutesLate <= PUNCH_IN_LATE_GRACE_MINUTES) {
+    return;
+  }
+  const parsed = parseShiftHhMm(params.shiftFrom || "");
+  const startLabel = parsed
+    ? `${String(parsed.hours).padStart(2, "0")}:${String(parsed.minutes).padStart(2, "0")}`
+    : params.shiftFrom || "shift start";
+  throw Object.assign(
+    new Error(
+      `Punch-in closed. You can only check in within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes of shift start (${startLabel}). Contact your supervisor if you still need to start duty.`
+    ),
+    { statusCode: 403 }
+  );
+}
+
+export function getPunchInWindowStatus(params: {
+  now?: Date;
+  shiftFrom: string;
+  shiftActive: boolean;
+}): {
+  open: boolean;
+  graceMinutes: number;
+  minutesPastStart: number | null;
+  closesAt: string | null;
+  message: string | null;
+} {
+  if (params.shiftActive) {
+    return {
+      open: false,
+      graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+      minutesPastStart: null,
+      closesAt: null,
+      message: null,
+    };
+  }
+  const now = params.now ?? new Date();
+  const punctuality = evaluatePunchInPunctuality({
+    punchedAt: now,
+    shiftFrom: params.shiftFrom,
+  });
+  const parsed = parseShiftHhMm(params.shiftFrom || "");
+  let closesAt: string | null = null;
+  if (parsed) {
+    const dutyDate = toDutyDateKey(now);
+    const start = istWallClockToDate(dutyDate, parsed.hours, parsed.minutes);
+    closesAt = new Date(
+      start.getTime() + PUNCH_IN_LATE_GRACE_MINUTES * 60_000
+    ).toISOString();
+  }
+  const open = punctuality.minutesLate <= PUNCH_IN_LATE_GRACE_MINUTES;
+  return {
+    open,
+    graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+    minutesPastStart: punctuality.minutesLate,
+    closesAt,
+    message: open
+      ? null
+      : `Punch-in closed. Check-in is only allowed within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes of your shift start.`,
+  };
 }
 
 function mapOpenPunchIn(docSnap: {
@@ -323,7 +400,7 @@ async function resolveSelfieAssets(params: {
   selfieBase64?: string;
   selfieStoragePath?: string;
   selfieUrl?: string;
-  purpose: "punch_in_selfie" | "punch_out_selfie";
+  purpose: "punch_in_selfie" | "punch_out_selfie" | "interval_checkin_selfie";
   loadTestId?: string;
 }): Promise<{ selfieUrl: string; storagePath: string }> {
   const path = params.selfieStoragePath?.trim() || "";
@@ -392,6 +469,12 @@ export async function markPunchIn(
     }
   }
 
+  const now = new Date();
+  assertPunchInWithinLateWindow({
+    punchedAt: now,
+    shiftFrom: params.guard.shiftFrom,
+  });
+
   const { selfieUrl, storagePath } = await resolveSelfieAssets({
     guard: params.guard,
     selfieBase64: params.selfieBase64,
@@ -401,7 +484,6 @@ export async function markPunchIn(
     loadTestId: loadTestId || undefined,
   });
 
-  const now = new Date();
   const dutyDate = toDutyDateKey(now);
   const punctuality = evaluatePunchInPunctuality({
     punchedAt: now,
@@ -566,6 +648,216 @@ export async function markPunchOut(
     mode: "punch_out",
     punchOutTime: formatPunchTime(now),
     durationLabel,
+  };
+}
+
+export type IntervalCheckinRecordSummary = {
+  id: string;
+  punchedAt: Date;
+  selfieUrl: string;
+  punctuality: "on_time" | "late";
+};
+
+export async function listIntervalCheckinsForShift(
+  shiftPunchInId: string
+): Promise<IntervalCheckinRecordSummary[]> {
+  if (!shiftPunchInId.trim()) {
+    return [];
+  }
+  const db = getFirestore();
+  // Single-field query — filter type in memory (avoids composite index).
+  const snap = await db
+    .collection(ATTENDANCE_COLLECTION)
+    .where("shiftPunchInId", "==", shiftPunchInId.trim())
+    .get();
+
+  const rows: IntervalCheckinRecordSummary[] = [];
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() ?? {};
+    if (String(data.type ?? "") !== "interval_checkin") {
+      continue;
+    }
+    const punchedAtRaw = data.punchedAt as Timestamp | undefined;
+    if (!punchedAtRaw?.toMillis) {
+      continue;
+    }
+    const punctualityRaw = String(data.checkinPunctuality ?? "on_time");
+    rows.push({
+      id: docSnap.id,
+      punchedAt: punchedAtRaw.toDate(),
+      selfieUrl: typeof data.selfieUrl === "string" ? data.selfieUrl : "",
+      punctuality: punctualityRaw === "late" ? "late" : "on_time",
+    });
+  }
+  rows.sort((a, b) => a.punchedAt.getTime() - b.punchedAt.getTime());
+  return rows;
+}
+
+export type MarkIntervalCheckinParams = {
+  guard: AuthenticatedGuardContext;
+  lat: number;
+  lng: number;
+  accuracyMeters?: number;
+  selfieBase64?: string;
+  selfieStoragePath?: string;
+  selfieUrl?: string;
+  site?: SiteGeofenceInput | null;
+  demoMode?: boolean;
+  /** Site interval minutes (required for window validation). */
+  intervalCheckinMinutes: number | null;
+};
+
+export type IntervalCheckinResult = PunchInResult & {
+  mode: "interval_checkin";
+  checkinPunctuality: "on_time" | "late";
+  sequenceNumber: number;
+};
+
+/**
+ * Mid-shift photo check-in: requires active punch-in, site geofence, and
+ * an open due/late window (15-minute grace after due).
+ */
+export async function markIntervalCheckin(
+  params: MarkIntervalCheckinParams
+): Promise<IntervalCheckinResult> {
+  const demoMode = params.demoMode !== false;
+  const accuracyMeters = params.accuracyMeters ?? 5;
+  const db = getFirestore();
+
+  const open = await getTodayOpenPunchIn(params.guard.guardId);
+  if (!open) {
+    throw Object.assign(
+      new Error("No active shift. Punch in before interval check-in."),
+      { statusCode: 400 }
+    );
+  }
+
+  const intervalMinutes = params.intervalCheckinMinutes;
+  if (!intervalMinutes || intervalMinutes < 5) {
+    throw Object.assign(
+      new Error("This site does not require regular interval check-ins."),
+      { statusCode: 400 }
+    );
+  }
+
+  const prior = await listIntervalCheckinsForShift(open.id);
+  const lastCheckinAt =
+    prior.length > 0 ? prior[prior.length - 1]!.punchedAt : null;
+  const window = computeIntervalCheckinStatus({
+    intervalMinutes,
+    shiftActive: true,
+    punchInAt: open.punchedAt,
+    lastCheckinAt,
+    completedCount: prior.length,
+  });
+
+  if (window.status !== "due" && window.status !== "late") {
+    if (window.status === "missed") {
+      throw Object.assign(
+        new Error(
+          "This check-in was missed. Wait for the next check-in window."
+        ),
+        { statusCode: 400 }
+      );
+    }
+    if (window.status === "waiting" && window.dueAt) {
+      throw Object.assign(
+        new Error(
+          `Next check-in is due at ${new Date(window.dueAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true })}.`
+        ),
+        { statusCode: 400 }
+      );
+    }
+    throw Object.assign(new Error("Interval check-in is not available now."), {
+      statusCode: 400,
+    });
+  }
+
+  if (!window.dueAt) {
+    throw Object.assign(new Error("Interval check-in window is invalid."), {
+      statusCode: 400,
+    });
+  }
+
+  const geofence = checkGeofence({
+    lat: params.lat,
+    lng: params.lng,
+    accuracyMeters,
+    site: params.site,
+    demoMode,
+  });
+
+  if (!geofence.unlocked) {
+    throw Object.assign(
+      new Error(
+        geofence.message ||
+          "You must be at the duty site to complete a check-in."
+      ),
+      { statusCode: 403 }
+    );
+  }
+
+  const now = new Date();
+  const punctuality = evaluateIntervalCheckinPunctuality({
+    punchedAt: now,
+    dueAt: new Date(window.dueAt),
+  });
+
+  const { selfieUrl, storagePath } = await resolveSelfieAssets({
+    guard: params.guard,
+    selfieBase64: params.selfieBase64,
+    selfieStoragePath: params.selfieStoragePath,
+    selfieUrl: params.selfieUrl,
+    purpose: "interval_checkin_selfie",
+  });
+
+  const dutyDate = toDutyDateKey(now);
+  const sequenceNumber = prior.length + 1;
+
+  const docRef = await db.collection(ATTENDANCE_COLLECTION).add({
+    guardId: params.guard.guardId,
+    agencyId: params.guard.agencyId,
+    siteId: params.guard.assignedSiteId,
+    type: "interval_checkin",
+    shiftPunchInId: open.id,
+    dutyDate,
+    punchedAt: Timestamp.fromDate(now),
+    dueAt: Timestamp.fromDate(new Date(window.dueAt)),
+    checkinPunctuality: punctuality,
+    sequenceNumber,
+    lat: params.lat,
+    lng: params.lng,
+    accuracyMeters,
+    selfieUrl,
+    selfieStoragePath: storagePath,
+    geofenceStatus: geofence.status,
+    shiftStatus: "started",
+    guardName: params.guard.fullName,
+    guardEmployeeCode: params.guard.employeeCode,
+    siteName: params.guard.siteName || open.siteName,
+    postName: params.guard.postName || open.postName,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  return {
+    recordId: docRef.id,
+    guardName: params.guard.fullName,
+    guardId: params.guard.employeeCode,
+    punchInTime: formatPunchTime(now),
+    punchInDate: formatPunchDate(now),
+    punchInStatus: punctuality === "late" ? "Late check-in" : "Check-in OK",
+    dutySiteName: params.guard.siteName || open.siteName,
+    dutyPostName: params.guard.postName || open.postName,
+    rosterTitle: `Interval check-in #${sequenceNumber}`,
+    rosterHours: `Every ${intervalMinutes} min`,
+    geofenceDetail: `Site Match: ${geofence.status === "failed" ? "0%" : "100%"} (Accuracy: ${accuracyMeters}m)`,
+    geofenceResult: geofence.unlocked ? "PASSED" : "FAILED",
+    selfieUrl,
+    shiftStatus: "started",
+    mode: "interval_checkin",
+    checkinPunctuality: punctuality,
+    sequenceNumber,
   };
 }
 

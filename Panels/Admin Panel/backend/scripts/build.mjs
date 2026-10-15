@@ -66,6 +66,10 @@ await esbuild.build({
       "modules/Site Management/index.ts"
     ),
     "@raskha/scheduling": path.join(monorepoRoot, "modules/Scheduling/index.ts"),
+    "@raskha/payroll": path.join(monorepoRoot, "modules/Payroll/index.ts"),
+    "@raskha/earnings": path.join(monorepoRoot, "modules/Earnings/index.ts"),
+    "@raskha/invoices": path.join(monorepoRoot, "modules/Invoices/index.ts"),
+    "@raskha/money-out": path.join(monorepoRoot, "modules/MoneyOut/index.ts"),
   },
   packages: "external",
   banner: {

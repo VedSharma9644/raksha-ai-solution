@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
+import { useConfirmDialog } from "../../../components/ConfirmDialog";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import type { ProspectClient, ProspectStatus } from "@raskha/client-management";
@@ -80,6 +81,7 @@ export function ProspectListScreen({
   onEdit,
   onDelete,
 }: ProspectListScreenProps) {
+  const { confirm } = useConfirmDialog();
   const [activeTab, setActiveTab] = useState<ProspectStatus | "">("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -117,7 +119,7 @@ export function ProspectListScreen({
           title="Prospect Clients"
           subtitle="Track and manage your prospective client pipeline."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to prospect leads"
           actions={
             <Button onClick={onAdd} variant="primary" size="medium">
               + Add Prospect
@@ -219,7 +221,16 @@ export function ProspectListScreen({
                           </span>
                         ) : "—"}
                       </td>
-                      <td className="prospect-table__source">{leadSourceLabel(p.leadSource)}</td>
+                      <td className="prospect-table__source">
+                        {leadSourceLabel(p.leadSource)}
+                        {p.leadSource === "referral" && p.referralName?.trim()
+                          ? (
+                              <div className="prospect-table__sub">
+                                {p.referralName.trim()}
+                              </div>
+                            )
+                          : null}
+                      </td>
                       <td>
                         <span className={`prospect-badge ${statusColorClass(p.status)}`}>
                           {statusLabel(p.status)}
@@ -248,9 +259,16 @@ export function ProspectListScreen({
                             className="prospect-action-btn prospect-action-btn--delete"
                             title="Delete"
                             onClick={() => {
-                              if (confirm(`Delete prospect "${p.orgName}"? This cannot be undone.`)) {
-                                onDelete(p.id);
-                              }
+                              void (async () => {
+                                const ok = await confirm({
+                                  title: "Delete prospect?",
+                                  message: `Delete prospect "${p.orgName}"? This cannot be undone.`,
+                                  confirmLabel: "Delete",
+                                  cancelLabel: "Cancel",
+                                  tone: "danger",
+                                });
+                                if (ok) onDelete(p.id);
+                              })();
                             }}
                           >
                             <IconTrash />

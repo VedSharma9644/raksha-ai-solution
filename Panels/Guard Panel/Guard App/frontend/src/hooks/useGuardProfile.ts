@@ -51,39 +51,64 @@ export function useGuardProfile(): {
     }
   }, [authToken]);
 
-  const refresh = useCallback(async () => {
-    if (!authToken) {
-      profileCache = null;
-      setProfile(null);
-      setError(null);
-      notifyListeners();
-      return;
-    }
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean; force?: boolean }) => {
+      if (!authToken) {
+        profileCache = null;
+        setProfile(null);
+        setError(null);
+        notifyListeners();
+        return;
+      }
 
-    const fresh =
-      profileCache &&
-      profileCache.token === authToken &&
-      Date.now() - profileCache.at < 30_000;
-    if (fresh) {
-      setProfile(profileCache!.data);
-      return;
-    }
+      const silent =
+        opts?.silent === true &&
+        Boolean(profileCache && profileCache.token === authToken);
+      const fresh =
+        !opts?.force &&
+        profileCache &&
+        profileCache.token === authToken &&
+        Date.now() - profileCache.at < 30_000;
+      if (fresh) {
+        setProfile(profileCache!.data);
+        return;
+      }
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchGuardProfile(authToken);
-      profileCache = { token: authToken, data, at: Date.now() };
-      setProfile(data);
-      notifyListeners();
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load profile.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authToken]);
+      if (!silent) {
+        setIsLoading(true);
+        setError(null);
+      }
+      try {
+        const data = await fetchGuardProfile(authToken);
+        const prev = profileCache?.token === authToken ? profileCache.data : null;
+        const changed =
+          !prev ||
+          prev.fullName !== data.fullName ||
+          prev.profilePictureUrl !== data.profilePictureUrl ||
+          prev.site.siteName !== data.site.siteName ||
+          prev.site.postName !== data.site.postName ||
+          prev.shiftFrom !== data.shiftFrom ||
+          prev.shiftTo !== data.shiftTo ||
+          JSON.stringify(prev.gear) !== JSON.stringify(data.gear);
+        profileCache = { token: authToken, data, at: Date.now() };
+        if (changed) {
+          setProfile(data);
+          notifyListeners();
+        }
+      } catch (err: unknown) {
+        if (!silent) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to load profile.',
+          );
+        }
+      } finally {
+        if (!silent) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [authToken],
+  );
 
   useEffect(() => {
     void refresh();
@@ -91,16 +116,14 @@ export function useGuardProfile(): {
 
   useEffect(() => {
     return subscribeRosterSync(() => {
-      profileCache = null;
-      void refresh();
+      void refresh({ silent: true, force: true });
     });
   }, [refresh]);
 
   useEffect(() => {
     const onState = (state: AppStateStatus) => {
       if (state === 'active') {
-        profileCache = null;
-        void refresh();
+        void refresh({ silent: true, force: true });
       }
     };
     const sub = AppState.addEventListener('change', onState);
@@ -116,7 +139,7 @@ export function useGuardProfile(): {
         : profile,
     isLoading,
     error,
-    refresh,
+    refresh: () => refresh({ silent: false, force: true }),
   };
 }
 

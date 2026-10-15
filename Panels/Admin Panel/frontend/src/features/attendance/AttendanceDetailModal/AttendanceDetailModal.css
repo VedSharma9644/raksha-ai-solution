@@ -515,6 +515,24 @@
   line-height: 1.5;
 }
 
+.att-modal__correction {
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.att-modal__correction-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #6b7280);
+  max-width: 42ch;
+}
+
 /* ─────────────────────────────────────────
    GEOFENCE BADGES (reused in photo cards)
 ───────────────────────────────────────── */

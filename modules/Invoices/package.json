@@ -1,0 +1,11 @@
+{
+  "name": "@raskha/invoices",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "dependencies": {
+    "@raskha/site-management": "1.0.0",
+    "firebase-admin": "^14.5.0",
+    "pdfkit": "^0.17.1"
+  }
+}

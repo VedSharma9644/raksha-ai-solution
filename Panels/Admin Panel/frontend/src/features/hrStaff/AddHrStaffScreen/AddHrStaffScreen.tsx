@@ -24,7 +24,7 @@ export function AddHrStaffScreen({
           title="Add HR User"
           subtitle="Create an HR account to manage leave, payroll, and staff records."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to HR"
         />
         <HrStaffForm
           mode="add"

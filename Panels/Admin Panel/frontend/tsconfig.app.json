@@ -16,6 +16,11 @@
       "@raskha/hr-management": ["../../../modules/HR Management/index.ts"],
       "@raskha/site-management": ["../../../modules/Site Management/index.ts"],
       "@raskha/form-builder": ["../../../modules/Form Builder/index.ts"],
+      "@raskha/payroll": ["../../../modules/Payroll/client.ts"],
+      "@raskha/earnings": ["../../../modules/Earnings/client.ts"],
+      "@raskha/invoices": ["../../../modules/Invoices/client.ts"],
+      "@raskha/money-out": ["../../../modules/MoneyOut/client.ts"],
+      "@raskha/shared": ["../../../shared/index.ts"],
       "@raskha/inventory-management": ["../../../modules/Inventory Management/index.ts"],
       "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"],
       "@raskha/client-management": ["../../../modules/Client Management/index.ts"]

@@ -89,6 +89,7 @@ export function EditGuardPage() {
           initialValues={initialValues}
           isSubmitting={isSubmitting}
           isDeleting={isDeleting}
+          excludeGuardId={guardId}
           guardInventoryPanel={inventoryPanel}
           onBack={goBack}
           onCancel={goBack}

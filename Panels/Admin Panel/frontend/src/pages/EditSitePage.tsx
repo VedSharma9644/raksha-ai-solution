@@ -38,8 +38,15 @@ export function EditSitePage() {
   const { id = "" } = useParams<{ id: string }>();
   const { agency } = useAuthContext();
 
-  const { initialValues, isLoading, isSubmitting, loadError, saveError, saveSite } =
-    useEditSite(id);
+  const {
+    initialValues,
+    assignedCounts,
+    isLoading,
+    isSubmitting,
+    loadError,
+    saveError,
+    saveSite,
+  } = useEditSite(id);
   const { removeSite, isDeleting, error: deleteError } = useDeleteSite(id);
   const { isEnabled, isLoading: isStatusLoading } = useFormBuilderStatus(
     agency?.id
@@ -77,6 +84,7 @@ export function EditSitePage() {
         ) : null}
         <EditSiteScreen
           initialValues={initialValues}
+          assignedCounts={assignedCounts}
           isSubmitting={isSubmitting}
           isDeleting={isDeleting}
           onBack={goBack}

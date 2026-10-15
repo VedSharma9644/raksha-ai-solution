@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
+import { useConfirmDialog } from "../../../components/ConfirmDialog";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import type { ProspectGuardStatus } from "@raskha/guard-management";
@@ -81,6 +82,7 @@ export function ProspectGuardListScreen({
   onEdit,
   onDelete,
 }: ProspectGuardListScreenProps) {
+  const { confirm } = useConfirmDialog();
   const [activeTab, setActiveTab] = useState<ProspectGuardStatus | "">("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -116,7 +118,7 @@ export function ProspectGuardListScreen({
           title="Prospect Guards"
           subtitle="Track and manage your prospective guard candidates."
           onBack={onBack}
-          backLabel="Back to dashboard"
+          backLabel="Back to prospect leads"
           actions={
             <Button onClick={onAdd} variant="primary" size="medium">
               + Add Prospect Guard
@@ -241,9 +243,16 @@ export function ProspectGuardListScreen({
                             className="prospect-guard-action-btn prospect-guard-action-btn--delete"
                             title="Delete"
                             onClick={() => {
-                              if (confirm(`Delete "${g.fullName}"? This cannot be undone.`)) {
-                                onDelete(g.id);
-                              }
+                              void (async () => {
+                                const ok = await confirm({
+                                  title: "Delete prospect guard?",
+                                  message: `Delete "${g.fullName}"? This cannot be undone.`,
+                                  confirmLabel: "Delete",
+                                  cancelLabel: "Cancel",
+                                  tone: "danger",
+                                });
+                                if (ok) onDelete(g.id);
+                              })();
                             }}
                           >
                             <IconTrash />

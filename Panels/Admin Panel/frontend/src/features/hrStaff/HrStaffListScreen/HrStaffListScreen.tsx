@@ -41,13 +41,13 @@ export function HrStaffListScreen({
     <AppScreenLayout>
       <div className="app-screen-layout__content hr-staff-list-screen">
         <PageHeader
-          title="HR User List"
-          subtitle="Manage HR staff who handle leave, payroll, and staff records."
+          title="HR"
+          subtitle="Browse, manage, and add HR users for leave, payroll, and records."
           onBack={onBack}
           backLabel="Back to dashboard"
           actions={
             <Button type="button" onClick={onAddHr}>
-              + Add HR User
+              + Add HR
             </Button>
           }
         />

@@ -27,6 +27,11 @@ export default defineConfig({
         projectRoot,
         "../../../modules/Form Builder/index.ts"
       ),
+      // Client-safe entry only (no firebase-admin / Node APIs in the browser)
+      "@raskha/payroll": path.resolve(
+        projectRoot,
+        "../../../modules/Payroll/client.ts"
+      ),
       "@raskha/inventory-management": path.resolve(
         projectRoot,
         "../../../modules/Inventory Management/index.ts"

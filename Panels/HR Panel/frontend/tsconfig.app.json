@@ -15,9 +15,11 @@
       "@raskha/hr-management": ["../../../modules/HR Management/index.ts"],
       "@raskha/guard-management": ["../../../modules/Guard Management/index.ts"],
       "@raskha/form-builder": ["../../../modules/Form Builder/index.ts"],
+      "@raskha/payroll": ["../../../modules/Payroll/client.ts"],
       "@raskha/inventory-management": ["../../../modules/Inventory Management/index.ts"],
       "@raskha/site-management": ["../../../modules/Site Management/index.ts"],
-      "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"]
+      "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"],
+      "@raskha/shared": ["../../../shared/index.ts"]
     },
 
     /* Bundler mode */

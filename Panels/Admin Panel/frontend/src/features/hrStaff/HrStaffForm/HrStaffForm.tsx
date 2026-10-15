@@ -107,7 +107,7 @@ export function HrStaffForm({
 
   return (
     <form className="hr-staff-form" onSubmit={handleSubmit} noValidate>
-      <FormPanel>
+      <FormPanel className="form-panel--wide">
         <div className="form-panel__grid">
           <TextField
             label="Full name"

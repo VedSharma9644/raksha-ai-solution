@@ -11,6 +11,7 @@ export function AttendanceMarkedDetailsCard() {
   const { lastPunchResult } = useGuardAppNavigation();
   const isPunchOut =
     lastPunchResult?.mode === 'punch_out' || lastPunchResult?.shiftStatus === 'ended';
+  const isIntervalCheckin = lastPunchResult?.mode === 'interval_checkin';
 
   return (
     <View style={styles.card}>
@@ -42,8 +43,12 @@ export function AttendanceMarkedDetailsCard() {
           </>
         ) : (
           <DetailInfoRow
-            icon="schedule"
-            label={attendanceMarkedDefaults.punchInLabel}
+            icon={isIntervalCheckin ? 'camera-alt' : 'schedule'}
+            label={
+              isIntervalCheckin
+                ? `Check-in #${lastPunchResult?.sequenceNumber ?? ''}`
+                : attendanceMarkedDefaults.punchInLabel
+            }
             title={lastPunchResult?.punchInTime ?? attendanceMarkedDefaults.punchInTime}
             titleVariant="headline"
             statusBadge={lastPunchResult?.punchInStatus ?? attendanceMarkedDefaults.punchInStatus}
@@ -60,7 +65,13 @@ export function AttendanceMarkedDetailsCard() {
 
         <DetailInfoRow
           icon="badge"
-          label={isPunchOut ? 'Shift Duration' : attendanceMarkedDefaults.rosterLabel}
+          label={
+            isPunchOut
+              ? 'Shift Duration'
+              : isIntervalCheckin
+                ? 'Interval'
+                : attendanceMarkedDefaults.rosterLabel
+          }
           title={lastPunchResult?.rosterTitle ?? attendanceMarkedDefaults.rosterTitle}
           subtitle={lastPunchResult?.rosterHours ?? attendanceMarkedDefaults.rosterHours}
         />

@@ -62,6 +62,7 @@ export function useAddGuard() {
         password: values.password,
         fullName: values.fullName,
         fatherName: values.fatherName,
+        motherName: values.motherName,
         gender: (values.gender || "male") as GuardGender,
         phone: values.phone,
         email: values.email,
@@ -78,6 +79,7 @@ export function useAddGuard() {
         education: values.education,
         // HR panel does not assign sites — leave blank
         assignedSiteId: values.assignedSiteId,
+        weeklyOffDays: values.weeklyOffDays,
         guardType: (values.guardType || "civilian") as
           | "ex-serviceman"
           | "civilian",
@@ -94,7 +96,7 @@ export function useAddGuard() {
         branchId: values.branchId || activeBranchId || null,
       });
 
-      navigate(APP_ROUTES.dashboard, { replace: true });
+      navigate(APP_ROUTES.guardList, { replace: true });
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to save guard. Please try again.");

@@ -96,6 +96,7 @@ export function useEditGuard(guardId: string) {
           body: JSON.stringify({
             fullName: values.fullName,
             fatherName: values.fatherName,
+            motherName: values.motherName,
             gender: (values.gender || "male") as GuardGender,
             phone: values.phone,
             email: values.email,
@@ -111,6 +112,7 @@ export function useEditGuard(guardId: string) {
             experience: values.experience,
             education: values.education,
             assignedSiteId: values.assignedSiteId,
+            weeklyOffDays: values.weeklyOffDays,
             guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
             interestedCity: values.interestedCity,
             shiftFrom: values.shiftFrom,
@@ -157,6 +159,7 @@ export function useEditGuard(guardId: string) {
     ? {
         fullName: guard.fullName,
         fatherName: guard.fatherName ?? "",
+        motherName: guard.motherName ?? "",
         gender: (guard.gender ?? "") as StaffMemberFormValues["gender"],
         phone: guard.phone,
         email: guard.email,
@@ -172,6 +175,9 @@ export function useEditGuard(guardId: string) {
         experience: guard.experience ?? "",
         education: guard.education ?? "",
         assignedSiteId: guard.assignedSiteId,
+        weeklyOffDays: Array.isArray(guard.weeklyOffDays)
+          ? guard.weeklyOffDays
+          : [],
         guardType: guard.guardType ?? "",
         interestedCity: guard.interestedCity ?? "",
         shiftFrom: guard.shiftFrom ?? "",

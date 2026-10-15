@@ -11,6 +11,8 @@ export interface Guard {
   // Personal details
   fullName: string;
   fatherName: string;
+  /** Optional; older records may omit this field. */
+  motherName: string;
   gender: GuardGender;
   phone: string;
   email: string;
@@ -29,6 +31,11 @@ export interface Guard {
   experience: string;    // e.g. "3 years"
   education: string;     // e.g. "10th Pass", "Graduate"
   assignedSiteId: string;
+  /**
+   * Per-guard weekly off weekdays (e.g. "monday", "sunday").
+   * Different guards can have different offs.
+   */
+  weeklyOffDays: string[];
 
   // Preferences
   guardType: "ex-serviceman" | "civilian";

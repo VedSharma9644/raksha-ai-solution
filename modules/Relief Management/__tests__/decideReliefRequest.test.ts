@@ -17,7 +17,11 @@ vi.mock("firebase-admin/firestore", () => ({
         }
         return { get: vi.fn(), update: vi.fn() };
       },
+      // Supports .where().get() and .where().where().get() (roster + attendance checks)
       where: () => ({
+        where: () => ({
+          get: vi.fn().mockResolvedValue({ docs: [] }),
+        }),
         get: vi.fn().mockResolvedValue({ docs: [] }),
       }),
     }),
@@ -36,6 +40,10 @@ function pendingSnap(agencyId: string, guardId = "guard-requester") {
       status: "pending",
       method: "remaining",
       dutyDate: "2026-10-08",
+      siteId: "site-a",
+      siteName: "Site A",
+      shiftFrom: "08:00",
+      shiftTo: "20:00",
     }),
   };
 }

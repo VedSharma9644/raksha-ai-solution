@@ -46,7 +46,7 @@ export function ProspectsPage() {
         prospects={prospects}
         isLoading={isLoading}
         error={error}
-        onBack={() => navigate(APP_ROUTES.dashboard)}
+        onBack={() => navigate(APP_ROUTES.prospectLeads)}
         onAdd={() => setModalProspect(null)}        // null = add mode
         onView={(id) => navigate(prospectDetailPath(id))}
         onEdit={(p) => setModalProspect(p)}

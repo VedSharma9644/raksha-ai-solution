@@ -1,0 +1,49 @@
+.invoice-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.invoice-settings__hint {
+  margin: 0;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.invoice-settings__section {
+  margin: 0.35rem 0 0;
+  grid-column: 1 / -1;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.invoice-settings__error {
+  margin: 0;
+  grid-column: 1 / -1;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.invoice-settings__success {
+  margin: 0;
+  grid-column: 1 / -1;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.invoice-settings__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}

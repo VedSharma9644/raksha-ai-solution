@@ -18,7 +18,7 @@ export function LeaveManagementPage() {
       isLoading={isLoading}
       error={error}
       updatingId={isUpdatingId}
-      onBack={() => navigate(APP_ROUTES.dashboard)}
+      onBack={() => navigate(APP_ROUTES.manageSchedule)}
       onUpdateStatus={(leaveId, status) => {
         void updateStatus(leaveId, status);
       }}

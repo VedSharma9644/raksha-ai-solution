@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   AppState,
@@ -80,47 +80,83 @@ export function ScheduleUpcomingShiftsSection({
   const [error, setError] = useState<string | null>(null);
   const [from, setFrom] = useState('');
   const [rows, setRows] = useState<GuardScheduleShiftDto[]>([]);
+  const hasLoadedRef = useRef(false);
+  const signatureRef = useRef('');
 
-  const load = useCallback(async () => {
-    if (!authToken) {
-      setError('Please log in again to view your schedule.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchGuardSchedule(authToken, 14);
-      setFrom(data.from);
-      setRows([...data.shifts, ...data.restDays].sort((a, b) =>
-        a.dutyDate.localeCompare(b.dutyDate),
-      ));
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load schedule.');
-    } finally {
-      setLoading(false);
-    }
-  }, [authToken]);
+  const load = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!authToken) {
+        setError('Please log in again to view your schedule.');
+        setLoading(false);
+        hasLoadedRef.current = false;
+        return;
+      }
+      const silent = opts?.silent === true && hasLoadedRef.current;
+      if (!silent) {
+        setLoading(true);
+      }
+      if (!silent) {
+        setError(null);
+      }
+      try {
+        const data = await fetchGuardSchedule(authToken, 14);
+        const nextRows = [...data.shifts, ...data.restDays].sort((a, b) =>
+          a.dutyDate.localeCompare(b.dutyDate),
+        );
+        const signature = JSON.stringify({
+          from: data.from,
+          rows: nextRows.map((r) => [
+            r.id,
+            r.dutyDate,
+            r.kind,
+            r.statusLabel,
+            r.timeLabel,
+            r.siteName,
+            r.postName,
+            r.dutyStatus,
+          ]),
+        });
+        if (signature !== signatureRef.current) {
+          signatureRef.current = signature;
+          setFrom(data.from);
+          setRows(nextRows);
+        }
+        hasLoadedRef.current = true;
+        setError(null);
+      } catch (err: unknown) {
+        if (!silent) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to load schedule.',
+          );
+        }
+      } finally {
+        if (!silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [authToken],
+  );
 
   useEffect(() => {
-    void load();
+    void load({ silent: false });
   }, [load]);
 
   useEffect(() => {
     return subscribeRosterSync(() => {
-      void load();
+      void load({ silent: true });
     });
   }, [load]);
 
   useEffect(() => {
     const onState = (state: AppStateStatus) => {
       if (state === 'active') {
-        void load();
+        void load({ silent: true });
       }
     };
     const sub = AppState.addEventListener('change', onState);
     const interval = setInterval(() => {
-      void load();
+      void load({ silent: true });
     }, ROSTER_FOREGROUND_POLL_MS);
     return () => {
       sub.remove();
@@ -146,7 +182,7 @@ export function ScheduleUpcomingShiftsSection({
         <Text style={headerStyles.subtitle}>From roster</Text>
       </View>
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <ActivityIndicator color={appColors.primary} style={{ marginVertical: 16 }} />
       ) : null}
 

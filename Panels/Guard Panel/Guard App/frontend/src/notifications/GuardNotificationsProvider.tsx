@@ -25,6 +25,7 @@ import {
   getLastNotificationResponseAsync,
 } from './localNotifications';
 import { preparePushRegistration } from './pushRegistration';
+import { cancelIntervalCheckinReminders } from './intervalCheckinReminders';
 import { cancelShiftReminders, rescheduleShiftReminders } from './shiftReminders';
 
 type GuardNotificationsContextValue = {
@@ -85,7 +86,7 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
         goHome();
         return;
       }
-      if (screen === 'home') {
+      if (type === 'interval_checkin_due' || screen === 'home') {
         goHome();
       }
     },
@@ -148,6 +149,7 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
     async function bootstrap() {
       if (!authToken || !guardUser || !isAuthenticated) {
         await cancelShiftReminders().catch(() => undefined);
+        await cancelIntervalCheckinReminders().catch(() => undefined);
         return;
       }
 
@@ -200,6 +202,7 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
     pushMetaRef.current = null;
     lastAuthTokenRef.current = null;
     void cancelShiftReminders();
+    void cancelIntervalCheckinReminders();
     setNotifications([]);
     setUnreadCount(0);
     if (meta && token) {

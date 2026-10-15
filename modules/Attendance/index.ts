@@ -57,14 +57,22 @@ export {
   getTodayOpenPunchIn,
   markPunchIn,
   markPunchOut,
+  markIntervalCheckin,
+  listIntervalCheckinsForShift,
   listAttendanceHistory,
   listGuardUpcomingSchedule,
   resolveTodayDuty,
   evaluatePunchInPunctuality,
+  assertPunchInWithinLateWindow,
+  getPunchInWindowStatus,
+  PUNCH_IN_LATE_GRACE_MINUTES,
   createSelfieUploadUrl,
   toDutyDateKey,
   type MarkPunchInParams,
   type MarkPunchOutParams,
+  type MarkIntervalCheckinParams,
+  type IntervalCheckinResult,
+  type IntervalCheckinRecordSummary,
   type OpenPunchInRecord,
   type AttendanceHistoryResponse,
   type AttendanceHistoryLogDto,
@@ -74,6 +82,15 @@ export {
   type GuardScheduleShiftDto,
   type TodayDutyResolution,
 } from "./attendanceService";
+
+export {
+  INTERVAL_CHECKIN_GRACE_MINUTES,
+  computeIntervalCheckinStatus,
+  evaluateIntervalCheckinPunctuality,
+  type IntervalCheckinStatusDto,
+  type IntervalCheckinWindowStatus,
+  type IntervalCheckinPunctuality,
+} from "./intervalCheckin";
 
 export type { GuardScheduleDutyStatus } from "./guardSchedule";
 
@@ -97,3 +114,22 @@ export {
   type AgencyAttendanceRecordDto,
   type AgencyAttendanceStatsDto,
 } from "./agencyAttendance";
+
+export {
+  ATTENDANCE_DAY_OVERRIDES_COLLECTION,
+  ATTENDANCE_CORRECTION_STATUSES,
+  attendanceOverrideDocId,
+  attendanceReliefBonusDutyId,
+  attendanceOverrideDocIdFromReliefBonusId,
+  isAttendanceReliefBonusDutyId,
+  getAttendanceDayOverride,
+  listAttendanceOverridesForGuard,
+  listAttendanceOverrideRecordsForGuard,
+  loadAttendanceOverridesForMonth,
+  saveAttendanceDayOverride,
+  deleteAttendanceDayOverride,
+  isAttendanceCorrectionStatus,
+  type AttendanceCorrectionStatus,
+  type AttendanceOverrideStatus,
+  type AttendanceDayOverride,
+} from "./attendanceDayOverride";

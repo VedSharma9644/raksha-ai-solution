@@ -1,10 +1,14 @@
 import { Router, type Response } from "express";
 import {
   checkGeofence,
+  computeIntervalCheckinStatus,
   createSelfieUploadUrl,
+  getPunchInWindowStatus,
   getSiteGeofenceById,
   getTodayOpenPunchIn,
   listAttendanceHistory,
+  listIntervalCheckinsForShift,
+  markIntervalCheckin,
   markPunchIn,
   markPunchOut,
   resolveTodayDuty,
@@ -161,7 +165,11 @@ export function createAttendanceRoutes(): Router {
       }
       const purposeRaw = String(req.body?.purpose ?? "punch_in_selfie");
       const purpose =
-        purposeRaw === "punch_out_selfie" ? "punch_out_selfie" : "punch_in_selfie";
+        purposeRaw === "punch_out_selfie"
+          ? "punch_out_selfie"
+          : purposeRaw === "interval_checkin_selfie"
+            ? "interval_checkin_selfie"
+            : "punch_in_selfie";
 
       const ticket = await createSelfieUploadUrl({
         agencyId: req.guard.agencyId,
@@ -338,6 +346,86 @@ export function createAttendanceRoutes(): Router {
     }
   });
 
+  router.post("/interval-checkin", async (req: AuthedRequest, res: Response) => {
+    try {
+      if (!req.guard || !req.guardToken) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
+
+      const lat = Number(req.body?.lat);
+      const lng = Number(req.body?.lng);
+      const accuracyMeters = Number(req.body?.accuracyMeters ?? 5);
+      const selfieBase64 =
+        typeof req.body?.selfieBase64 === "string" ? req.body.selfieBase64 : "";
+      const selfieStoragePath =
+        typeof req.body?.selfieStoragePath === "string"
+          ? req.body.selfieStoragePath
+          : "";
+      const selfieUrl =
+        typeof req.body?.selfieUrl === "string" ? req.body.selfieUrl : "";
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        res.status(400).json({ error: "lat and lng are required." });
+        return;
+      }
+
+      if (!selfieBase64 && !selfieStoragePath) {
+        res.status(400).json({
+          error: "selfieStoragePath or selfieBase64 is required.",
+        });
+        return;
+      }
+
+      await applyRosterDutyToRequest(req);
+      const site = await resolveAssignedSite(req);
+      if (site) {
+        req.guard.siteName = site.siteName;
+      }
+
+      const accuracy = Number.isFinite(accuracyMeters) ? accuracyMeters : 5;
+      const geofence = checkGeofence({
+        lat,
+        lng,
+        accuracyMeters: accuracy,
+        site,
+        demoMode: isDemoMode(),
+      });
+
+      const unlocked =
+        (await isGeofenceUnlocked(req.guardToken)) || geofence.unlocked;
+      if (!unlocked) {
+        res.status(403).json({
+          error:
+            geofence.message ||
+            "You must be at the duty site to complete a check-in.",
+          distanceMeters: geofence.distanceMeters,
+        });
+        return;
+      }
+
+      const result = await markIntervalCheckin({
+        guard: req.guard,
+        lat,
+        lng,
+        accuracyMeters: accuracy,
+        selfieBase64: selfieBase64 || undefined,
+        selfieStoragePath: selfieStoragePath || undefined,
+        selfieUrl: selfieUrl || undefined,
+        site,
+        demoMode: isDemoMode(),
+        intervalCheckinMinutes: site?.intervalCheckinMinutes ?? null,
+      });
+
+      res.status(201).json(result);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      res
+        .status(statusCodeOf(error))
+        .json({ error: err.message ?? "Interval check-in failed." });
+    }
+  });
+
   router.get("/today", async (req: AuthedRequest, res: Response) => {
     try {
       if (!req.guard) {
@@ -357,6 +445,21 @@ export function createAttendanceRoutes(): Router {
       const postName =
         open?.postName || req.guard.postName || duty?.postName || "";
 
+      const prior = open ? await listIntervalCheckinsForShift(open.id) : [];
+      const lastCheckinAt =
+        prior.length > 0 ? prior[prior.length - 1]!.punchedAt : null;
+      const intervalCheckin = computeIntervalCheckinStatus({
+        intervalMinutes: site?.intervalCheckinMinutes ?? null,
+        shiftActive: Boolean(open),
+        punchInAt: open?.punchedAt ?? null,
+        lastCheckinAt,
+        completedCount: prior.length,
+      });
+      const punchInWindow = getPunchInWindowStatus({
+        shiftFrom: req.guard.shiftFrom,
+        shiftActive: Boolean(open),
+      });
+
       res.json({
         shiftActive: Boolean(open),
         openPunchInId: open?.id ?? null,
@@ -373,6 +476,9 @@ export function createAttendanceRoutes(): Router {
         earlierShiftCount: duty?.earlierShiftCount ?? 0,
         hasLaterReplacement: duty?.hasLaterReplacement ?? false,
         assignmentId: duty?.assignmentId ?? null,
+        intervalCheckinMinutes: site?.intervalCheckinMinutes ?? null,
+        intervalCheckin,
+        punchInWindow,
         guard: {
           employeeCode: req.guard.employeeCode,
           fullName: req.guard.fullName,

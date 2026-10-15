@@ -1,6 +1,7 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
 import { ATTENDANCE_COLLECTION } from "./attendance";
+import { listAttendanceOverridesForGuard } from "./attendanceDayOverride";
 import {
   formatIstPunchTime,
   formatIstShortDate,
@@ -33,6 +34,8 @@ export type AttendanceHistoryDayStatus =
   | "today"
   | "off"
   | "leave"
+  /** Admin-recorded extra relief duty (covering guard). */
+  | "relief"
   /** @deprecated use full — kept for older clients */
   | "present"
   | "empty";
@@ -45,6 +48,8 @@ export type AttendanceHistoryLogKind =
   | "upcoming"
   | "weeklyOff"
   | "leave"
+  /** Admin-recorded extra relief duty (covering guard). */
+  | "relief"
   /** @deprecated use full */
   | "present";
 
@@ -475,7 +480,8 @@ type DayCompletion =
   | "today"
   | "off"
   | "leave"
-  | "onDuty";
+  | "onDuty"
+  | "relief";
 
 function classifyDay(params: {
   dutyDate: string;
@@ -500,8 +506,12 @@ function classifyDay(params: {
     return "off";
   }
 
+  // Full cover with no punch → unpaid missed day (not auto paid leave).
+  // Paid leave only when an approved leave request (or admin day override) applies.
   if (params.relief?.method === "cover" && !punch) {
-    return "leave";
+    if (isPast || (isToday && scheduled)) {
+      return "missed";
+    }
   }
 
   if (isFuture && scheduled) {
@@ -569,6 +579,8 @@ function calendarStatusOf(completion: DayCompletion): AttendanceHistoryDayStatus
       return "leave";
     case "off":
       return "off";
+    case "relief":
+      return "relief";
     default:
       return "empty";
   }
@@ -625,6 +637,27 @@ function buildLog(params: {
     };
   }
 
+  if (completion === "relief") {
+    return {
+      id: `relief-${dutyDate}`,
+      kind: "relief",
+      statusLabel: "RELIEF DUTY",
+      dateLabel,
+      postLabel: postLabel === "Duty" ? "Extra relief cover" : postLabel,
+      postIcon: "shield",
+      detailPrimaryLabel: "Shift",
+      detailPrimaryValue: scheduled
+        ? `${scheduled.shiftFrom} – ${scheduled.shiftTo}`
+        : "—",
+      detailSecondaryLabel: "Site",
+      detailSecondaryValue: siteName,
+      footerTags: ["Relief Duty"],
+      punchedAtIso: dateObj.toISOString(),
+      dayOfMonth: d,
+      dutyDate,
+    };
+  }
+
   if (completion === "upcoming") {
     return {
       id: `upcoming-${dutyDate}`,
@@ -647,12 +680,17 @@ function buildLog(params: {
   }
 
   if (completion === "missed") {
+    const covered = relief?.method === "cover";
     return {
       id: `missed-${dutyDate}`,
       kind: "missed",
-      statusLabel: "SHIFT MISSED",
+      statusLabel: covered ? "COVERED • UNPAID" : "SHIFT MISSED",
       dateLabel,
-      postLabel,
+      postLabel: covered
+        ? relief?.assignedGuardName
+          ? `Covered by ${relief.assignedGuardName}`
+          : "Full shift cover (unpaid)"
+        : postLabel,
       postIcon: "shield",
       detailPrimaryLabel: "Shift",
       detailPrimaryValue: scheduled
@@ -660,7 +698,9 @@ function buildLog(params: {
         : "—",
       detailSecondaryLabel: "Site",
       detailSecondaryValue: siteName,
-      footerTags: ["No Punch-in"],
+      footerTags: covered
+        ? ["Relief Cover", "Deducted"]
+        : ["No Punch-in"],
       punchedAtIso: dateObj.toISOString(),
       dayOfMonth: d,
       dutyDate,
@@ -803,12 +843,24 @@ export async function listAttendanceHistory(params: {
     now.getFullYear() === year && now.getMonth() + 1 === month;
   const { start } = monthBounds(year, month);
 
-  const [assignments, punches, reliefMap, leaveDates] = await Promise.all([
-    loadAssignments(params.guardId, params.agencyId || ""),
-    loadPunches(params.guardId, year, month, params.postName),
-    loadApprovedReliefDutyDates(params.guardId),
-    loadApprovedLeaveDates(params.guardId, year, month),
-  ]);
+  const monthStart = dutyDateFromParts(year, month, 1);
+  const monthEnd = dutyDateFromParts(year, month, daysInMonth);
+
+  const [assignments, punches, reliefMap, leaveDates, overrides] =
+    await Promise.all([
+      loadAssignments(params.guardId, params.agencyId || ""),
+      loadPunches(params.guardId, year, month, params.postName),
+      loadApprovedReliefDutyDates(params.guardId),
+      loadApprovedLeaveDates(params.guardId, year, month),
+      params.agencyId
+        ? listAttendanceOverridesForGuard({
+            agencyId: params.agencyId,
+            guardId: params.guardId,
+            startDate: monthStart,
+            endDate: monthEnd,
+          })
+        : Promise.resolve(new Map()),
+    ]);
 
   const scheduled = buildScheduledDuties({
     year,
@@ -852,19 +904,26 @@ export async function listAttendanceHistory(params: {
     const relief = reliefMap.get(dutyDate);
     const onLeave = leaveDates.has(dutyDate);
 
-    const completion = classifyDay({
-      dutyDate,
-      todayKey,
-      now,
-      scheduled: duty,
-      punch,
-      leave: onLeave,
-      relief,
-    });
+    const overrideStatus = overrides.get(dutyDate);
+    const completion: DayCompletion = overrideStatus
+      ? overrideStatus
+      : classifyDay({
+          dutyDate,
+          todayKey,
+          now,
+          scheduled: duty,
+          punch,
+          leave: onLeave,
+          relief,
+        });
 
     calendarDays.push({ day, status: calendarStatusOf(completion) });
 
-    if (completion === "full" || completion === "onDuty") {
+    if (
+      completion === "full" ||
+      completion === "onDuty" ||
+      completion === "relief"
+    ) {
       presentDays += 1;
     } else if (completion === "half") {
       presentDays += 1;
@@ -879,7 +938,11 @@ export async function listAttendanceHistory(params: {
 
     if (punch?.punchedOutAt) {
       totalHours += durationHours(punch.punchedAt, punch.punchedOutAt);
-    } else if (completion === "full" || completion === "onDuty") {
+    } else if (
+      completion === "full" ||
+      completion === "onDuty" ||
+      completion === "relief"
+    ) {
       totalHours += defaultHours;
     } else if (completion === "half") {
       totalHours += Math.max(1, Math.round(defaultHours / 2));
@@ -892,6 +955,7 @@ export async function listAttendanceHistory(params: {
       completion === "missed" ||
       completion === "onDuty" ||
       completion === "leave" ||
+      completion === "relief" ||
       completion === "today" ||
       (completion === "upcoming" &&
         isCurrentMonth &&
@@ -904,6 +968,9 @@ export async function listAttendanceHistory(params: {
 
     const log = buildLog({ completion, dutyDate, scheduled: duty, punch, relief });
     if (log) {
+      if (overrideStatus) {
+        log.footerTags = [...log.footerTags, "Admin Corrected"];
+      }
       logs.push(log);
     }
   }
@@ -946,7 +1013,7 @@ export async function listAttendanceHistory(params: {
     filterCounts: {
       all: logs.length,
       present: logs.filter((l) =>
-        ["full", "half", "onDuty", "present"].includes(l.kind)
+        ["full", "half", "onDuty", "present", "relief"].includes(l.kind)
       ).length,
       missed: logs.filter((l) => l.kind === "missed").length,
       half: logs.filter((l) => l.kind === "half").length,

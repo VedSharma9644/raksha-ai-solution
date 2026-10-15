@@ -4,7 +4,7 @@ import type { GuardSessionUser, PunchInResult } from '../api/guard-api';
 import type { BottomTabKey } from '../constants/bottom-tab-menu-items';
 import type { GuardMainTab, GuardStackRoute } from './guard-app-routes';
 
-export type PatrolMode = 'punch_in' | 'punch_out';
+export type PatrolMode = 'punch_in' | 'punch_out' | 'interval_checkin';
 
 type GuardAppNavigationContextValue = {
   isAuthenticated: boolean;
@@ -124,7 +124,7 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
   }, []);
 
   const setShiftActive = useCallback((active: boolean) => {
-    setShiftActiveState(active);
+    setShiftActiveState((current) => (current === active ? current : active));
   }, []);
 
   const setPatrolMode = useCallback((mode: PatrolMode) => {
@@ -151,7 +151,21 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
   }, []);
 
   const patchGuardUser = useCallback((patch: Partial<GuardSessionUser>) => {
-    setGuardUser((current) => (current ? { ...current, ...patch } : current));
+    setGuardUser((current) => {
+      if (!current) {
+        return current;
+      }
+      let changed = false;
+      const next = { ...current };
+      (Object.keys(patch) as Array<keyof GuardSessionUser>).forEach((key) => {
+        const value = patch[key];
+        if (value !== undefined && current[key] !== value) {
+          (next as Record<string, unknown>)[key as string] = value;
+          changed = true;
+        }
+      });
+      return changed ? next : current;
+    });
   }, []);
 
   const signOut = useCallback(() => {

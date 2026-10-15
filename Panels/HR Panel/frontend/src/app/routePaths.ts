@@ -2,6 +2,8 @@ export const APP_ROUTES = {
   login: "/",
   selectBranch: "/select-branch",
   dashboard: "/dashboard",
+  generalSettings: "/general-settings",
+  manageSchedule: "/manage-schedule",
   addGuard: "/guards/add",
   guardList: "/guards",
   viewGuard: "/guards/:id",

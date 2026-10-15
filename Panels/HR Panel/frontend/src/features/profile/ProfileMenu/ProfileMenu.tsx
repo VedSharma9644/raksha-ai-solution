@@ -9,12 +9,15 @@ import { APP_ROUTES } from "../../../app/routePaths";
 import { AppearancePicker } from "../../appearance";
 import { useAuthContext } from "../../authentication";
 import { LanguagePicker } from "../../language";
+import { useEnabledModules } from "../../modules/useEnabledModules";
 import { ThemePicker } from "../../theme";
 import "./ProfileMenu.css";
 
 export function ProfileMenu() {
   const navigate = useNavigate();
   const { hrStaff, logout } = useAuthContext();
+  const { hasModule } = useEnabledModules();
+  const showGeneralSettings = hasModule("payroll");
   const [isOpen, setIsOpen] = useState(false);
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
@@ -119,6 +122,20 @@ export function ProfileMenu() {
             </div>
 
             <div className="profile-menu__section" role="none">
+              {showGeneralSettings ? (
+                <button
+                  type="button"
+                  className="profile-menu__item"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate(APP_ROUTES.generalSettings);
+                  }}
+                >
+                  <span>General settings</span>
+                </button>
+              ) : null}
+
               <button
                 type="button"
                 className="profile-menu__item"

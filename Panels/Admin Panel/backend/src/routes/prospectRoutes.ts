@@ -75,7 +75,7 @@ export function createProspectRoutes(): Router {
 
       const {
         orgName, city, expectedSiteType, expectedGuardCount,
-        expectedMonthlyValue, leadSource,
+        expectedMonthlyValue, leadSource, referralName,
         contactName, contactDesignation, primaryPhone, alternatePhone, email,
         status, followUpDate,
       } = req.body as Record<string, unknown>;
@@ -90,6 +90,10 @@ export function createProspectRoutes(): Router {
         res.status(400).json({ error: "primaryPhone is required." }); return;
       }
 
+      const source = String(leadSource ?? "other").trim();
+      const referral =
+        source === "referral" ? String(referralName ?? "").trim() : "";
+
       const adminDb = getFirestore();
       const now = FieldValue.serverTimestamp();
       const data = {
@@ -99,7 +103,8 @@ export function createProspectRoutes(): Router {
         expectedSiteType: String(expectedSiteType ?? "").trim(),
         expectedGuardCount: typeof expectedGuardCount === "number" ? expectedGuardCount : null,
         expectedMonthlyValue: String(expectedMonthlyValue ?? "").trim(),
-        leadSource: String(leadSource ?? "other").trim(),
+        leadSource: source,
+        referralName: referral,
         contactName: String(contactName).trim(),
         contactDesignation: String(contactDesignation ?? "").trim(),
         primaryPhone: String(primaryPhone).trim(),
@@ -133,7 +138,7 @@ export function createProspectRoutes(): Router {
 
       const allowed = [
         "orgName", "city", "expectedSiteType", "expectedGuardCount",
-        "expectedMonthlyValue", "leadSource",
+        "expectedMonthlyValue", "leadSource", "referralName",
         "contactName", "contactDesignation", "primaryPhone", "alternatePhone", "email",
         "status", "followUpDate",
       ];
@@ -142,6 +147,17 @@ export function createProspectRoutes(): Router {
       for (const key of allowed) {
         if (key in req.body) {
           updates[key] = req.body[key] ?? null;
+        }
+      }
+      // Keep referral name only when source is referral
+      if ("leadSource" in updates || "referralName" in updates) {
+        const nextSource = String(
+          updates.leadSource ?? existing.data()!.leadSource ?? "other"
+        ).trim();
+        if (nextSource !== "referral") {
+          updates.referralName = "";
+        } else if ("referralName" in updates) {
+          updates.referralName = String(updates.referralName ?? "").trim();
         }
       }
 

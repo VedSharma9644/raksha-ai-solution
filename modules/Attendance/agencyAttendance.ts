@@ -25,6 +25,8 @@ export type AgencyAttendanceIntervalDto = {
   lat: number;
   lng: number;
   accuracyMeters: number;
+  /** on_time | late — from guard check-in punctuality */
+  punctuality: "on_time" | "late";
 };
 
 export type AgencyAttendanceRecordDto = {
@@ -228,15 +230,20 @@ export async function listAgencyAttendanceForDate(params: {
     const intervalCheckins: AgencyAttendanceIntervalDto[] = intervalDocs.map(
       (interval, index) => {
         const at = toDate(interval.data.punchedAt) ?? punchedAt;
+        const punctualityRaw = String(
+          interval.data.checkinPunctuality ?? "on_time"
+        );
         return {
           id: interval.id,
-          sequenceNumber: index + 1,
+          sequenceNumber:
+            toNumber(interval.data.sequenceNumber, index + 1) || index + 1,
           checkinTime: formatIstTime(at),
           selfieUrl: String(interval.data.selfieUrl ?? ""),
           geofenceStatus: asGeofenceStatus(interval.data.geofenceStatus),
           lat: toNumber(interval.data.lat),
           lng: toNumber(interval.data.lng),
           accuracyMeters: toNumber(interval.data.accuracyMeters, 5),
+          punctuality: punctualityRaw === "late" ? "late" : "on_time",
         };
       }
     );

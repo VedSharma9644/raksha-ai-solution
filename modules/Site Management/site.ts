@@ -89,8 +89,58 @@ export interface Site {
   /** Branch this site belongs to. null/undefined = unassigned (agency-wide). */
   branchId?: string | null;
 
+  /**
+   * Client billing: ₹ the client pays per male guard per month.
+   * Missing/0 on older sites until admin enters rates.
+   */
+  clientRateMaleMonthly?: number;
+  /** Client billing: ₹ per female guard per month. */
+  clientRateFemaleMonthly?: number;
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export const SITES_COLLECTION = "sites";
+
+/** Monthly client revenue from headcount × rates. `other` bills at male rate. */
+export function computeSiteClientRevenueMonthly(params: {
+  maleRate: number;
+  femaleRate: number;
+  maleCount: number;
+  femaleCount: number;
+  otherCount?: number;
+}): number {
+  const maleRate = Math.max(0, Number(params.maleRate) || 0);
+  const femaleRate = Math.max(0, Number(params.femaleRate) || 0);
+  const male = Math.max(0, Math.floor(Number(params.maleCount) || 0));
+  const female = Math.max(0, Math.floor(Number(params.femaleCount) || 0));
+  const other = Math.max(0, Math.floor(Number(params.otherCount) || 0));
+  return (
+    Math.round(
+      (male * maleRate + female * femaleRate + other * maleRate) * 100
+    ) / 100
+  );
+}
+
+/** Sum required male/female/other across shift slots. */
+export function sumShiftGenderRequirements(
+  shifts: Array<{
+    genderRequirements?: ShiftGenderRequirement | null;
+    requiredGuards?: number;
+  }>
+): { male: number; female: number; other: number } {
+  let male = 0;
+  let female = 0;
+  let other = 0;
+  for (const s of shifts) {
+    if (s.genderRequirements) {
+      male += Math.max(0, Number(s.genderRequirements.male) || 0);
+      female += Math.max(0, Number(s.genderRequirements.female) || 0);
+      other += Math.max(0, Number(s.genderRequirements.other) || 0);
+    } else {
+      male += Math.max(0, Number(s.requiredGuards) || 0);
+    }
+  }
+  return { male, female, other };
+}

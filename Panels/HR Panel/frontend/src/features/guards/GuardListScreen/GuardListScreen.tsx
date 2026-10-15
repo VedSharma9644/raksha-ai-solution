@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
+import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
@@ -41,6 +42,7 @@ function Avatar({ name, url }: { name: string; url?: string }) {
 export interface GuardListScreenProps {
   guards: GuardListItem[];
   onBack: () => void;
+  onAddGuard?: () => void;
   onSelectGuard?: (guardId: string) => void;
   onViewGuard?: (guardId: string) => void;
   onDeleteGuard?: (guardId: string) => void;
@@ -49,6 +51,7 @@ export interface GuardListScreenProps {
 export function GuardListScreen({
   guards,
   onBack,
+  onAddGuard,
   onSelectGuard,
   onViewGuard,
   onDeleteGuard,
@@ -72,10 +75,17 @@ export function GuardListScreen({
     <AppScreenLayout>
       <div className="app-screen-layout__content guard-list-screen">
         <PageHeader
-          title="Guard List"
-          subtitle="Browse guards for leave and inventory operations."
+          title="Guards"
+          subtitle="Browse, search, and add guards managed by HR."
           onBack={onBack}
           backLabel="Back to dashboard"
+          actions={
+            onAddGuard ? (
+              <Button type="button" onClick={onAddGuard}>
+                + Add Guard
+              </Button>
+            ) : null
+          }
         />
 
         <div className="guard-list-screen__filters">
