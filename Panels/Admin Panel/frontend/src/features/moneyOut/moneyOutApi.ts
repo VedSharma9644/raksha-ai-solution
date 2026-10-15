@@ -4,43 +4,7 @@ import type {
   EmployeeAdvance,
   ExpenseCategory,
 } from "@raskha/money-out";
-import { auth } from "../../lib/firebase";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    const forceRemote =
-      import.meta.env.VITE_ADMIN_API_FORCE_REMOTE === "true";
-    if (!forceRemote) {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error("You must be signed in to manage money out.");
-  }
-  headers.set("Authorization", `Bearer ${await user.getIdToken()}`);
-  return headers;
-}
-
-async function adminFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = await authHeaders();
-  const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
-  const data = (await response.json().catch(() => ({}))) as T & {
-    error?: string;
-  };
-  if (!response.ok) {
-    throw new Error(data.error ?? `Request failed (${response.status})`);
-  }
-  return data;
-}
+import { adminFetch } from "@raskha/shared";
 
 export async function listAdvancesApi(params?: {
   guardId?: string;
@@ -134,6 +98,24 @@ export async function createExpenseApi(body: {
   const data = await adminFetch<{ expense: AgencyExpense }>(
     "/api/money-out/expenses",
     { method: "POST", body: JSON.stringify(body) }
+  );
+  return data.expense;
+}
+
+export async function updateExpenseApi(
+  expenseId: string,
+  body: {
+    date?: string;
+    amount?: number;
+    category?: ExpenseCategory;
+    siteId?: string | null;
+    guardId?: string | null;
+    note?: string;
+  }
+): Promise<AgencyExpense> {
+  const data = await adminFetch<{ expense: AgencyExpense }>(
+    `/api/money-out/expenses/${encodeURIComponent(expenseId)}`,
+    { method: "PATCH", body: JSON.stringify(body) }
   );
   return data.expense;
 }

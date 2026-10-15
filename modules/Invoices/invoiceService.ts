@@ -46,8 +46,12 @@ function httpError(message: string, statusCode: number): Error {
 }
 
 function todayKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 function normalizeLine(raw: Partial<InvoiceLineItem>): InvoiceLineItem {
@@ -197,7 +201,7 @@ export async function createSiteInvoiceDraft(params: {
   const maleRate = roundMoney(Number(site.clientRateMaleMonthly) || 0);
   const femaleRate = roundMoney(Number(site.clientRateFemaleMonthly) || 0);
   const settings = await getAgencyInvoiceSettings(agencyId);
-  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const lineItems: InvoiceLineItem[] = [];
 
   if (male > 0 || maleRate > 0) {

@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { resolveBrowserAuthDomain } from "@raskha/core";
+import { configureAdminApi } from "@raskha/shared";
 
 const firebaseConfig = {
   apiKey: import.meta.env.FIREBASE_API_KEY,
@@ -24,3 +25,12 @@ export const storage = getStorage(app);
 
 /** Config for secondary Auth apps if ever needed. */
 export const clientFirebaseConfig = firebaseConfig;
+
+// Bind Admin API client once (HR uses the same Admin backend).
+configureAdminApi({
+  getIdToken: async () => {
+    const user = auth.currentUser;
+    if (!user) return null;
+    return user.getIdToken();
+  },
+});

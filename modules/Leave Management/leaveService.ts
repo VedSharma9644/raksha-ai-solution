@@ -24,12 +24,14 @@ const STATUS_LABELS: Record<
   rejected: "NOT APPROVED",
 };
 
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-export function toDateKey(date: Date): string {
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+/** Civil calendar date in IST (YYYY-MM-DD) — not host local. */
+export function toDateKey(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 export function parseDateKey(key: string): Date | null {
@@ -40,15 +42,15 @@ export function parseDateKey(key: string): Date | null {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const date = new Date(year, month - 1, day);
+  // Validate civil Y-M-D via UTC noon so host TZ cannot reject valid dates.
+  const date = new Date(Date.UTC(year, month - 1, day, 12));
   if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
   ) {
     return null;
   }
-  date.setHours(0, 0, 0, 0);
   return date;
 }
 
@@ -76,7 +78,11 @@ function formatShortDate(key: string): string {
   if (!date) {
     return key;
   }
-  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  return date.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+  });
 }
 
 function formatDateRange(startKey: string, endKey: string): string {
@@ -85,20 +91,24 @@ function formatDateRange(startKey: string, endKey: string): string {
   if (!start || !end) {
     return `${startKey} – ${endKey}`;
   }
+  const ist = { timeZone: "Asia/Kolkata" as const };
   if (startKey === endKey) {
     return start.toLocaleDateString("en-IN", {
+      ...ist,
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   }
-  const sameYear = start.getFullYear() === end.getFullYear();
+  const sameYear = startKey.slice(0, 4) === endKey.slice(0, 4);
   const left = start.toLocaleDateString("en-IN", {
+    ...ist,
     day: "2-digit",
     month: "short",
     ...(sameYear ? {} : { year: "numeric" as const }),
   });
   const right = end.toLocaleDateString("en-IN", {
+    ...ist,
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -107,18 +117,16 @@ function formatDateRange(startKey: string, endKey: string): string {
 }
 
 function formatAppliedMeta(appliedAt: Date): string {
-  const now = new Date();
-  const sameDay =
-    appliedAt.getFullYear() === now.getFullYear() &&
-    appliedAt.getMonth() === now.getMonth() &&
-    appliedAt.getDate() === now.getDate();
+  const sameDay = toDateKey(appliedAt) === toDateKey();
   const dayPart = sameDay
     ? "Today"
     : appliedAt.toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
         day: "2-digit",
         month: "short",
       });
   const timePart = appliedAt.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -350,9 +358,13 @@ function toCardDto(record: LeaveRequestRecord): LeaveRequestCardDto | null {
   };
 }
 
+function currentIstYear(): number {
+  return Number(toDateKey().slice(0, 4));
+}
+
 export async function getLeaveBalanceForGuard(
   guard: AuthenticatedGuardContext,
-  year = new Date().getFullYear()
+  year = currentIstYear()
 ): Promise<LeaveBalanceSummaryDto> {
   const records = await fetchGuardYearRequests(guard.guardId, year);
   return buildLeaveBalanceSummary({
@@ -368,7 +380,7 @@ export async function listLeaveRequestsForGuard(params: {
   year?: number;
   status?: "all" | "pending" | "approved" | "rejected";
 }): Promise<LeaveRequestsResponse> {
-  const year = params.year ?? new Date().getFullYear();
+  const year = params.year ?? currentIstYear();
   const records = await fetchGuardYearRequests(params.guard.guardId, year);
   const balance = buildLeaveBalanceSummary({
     year,
@@ -456,7 +468,7 @@ export async function submitLeaveRequest(
     throw Object.assign(new Error("Invalid leave type."), { statusCode: 400 });
   }
 
-  const year = start.getFullYear();
+  const year = Number(params.startDate.slice(0, 4));
   const existing = await fetchGuardYearRequests(params.guard.guardId, year);
 
   for (const record of existing) {

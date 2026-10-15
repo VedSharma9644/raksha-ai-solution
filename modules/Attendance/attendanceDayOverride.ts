@@ -1,5 +1,7 @@
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
+import { daysInCalendarMonth, dutyDateFromParts } from "./dutyDate";
+
 export const ATTENDANCE_DAY_OVERRIDES_COLLECTION = "attendanceDayOverrides";
 
 /** Statuses an admin can set for payroll / history day classification. */
@@ -133,9 +135,9 @@ export async function loadAttendanceOverridesForMonth(params: {
   month: number;
 }): Promise<Map<string, AttendanceCorrectionStatus>> {
   const { agencyId, guardId, year, month } = params;
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-  const endDate = `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
+  const daysInMonth = daysInCalendarMonth(year, month);
+  const startDate = dutyDateFromParts(year, month, 1);
+  const endDate = dutyDateFromParts(year, month, daysInMonth);
   return listAttendanceOverridesForGuard({
     agencyId,
     guardId,

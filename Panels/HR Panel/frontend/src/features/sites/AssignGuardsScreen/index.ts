@@ -1,2 +1,4 @@
-export { AssignGuardsScreen } from "./AssignGuardsScreen";
-export type { AssignGuardsScreenProps } from "./AssignGuardsScreen";
+export {
+  AssignGuardsScreen,
+  type AssignGuardsScreenProps,
+} from "@raskha/web-ops";

@@ -7,6 +7,12 @@ import type {
   PayrollPeriod,
 } from "./payrollRun";
 
+/**
+ * Pure civil-calendar helpers (UTC). Keep browser-safe — this file is exported
+ * via `client.ts` and must NOT import `@raskha/attendance` (firebase-admin).
+ */
+const IST_TIME_ZONE = "Asia/Kolkata";
+
 const WEEKDAY_TO_JS: Record<WeekdayId, number> = {
   sunday: 0,
   monday: 1,
@@ -30,14 +36,29 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function toDateKey(d: Date): string {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+/** Gregorian days-in-month — host-TZ independent. */
+function daysInCalendarMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function addDays(dateKey: string, days: number): string {
+function addDaysToDutyDate(dateKey: string, days: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);
-  const dt = new Date(y, m - 1, d + days);
-  return toDateKey(dt);
+  const utc = new Date(Date.UTC(y, m - 1, d + days, 6, 30));
+  return `${utc.getUTCFullYear()}-${pad2(utc.getUTCMonth() + 1)}-${pad2(utc.getUTCDate())}`;
+}
+
+/** JS getDay()-style weekday (0=Sun … 6=Sat) for a YYYY-MM-DD civil date. */
+function jsWeekdayFromDutyDate(dutyDate: string): number {
+  const [y, m, d] = dutyDate.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 6, 30)).getUTCDay();
+}
+
+function formatIstMonthLabel(year: number, month: number): string {
+  return new Date(Date.UTC(year, month - 1, 1, 12)).toLocaleDateString("en-IN", {
+    timeZone: IST_TIME_ZONE,
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function daysBetweenInclusive(start: string, end: string): number {
@@ -59,13 +80,10 @@ export function resolvePayPeriod(
   payCycleStartDay: number
 ): PayrollPeriod {
   const startDay = Math.min(28, Math.max(1, Math.round(payCycleStartDay) || 1));
-  const monthLabel = new Date(year, month - 1, 1).toLocaleString("en-IN", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = formatIstMonthLabel(year, month);
 
   if (startDay === 1) {
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInMonth = daysInCalendarMonth(year, month);
     return {
       year,
       month,
@@ -110,15 +128,14 @@ export function countWeekdaysInPeriod(
   let count = 0;
   let cursor = startDate;
   while (cursor <= endDate) {
-    const [y, m, d] = cursor.split("-").map(Number);
-    const jsDay = new Date(y, m - 1, d).getDay();
+    const jsDay = jsWeekdayFromDutyDate(cursor);
     for (const id of wanted) {
       if (WEEKDAY_TO_JS[id] === jsDay) {
         count += 1;
         break;
       }
     }
-    cursor = addDays(cursor, 1);
+    cursor = addDaysToDutyDate(cursor, 1);
   }
   return count;
 }

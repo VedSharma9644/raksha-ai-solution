@@ -1,43 +1,15 @@
 import { useState } from "react";
 import type { ProspectClient } from "@raskha/client-management";
+import { adminFetch } from "@raskha/shared";
 import type { ProspectFormValues } from "./prospectFormTypes";
-import { auth } from "../../lib/firebase";
 import { useBranchContext } from "../branches";
 
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-}
-
 async function apiRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers = await authHeaders();
-  const res = await fetch(`${API_BASE}${path}`, {
+  return adminFetch<T>(path, {
     method,
-    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    requireAuth: false,
   });
-  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? `Request failed (${res.status})`);
-  }
-  return data;
 }
 
 /** Convert form values to the API payload shape */

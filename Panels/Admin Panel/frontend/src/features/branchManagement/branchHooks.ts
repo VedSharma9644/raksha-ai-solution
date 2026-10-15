@@ -1,29 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Branch } from "@raskha/branch-management";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
-import { auth } from "../../lib/firebase";
 import { APP_ROUTES } from "../../app/routePaths";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const h = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) h.set("Authorization", `Bearer ${await user.getIdToken()}`);
-  return h;
-}
 
 // ─── useBranchesList ─────────────────────────────────────────────────────────
 
@@ -67,9 +48,8 @@ export function useAddBranch() {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/branches`, {
+      await adminFetch("/api/branches", {
         method: "POST",
-        headers: await authHeaders(),
         body: JSON.stringify({
           name: values.name.trim(),
           city: values.city.trim(),
@@ -77,9 +57,8 @@ export function useAddBranch() {
           phone: values.phone.trim(),
           managerName: values.managerName.trim(),
         }),
+        requireAuth: false,
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed to create branch.");
       await reload();
       navigate(APP_ROUTES.branchList, { replace: true });
     } catch (err: unknown) {
@@ -108,12 +87,9 @@ export function useEditBranch(branchId: string) {
   const [fetchedBranch, setFetchedBranch] = useState<Branch | null>(null);
   useEffect(() => {
     if (branch) return; // already in context
-    auth.currentUser?.getIdToken().then(async (token) => {
-      const res = await fetch(`${API_BASE}/api/branches/${branchId}`, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      if (res.ok) setFetchedBranch(await res.json() as Branch);
-    }).catch(() => undefined);
+    void adminFetch<Branch>(`/api/branches/${branchId}`, { requireAuth: false })
+      .then((data) => setFetchedBranch(data))
+      .catch(() => undefined);
   }, [branchId, branch]);
 
   const activeBranch = branch ?? fetchedBranch;
@@ -122,9 +98,8 @@ export function useEditBranch(branchId: string) {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/branches/${branchId}`, {
+      await adminFetch(`/api/branches/${branchId}`, {
         method: "PUT",
-        headers: await authHeaders(),
         body: JSON.stringify({
           name: values.name.trim(),
           city: values.city.trim(),
@@ -133,9 +108,8 @@ export function useEditBranch(branchId: string) {
           managerName: values.managerName.trim(),
           status: values.status,
         }),
+        requireAuth: false,
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed to update branch.");
       await reload();
       navigate(APP_ROUTES.branchList, { replace: true });
     } catch (err: unknown) {
@@ -149,12 +123,10 @@ export function useEditBranch(branchId: string) {
     setError("");
     setIsDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/branches/${branchId}`, {
+      await adminFetch(`/api/branches/${branchId}`, {
         method: "DELETE",
-        headers: await authHeaders(),
+        requireAuth: false,
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed to delete branch.");
       await reload();
       navigate(APP_ROUTES.branchList, { replace: true });
     } catch (err: unknown) {

@@ -1,31 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProspectClient, ProspectStatus } from "@raskha/client-management";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 import { appendBranchParam } from "../../lib/branchFilter";
-import { auth } from "../../lib/firebase";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-}
 
 export function useProspectList(statusFilter?: ProspectStatus | "") {
   const { agency } = useAuthContext();
@@ -41,20 +19,12 @@ export function useProspectList(statusFilter?: ProspectStatus | "") {
     setIsLoading(true);
     setError("");
 
-    let url = statusFilter
-      ? `${API_BASE}/api/prospects?status=${encodeURIComponent(statusFilter)}`
-      : `${API_BASE}/api/prospects`;
-    url = appendBranchParam(url, activeBranchId);
+    let path = statusFilter
+      ? `/api/prospects?status=${encodeURIComponent(statusFilter)}`
+      : `/api/prospects`;
+    path = appendBranchParam(path, activeBranchId);
 
-    authHeaders()
-      .then((headers) => fetch(url, { headers }))
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? `Failed to load prospects (${res.status})`);
-        }
-        return res.json() as Promise<ProspectClient[]>;
-      })
+    adminFetch<ProspectClient[]>(path, { requireAuth: false })
       .then((data) => setProspects(data))
       .catch((err: unknown) => {
         const e = err as { message?: string };

@@ -11,6 +11,7 @@ import {
   formatIstPunchDate,
   formatIstPunchTime,
   istWallClockToDate,
+  startOfIstDay,
   toDutyDateKey,
 } from "./dutyDate";
 import { withSelfieUploadSlot } from "./uploadQueue";
@@ -43,13 +44,6 @@ export type MarkPunchInParams = {
 
 const formatPunchTime = formatIstPunchTime;
 const formatPunchDate = formatIstPunchDate;
-
-function startOfTodayUtc(): Date {
-  const now = new Date();
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  );
-}
 
 function decodeBase64Image(selfieBase64: string): Buffer {
   const cleaned = selfieBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -330,7 +324,8 @@ export async function getTodayOpenPunchIn(
 ): Promise<OpenPunchInRecord | null> {
   const db = getFirestore();
   const dutyDate = toDutyDateKey();
-  const dayStartMs = startOfTodayUtc().getTime();
+  // Legacy open-punch scan: compare against IST midnight, not host/UTC midnight.
+  const dayStartMs = startOfIstDay(dutyDate).getTime();
 
   // Prefer indexed query: guardId + dutyDate (composite index in firestore.indexes.json)
   try {

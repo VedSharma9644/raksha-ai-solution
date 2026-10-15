@@ -1,34 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
-import { auth } from "../../lib/firebase";
 
 export interface ProspectGuardNote {
   id: string;
   authorName: string;
   content: string;
   createdAt: unknown;
-}
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
 }
 
 export function useProspectGuardNotes(guardId: string) {
@@ -43,10 +21,12 @@ export function useProspectGuardNotes(guardId: string) {
     setLoading(true);
     setError(null);
     try {
-      const headers = await authHeaders();
-      const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes`, { headers });
-      if (!res.ok) throw new Error(`Failed to load notes (${res.status})`);
-      setNotes(await res.json());
+      setNotes(
+        await adminFetch<ProspectGuardNote[]>(
+          `/api/prospect-guards/${guardId}/notes`,
+          { requireAuth: false }
+        )
+      );
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Unknown error");
     } finally {
@@ -54,22 +34,24 @@ export function useProspectGuardNotes(guardId: string) {
     }
   }, [agency, guardId]);
 
-  useEffect(() => { fetchNotes(); }, [fetchNotes]);
+  useEffect(() => {
+    void fetchNotes();
+  }, [fetchNotes]);
 
   const addNote = useCallback(
     async (content: string, authorName: string): Promise<boolean> => {
       if (!agency) return false;
       setSaving(true);
       try {
-        const headers = await authHeaders();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes`, {
+        await adminFetch(`/api/prospect-guards/${guardId}/notes`, {
           method: "POST",
-          headers,
           body: JSON.stringify({ content, authorName }),
+          requireAuth: false,
         });
-        if (!res.ok) return false;
         await fetchNotes();
         return true;
+      } catch {
+        return false;
       } finally {
         setSaving(false);
       }
@@ -81,13 +63,12 @@ export function useProspectGuardNotes(guardId: string) {
     async (noteId: string): Promise<boolean> => {
       if (!agency) return false;
       try {
-        const headers = await authHeaders();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes/${noteId}`, {
+        await adminFetch(`/api/prospect-guards/${guardId}/notes/${noteId}`, {
           method: "DELETE",
-          headers,
+          requireAuth: false,
         });
-        if (res.ok) await fetchNotes();
-        return res.ok;
+        await fetchNotes();
+        return true;
       } catch {
         return false;
       }

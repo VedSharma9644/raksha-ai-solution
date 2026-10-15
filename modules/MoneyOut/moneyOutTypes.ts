@@ -133,12 +133,24 @@ export function firstRecoveryMonth(givenOn: string): {
   month: number;
 } {
   const [y, m] = givenOn.split("-").map(Number);
-  const year = Number.isFinite(y) ? y : new Date().getFullYear();
-  const month = Number.isFinite(m) ? m : new Date().getMonth() + 1;
-  return { year, month: Math.min(12, Math.max(1, month)) };
+  if (Number.isFinite(y) && Number.isFinite(m)) {
+    return { year: y, month: Math.min(12, Math.max(1, m)) };
+  }
+  return istYearMonth(new Date());
 }
 
-/** Allowed EMI / next-payroll start: this calendar month through +5 months. */
+/** Current year/month in Asia/Kolkata (Cloud Run host is UTC). */
+function istYearMonth(now: Date): { year: number; month: number } {
+  const key = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+  }).format(now);
+  const [year, month] = key.split("-").map(Number);
+  return { year, month };
+}
+
+/** Allowed EMI / next-payroll start: this IST calendar month through +5 months. */
 export function isValidRecoveryStartMonth(
   year: number,
   month: number,
@@ -146,7 +158,8 @@ export function isValidRecoveryStartMonth(
 ): boolean {
   if (!Number.isFinite(year) || !Number.isFinite(month)) return false;
   if (month < 1 || month > 12) return false;
-  const currentIdx = now.getFullYear() * 12 + now.getMonth();
+  const current = istYearMonth(now);
+  const currentIdx = current.year * 12 + (current.month - 1);
   const targetIdx = year * 12 + (month - 1);
   const delta = targetIdx - currentIdx;
   return delta >= 0 && delta <= 5;
@@ -175,10 +188,11 @@ export function recoveryStartOptions(
     label: string;
     value: string;
   }> = [];
+  const current = istYearMonth(now);
   for (let offset = 0; offset <= 5; offset += 1) {
-    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
+    const idx = current.year * 12 + (current.month - 1) + offset;
+    const year = Math.floor(idx / 12);
+    const month = (idx % 12) + 1;
     const monthName = names[month - 1] ?? String(month);
     options.push({
       year,

@@ -43,19 +43,6 @@ export type SiteEarningsRow = {
   result: "profit" | "loss" | "break_even";
 };
 
-export type EarningsSummary = {
-  from: YearMonth;
-  to: YearMonth;
-  monthCount: number;
-  moneyIn: number;
-  moneyOut: number;
-  moneyOutExpenses: number;
-  moneyOutUnattributedExpenses: number;
-  net: number;
-  result: "profit" | "loss" | "break_even";
-  sites: SiteEarningsRow[];
-};
-
 export type SiteEarningsExpenseCost = {
   expenseId: string;
   date: string;
@@ -63,6 +50,22 @@ export type SiteEarningsExpenseCost = {
   amount: number;
   guardName: string;
   note: string;
+};
+
+export type EarningsSummary = {
+  from: YearMonth;
+  to: YearMonth;
+  monthCount: number;
+  moneyIn: number;
+  moneyOut: number;
+  moneyOutExpenses: number;
+  /** Expenses with no site — deducted from agency net only. */
+  moneyOutUnattributedExpenses: number;
+  /** Line items for agency-level / general expenses (no site). */
+  unattributedExpenses: SiteEarningsExpenseCost[];
+  net: number;
+  result: "profit" | "loss" | "break_even";
+  sites: SiteEarningsRow[];
 };
 
 export type SiteEarningsDetail = {
@@ -177,7 +180,7 @@ export function earningsSummaryToCsv(summary: EarningsSummary): string {
     s.result,
   ]);
   const totals = [
-    "TOTAL",
+    "TOTAL (incl. general expenses)",
     "",
     "",
     "",
@@ -192,11 +195,43 @@ export function earningsSummaryToCsv(summary: EarningsSummary): string {
     String(summary.net),
     summary.result,
   ];
+  const general = [
+    "GENERAL / UNALLOCATED EXPENSES",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "0",
+    "",
+    "",
+    String(summary.moneyOutUnattributedExpenses ?? 0),
+    String(summary.moneyOutUnattributedExpenses ?? 0),
+    String(-(summary.moneyOutUnattributedExpenses ?? 0)),
+    "",
+  ];
   const escape = (cell: string) => {
     if (/[",\n]/.test(cell)) return `"${cell.replace(/"/g, '""')}"`;
     return cell;
   };
-  return [header, ...rows, totals]
+  const main = [header, ...rows, general, totals]
     .map((r) => r.map(escape).join(","))
     .join("\n");
+
+  const detailHeader = ["Date", "Category", "Amount", "Guard", "Note"];
+  const detailRows = (summary.unattributedExpenses ?? []).map((e) => [
+    e.date,
+    e.category,
+    String(e.amount),
+    e.guardName || "",
+    e.note || "",
+  ]);
+  if (detailRows.length === 0) {
+    return main;
+  }
+  const detail = [detailHeader, ...detailRows]
+    .map((r) => r.map(escape).join(","))
+    .join("\n");
+  return `${main}\n\nGeneral expense details\n${detail}`;
 }

@@ -1,29 +1,7 @@
 import { useState, useCallback } from "react";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
-import { auth } from "../../lib/firebase";
 import type { ProspectGuardFormValues } from "./prospectGuardFormTypes";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-}
 
 function toPayload(values: ProspectGuardFormValues, agencyId?: string) {
   return {
@@ -37,7 +15,9 @@ function toPayload(values: ProspectGuardFormValues, agencyId?: string) {
     email: values.email.trim(),
     aadhaarNumber: values.aadhaarNumber.trim(),
     panNumber: values.panNumber.trim(),
-    yearsOfExperience: values.yearsOfExperience ? Number(values.yearsOfExperience) : null,
+    yearsOfExperience: values.yearsOfExperience
+      ? Number(values.yearsOfExperience)
+      : null,
     previousEmployer: values.previousEmployer.trim(),
     height: values.height.trim(),
     weight: values.weight.trim(),
@@ -56,31 +36,26 @@ export function useSaveProspectGuard() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const saveGuard = useCallback(
-    async (values: ProspectGuardFormValues, existingId?: string): Promise<string | null> => {
+    async (
+      values: ProspectGuardFormValues,
+      existingId?: string
+    ): Promise<string | null> => {
       if (!agency) return null;
       setSaving(true);
       setSaveError(null);
       try {
-        const method = existingId ? "PATCH" : "POST";
-        const url = existingId
-          ? `${API_BASE}/api/prospect-guards/${existingId}`
-          : `${API_BASE}/api/prospect-guards`;
+        const path = existingId
+          ? `/api/prospect-guards/${existingId}`
+          : `/api/prospect-guards`;
         const payload = existingId
           ? toPayload(values)
-          : toPayload(values, auth.currentUser?.uid);
-
-        const headers = await authHeaders();
-        const res = await fetch(url, {
-          method,
-          headers,
+          : toPayload(values, agency.id);
+        const saved = await adminFetch<{ id: string }>(path, {
+          method: existingId ? "PATCH" : "POST",
           body: JSON.stringify(payload),
+          requireAuth: false,
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? `Save failed (${res.status})`);
-        }
-        const saved = await res.json();
-        return saved.id as string;
+        return saved.id;
       } catch (err: unknown) {
         setSaveError((err as { message?: string }).message ?? "Unknown error");
         return null;
@@ -95,12 +70,11 @@ export function useSaveProspectGuard() {
     async (guardId: string): Promise<boolean> => {
       if (!agency) return false;
       try {
-        const headers = await authHeaders();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}`, {
+        await adminFetch(`/api/prospect-guards/${guardId}`, {
           method: "DELETE",
-          headers,
+          requireAuth: false,
         });
-        return res.ok;
+        return true;
       } catch {
         return false;
       }

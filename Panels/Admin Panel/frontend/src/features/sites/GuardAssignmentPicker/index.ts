@@ -1,2 +1,4 @@
-export { GuardAssignmentPicker } from "./GuardAssignmentPicker";
-export type { GuardAssignmentPickerProps } from "./GuardAssignmentPicker";
+export {
+  GuardAssignmentPicker,
+  type GuardAssignmentPickerProps,
+} from "@raskha/web-ops";

@@ -144,6 +144,21 @@
   color: #b91c1c;
 }
 
+.money-out__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.9rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.money-out__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
 .money-out__badge {
   display: inline-flex;
   padding: 0.2rem 0.5rem;

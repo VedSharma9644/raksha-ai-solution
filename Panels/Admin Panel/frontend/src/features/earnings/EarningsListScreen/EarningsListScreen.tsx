@@ -68,6 +68,35 @@ export function EarningsListScreen() {
     return `${m} ${year}`;
   }, [month, year]);
 
+  /** Ensure general (no-site) expenses always reduce Money out / Net in the UI. */
+  const agencyTotals = useMemo(() => {
+    if (!summary) return null;
+    const generalFromRows = (summary.unattributedExpenses ?? []).reduce(
+      (s, e) => s + (Number(e.amount) || 0),
+      0
+    );
+    const general =
+      generalFromRows > 0
+        ? generalFromRows
+        : Number(summary.moneyOutUnattributedExpenses) || 0;
+    const siteMoneyOut = summary.sites.reduce(
+      (s, r) => s + (Number(r.moneyOut) || 0),
+      0
+    );
+    const moneyIn = Number(summary.moneyIn) || 0;
+    const moneyOut = Math.round((siteMoneyOut + general) * 100) / 100;
+    const net = Math.round((moneyIn - moneyOut) * 100) / 100;
+    const result =
+      net > 0.005 ? "profit" : net < -0.005 ? "loss" : "break_even";
+    return {
+      moneyIn,
+      moneyOut,
+      general: Math.round(general * 100) / 100,
+      net,
+      result,
+    };
+  }, [summary]);
+
   async function load(y: number, m: number) {
     setIsLoading(true);
     setError("");
@@ -195,32 +224,109 @@ export function EarningsListScreen() {
               <article className="earnings-list__kpi earnings-list__kpi--in">
                 <span className="earnings-list__kpi-label">Money in</span>
                 <strong className="earnings-list__kpi-value">
-                  {formatMoney(summary.moneyIn)}
+                  {formatMoney(agencyTotals?.moneyIn ?? summary.moneyIn)}
                 </strong>
                 <span className="earnings-list__kpi-meta">Client billing</span>
               </article>
               <article className="earnings-list__kpi earnings-list__kpi--out">
                 <span className="earnings-list__kpi-label">Money out</span>
                 <strong className="earnings-list__kpi-value">
-                  {formatMoney(summary.moneyOut)}
+                  {formatMoney(agencyTotals?.moneyOut ?? summary.moneyOut)}
                 </strong>
                 <span className="earnings-list__kpi-meta">
-                  Guard pay + relief + expenses
+                  Sites + general expenses
+                  {(agencyTotals?.general ?? 0) > 0
+                    ? ` (incl. ${formatMoney(agencyTotals!.general)} general)`
+                    : ""}
+                </span>
+              </article>
+              <article className="earnings-list__kpi earnings-list__kpi--general">
+                <span className="earnings-list__kpi-label">General expenses</span>
+                <strong className="earnings-list__kpi-value">
+                  {formatMoney(agencyTotals?.general ?? 0)}
+                </strong>
+                <span className="earnings-list__kpi-meta">
+                  Deducted from agency net
                 </span>
               </article>
               <article
-                className={`earnings-list__kpi earnings-list__kpi--net earnings-list__kpi--${summary.result}`}
+                className={`earnings-list__kpi earnings-list__kpi--net earnings-list__kpi--${agencyTotals?.result ?? summary.result}`}
               >
                 <span className="earnings-list__kpi-label">Net</span>
                 <strong className="earnings-list__kpi-value">
-                  {formatMoney(summary.net)}
+                  {formatMoney(agencyTotals?.net ?? summary.net)}
                 </strong>
                 <span
-                  className={`earnings-list__badge earnings-list__badge--${summary.result}`}
+                  className={`earnings-list__badge earnings-list__badge--${agencyTotals?.result ?? summary.result}`}
                 >
-                  {resultLabel(summary.result)}
+                  {resultLabel(agencyTotals?.result ?? summary.result)}
                 </span>
               </article>
+            </section>
+
+            <section
+              className="earnings-list__sites"
+              aria-labelledby="earnings-general-title"
+            >
+              <div className="earnings-list__sites-head">
+                <h2
+                  id="earnings-general-title"
+                  className="earnings-list__panel-title"
+                >
+                  General / unallocated expenses
+                </h2>
+                <p className="earnings-list__panel-hint">
+                  Logged in Money Out without a site (for example staff parties
+                  or misc spend). Deducted from agency profit only — not assigned
+                  to any site.
+                </p>
+              </div>
+
+              <div className="earnings-list__table-wrap">
+                <table className="earnings-list__table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Category</th>
+                      <th>Note</th>
+                      <th>Guard</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(summary.unattributedExpenses ?? []).length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="earnings-list__empty">
+                          No general expenses in this period. Add them in Money
+                          Out and leave Site empty.
+                        </td>
+                      </tr>
+                    ) : (
+                      (summary.unattributedExpenses ?? []).map((e) => (
+                        <tr key={e.expenseId}>
+                          <td>{e.date}</td>
+                          <td>{e.category}</td>
+                          <td>{e.note || "—"}</td>
+                          <td>{e.guardName || "—"}</td>
+                          <td className="earnings-list__num">
+                            {formatMoney(e.amount)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  {(summary.unattributedExpenses ?? []).length > 0 ? (
+                    <tfoot>
+                      <tr className="earnings-list__tfoot">
+                        <td colSpan={4}>Total general expenses</td>
+                        <td className="earnings-list__num">
+                          {formatMoney(agencyTotals?.general ?? 0)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  ) : null}
+                </table>
+              </div>
             </section>
 
             <section className="earnings-list__sites" aria-labelledby="earnings-sites-title">
@@ -229,7 +335,8 @@ export function EarningsListScreen() {
                   By site
                 </h2>
                 <p className="earnings-list__panel-hint">
-                  Click a site name for the guard and relief breakdown.
+                  Site-linked costs only. General expenses above are extra on top
+                  of these rows. Click a site for the guard and relief breakdown.
                 </p>
               </div>
 

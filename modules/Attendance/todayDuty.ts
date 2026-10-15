@@ -1,22 +1,15 @@
 import { getFirestore } from "firebase-admin/firestore";
 
-import { toDutyDateKey } from "./dutyDate";
+import {
+  shiftWindowIst,
+  toDutyDateKey,
+  weekdayFromDutyDate,
+  type DayOfWeek,
+} from "./dutyDate";
 import { hydrateAssignmentsFromLiveSites } from "./rosterLive";
 import { getSiteGeofenceById } from "./siteLookup";
 
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
-
-type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-
-const JS_TO_DOW: DayOfWeek[] = [
-  "sun",
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-];
 
 export type TodayDutyResolution = {
   shiftFrom: string;
@@ -44,36 +37,6 @@ type AssignmentRow = {
   effectiveFrom: string;
   effectiveTo?: string | null;
 };
-
-function weekdayFromDutyDate(dutyDate: string): DayOfWeek {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const utc = new Date(Date.UTC(y, m - 1, d, 6, 30));
-  return JS_TO_DOW[utc.getUTCDay()] ?? "mon";
-}
-
-function parseHhMm(value: string): { hours: number; minutes: number } | null {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    return null;
-  }
-  return { hours: Number(match[1]), minutes: Number(match[2]) };
-}
-
-function shiftWindow(
-  dutyDate: string,
-  shiftFrom: string,
-  shiftTo: string
-): { start: Date; end: Date } {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const from = parseHhMm(shiftFrom) ?? { hours: 8, minutes: 0 };
-  const to = parseHhMm(shiftTo) ?? { hours: 20, minutes: 0 };
-  const start = new Date(y, m - 1, d, from.hours, from.minutes, 0, 0);
-  let end = new Date(y, m - 1, d, to.hours, to.minutes, 0, 0);
-  if (end <= start) {
-    end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
-  }
-  return { start, end };
-}
 
 function covers(assignment: AssignmentRow, dutyDate: string): boolean {
   if (dutyDate < assignment.effectiveFrom) {
@@ -161,7 +124,7 @@ export async function resolveTodayDuty(params: {
   const todayRows = assignments
     .filter((row) => covers(row, dutyDate))
     .map((row) => {
-      const { start, end } = shiftWindow(
+      const { start, end } = shiftWindowIst(
         dutyDate,
         row.shiftStartTime,
         row.shiftEndTime

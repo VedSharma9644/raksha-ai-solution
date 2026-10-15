@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SiteShiftConfig, SiteShift } from "@raskha/site-management";
-import { auth } from "../../lib/firebase";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 import type { SiteFormValues } from "./siteFormTypes";
-
-const ADMIN_BACKEND_URL =
-  import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001";
 
 function buildShiftConfig(values: SiteFormValues): SiteShiftConfig | null {
   const shifts: SiteShift[] = values.shifts.map((s) => {
@@ -34,14 +31,6 @@ function buildShiftConfig(values: SiteFormValues): SiteShiftConfig | null {
   };
 }
 
-async function authHeaders(): Promise<HeadersInit> {
-  const token = await auth.currentUser?.getIdToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export function useAddSite() {
   const navigate = useNavigate();
   const { agency } = useAuthContext();
@@ -63,9 +52,8 @@ export function useAddSite() {
         ? parseInt(values.intervalCheckinMinutes, 10) || null
         : null;
 
-      const res = await fetch(`${ADMIN_BACKEND_URL}/api/sites`, {
+      await adminFetch("/api/sites", {
         method: "POST",
-        headers: await authHeaders(),
         body: JSON.stringify({
           agencyId: agency.id,
           siteName: values.siteName,
@@ -94,12 +82,8 @@ export function useAddSite() {
               String(values.clientRateFemaleMonthly).replace(/[^\d.]/g, "")
             ) || 0,
         }),
+        requireAuth: false,
       });
-
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Failed to save site.");
-      }
 
       navigate("/sites", { replace: true });
     } catch (err: unknown) {

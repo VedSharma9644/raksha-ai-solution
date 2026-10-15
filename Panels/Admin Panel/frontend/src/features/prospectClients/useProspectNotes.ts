@@ -1,42 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProspectNote } from "@raskha/client-management";
-import { auth } from "../../lib/firebase";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(): Promise<Headers> {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  const user = auth.currentUser;
-  if (user) {
-    const token = await user.getIdToken();
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-}
-
-async function apiRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers = await authHeaders();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? `Request failed (${res.status})`);
-  }
-  return data;
-}
+import { adminFetch } from "@raskha/shared";
 
 export function useProspectNotes(prospectId: string) {
   const [notes, setNotes] = useState<ProspectNote[]>([]);
@@ -47,18 +11,15 @@ export function useProspectNotes(prospectId: string) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!prospectId) { setIsLoading(false); return; }
+    if (!prospectId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError("");
-    authHeaders()
-      .then((headers) => fetch(`${API_BASE}/api/prospects/${prospectId}/notes`, { headers }))
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? `Failed to load notes (${res.status})`);
-        }
-        return res.json() as Promise<ProspectNote[]>;
-      })
+    adminFetch<ProspectNote[]>(`/api/prospects/${prospectId}/notes`, {
+      requireAuth: false,
+    })
       .then(setNotes)
       .catch((err: unknown) => {
         const e = err as { message?: string };
@@ -73,7 +34,11 @@ export function useProspectNotes(prospectId: string) {
     setIsSaving(true);
     setSaveError("");
     try {
-      await apiRequest("POST", `/api/prospects/${prospectId}/notes`, { content, authorName });
+      await adminFetch(`/api/prospects/${prospectId}/notes`, {
+        method: "POST",
+        body: JSON.stringify({ content, authorName }),
+        requireAuth: false,
+      });
       reload();
       return true;
     } catch (err: unknown) {
@@ -88,7 +53,10 @@ export function useProspectNotes(prospectId: string) {
   async function deleteNote(noteId: string): Promise<boolean> {
     setSaveError("");
     try {
-      await apiRequest("DELETE", `/api/prospects/${prospectId}/notes/${noteId}`);
+      await adminFetch(`/api/prospects/${prospectId}/notes/${noteId}`, {
+        method: "DELETE",
+        requireAuth: false,
+      });
       reload();
       return true;
     } catch (err: unknown) {

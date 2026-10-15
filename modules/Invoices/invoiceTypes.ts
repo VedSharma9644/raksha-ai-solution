@@ -139,7 +139,8 @@ export function defaultAgencyInvoiceSettings(
 }
 
 export function periodLabel(year: number, month: number): string {
-  return new Date(year, month - 1, 1).toLocaleString("en-IN", {
+  return new Date(Date.UTC(year, month - 1, 1, 12)).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     month: "long",
     year: "numeric",
   });

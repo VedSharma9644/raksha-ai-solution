@@ -1,18 +1,7 @@
 import { useState, useCallback } from "react";
-import { auth } from "../../lib/firebase";
+import { adminFetch } from "@raskha/shared";
+import { useAuthContext } from "../authentication";
 import type { ProspectGuardFormValues } from "./prospectGuardFormTypes";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
 
 function toPayload(values: ProspectGuardFormValues, agencyId?: string) {
   return {
@@ -26,7 +15,9 @@ function toPayload(values: ProspectGuardFormValues, agencyId?: string) {
     email: values.email.trim(),
     aadhaarNumber: values.aadhaarNumber.trim(),
     panNumber: values.panNumber.trim(),
-    yearsOfExperience: values.yearsOfExperience ? Number(values.yearsOfExperience) : null,
+    yearsOfExperience: values.yearsOfExperience
+      ? Number(values.yearsOfExperience)
+      : null,
     previousEmployer: values.previousEmployer.trim(),
     height: values.height.trim(),
     weight: values.weight.trim(),
@@ -40,36 +31,31 @@ function toPayload(values: ProspectGuardFormValues, agencyId?: string) {
 }
 
 export function useSaveProspectGuard() {
+  const { hrStaff } = useAuthContext();
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const saveGuard = useCallback(
-    async (values: ProspectGuardFormValues, existingId?: string): Promise<string | null> => {
-      const user = auth.currentUser;
-      if (!user) return null;
+    async (
+      values: ProspectGuardFormValues,
+      existingId?: string
+    ): Promise<string | null> => {
+      if (!hrStaff?.agencyId) return null;
       setSaving(true);
       setSaveError(null);
       try {
-        const token = await user.getIdToken();
-        const method = existingId ? "PATCH" : "POST";
-        const url = existingId
-          ? `${API_BASE}/api/prospect-guards/${existingId}`
-          : `${API_BASE}/api/prospect-guards`;
+        const path = existingId
+          ? `/api/prospect-guards/${existingId}`
+          : `/api/prospect-guards`;
         const payload = existingId
           ? toPayload(values)
-          : toPayload(values, user.uid);
-
-        const res = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          : toPayload(values, hrStaff.agencyId);
+        const saved = await adminFetch<{ id: string }>(path, {
+          method: existingId ? "PATCH" : "POST",
           body: JSON.stringify(payload),
+          requireAuth: false,
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? `Save failed (${res.status})`);
-        }
-        const saved = await res.json();
-        return saved.id as string;
+        return saved.id;
       } catch (err: unknown) {
         setSaveError((err as { message?: string }).message ?? "Unknown error");
         return null;
@@ -77,26 +63,20 @@ export function useSaveProspectGuard() {
         setSaving(false);
       }
     },
-    []
+    [hrStaff?.agencyId]
   );
 
-  const deleteGuard = useCallback(
-    async (guardId: string): Promise<boolean> => {
-      const user = auth.currentUser;
-      if (!user) return false;
-      try {
-        const token = await user.getIdToken();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        return res.ok;
-      } catch {
-        return false;
-      }
-    },
-    []
-  );
+  const deleteGuard = useCallback(async (guardId: string): Promise<boolean> => {
+    try {
+      await adminFetch(`/api/prospect-guards/${guardId}`, {
+        method: "DELETE",
+        requireAuth: false,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
 
   return { saving, saveError, saveGuard, deleteGuard };
 }

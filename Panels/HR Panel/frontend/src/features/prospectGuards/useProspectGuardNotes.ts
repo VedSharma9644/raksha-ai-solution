@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { auth } from "../../lib/firebase";
+import { adminFetch } from "@raskha/shared";
 
 export interface ProspectGuardNote {
   id: string;
@@ -8,18 +8,6 @@ export interface ProspectGuardNote {
   createdAt: unknown;
 }
 
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
 export function useProspectGuardNotes(guardId: string) {
   const [notes, setNotes] = useState<ProspectGuardNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,17 +15,16 @@ export function useProspectGuardNotes(guardId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotes = useCallback(async () => {
-    const user = auth.currentUser;
-    if (!user || !guardId) return;
+    if (!guardId) return;
     setLoading(true);
     setError(null);
     try {
-      const token = await user.getIdToken();
-      const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Failed to load notes (${res.status})`);
-      setNotes(await res.json());
+      setNotes(
+        await adminFetch<ProspectGuardNote[]>(
+          `/api/prospect-guards/${guardId}/notes`,
+          { requireAuth: false }
+        )
+      );
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Unknown error");
     } finally {
@@ -45,23 +32,23 @@ export function useProspectGuardNotes(guardId: string) {
     }
   }, [guardId]);
 
-  useEffect(() => { fetchNotes(); }, [fetchNotes]);
+  useEffect(() => {
+    void fetchNotes();
+  }, [fetchNotes]);
 
   const addNote = useCallback(
     async (content: string, authorName: string): Promise<boolean> => {
-      const user = auth.currentUser;
-      if (!user) return false;
       setSaving(true);
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes`, {
+        await adminFetch(`/api/prospect-guards/${guardId}/notes`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ content, authorName }),
+          requireAuth: false,
         });
-        if (!res.ok) return false;
         await fetchNotes();
         return true;
+      } catch {
+        return false;
       } finally {
         setSaving(false);
       }
@@ -71,16 +58,13 @@ export function useProspectGuardNotes(guardId: string) {
 
   const deleteNote = useCallback(
     async (noteId: string): Promise<boolean> => {
-      const user = auth.currentUser;
-      if (!user) return false;
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`${API_BASE}/api/prospect-guards/${guardId}/notes/${noteId}`, {
+        await adminFetch(`/api/prospect-guards/${guardId}/notes/${noteId}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          requireAuth: false,
         });
-        if (res.ok) await fetchNotes();
-        return res.ok;
+        await fetchNotes();
+        return true;
       } catch {
         return false;
       }

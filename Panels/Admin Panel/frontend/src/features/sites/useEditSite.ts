@@ -3,13 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import { getSiteById } from "@raskha/site-management";
 import type { Site, SiteShiftConfig, SiteShift } from "@raskha/site-management";
-import { db, auth } from "../../lib/firebase";
+import { adminFetch } from "@raskha/shared";
+import { db } from "../../lib/firebase";
 import type { AssignedGenderCounts } from "./AddSiteForm/AddSiteForm";
 import type { SiteFormValues, SiteShiftRowValues } from "./siteFormTypes";
-
-const ADMIN_BACKEND_URL =
-  (import.meta.env.VITE_ADMIN_API_URL as string | undefined)?.replace(/\/$/, "") ??
-  "http://localhost:3001";
 
 function buildShiftConfig(values: SiteFormValues): SiteShiftConfig | null {
   const shifts: SiteShift[] = values.shifts.map((s) => {
@@ -95,13 +92,8 @@ export function useEditSite(siteId: string) {
         ? parseInt(values.intervalCheckinMinutes, 10) || null
         : null;
 
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`${ADMIN_BACKEND_URL}/api/sites/${siteId}`, {
+      await adminFetch(`/api/sites/${siteId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
         body: JSON.stringify({
           siteName: values.siteName,
           siteType: values.siteType,
@@ -129,12 +121,8 @@ export function useEditSite(siteId: string) {
               String(values.clientRateFemaleMonthly).replace(/[^\d.]/g, "")
             ) || 0,
         }),
+        requireAuth: false,
       });
-
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Failed to update site.");
-      }
 
       navigate("/sites", { replace: true });
     } catch (err: unknown) {

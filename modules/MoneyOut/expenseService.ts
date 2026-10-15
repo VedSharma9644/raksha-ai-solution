@@ -288,10 +288,17 @@ export async function sumExpensesForPeriod(params: {
   fromMonth: number;
   toYear: number;
   toMonth: number;
+  /**
+   * When provided, expenses whose siteId is missing OR not in this set count as
+   * agency-level (general) so they still reduce overall profit.
+   */
+  knownSiteIds?: ReadonlySet<string>;
 }): Promise<{
   total: number;
   bySiteId: Map<string, number>;
   unattributed: number;
+  /** Active expenses with no usable site (agency-level / general). */
+  unattributedRows: AgencyExpense[];
 }> {
   const snap = await getFirestore()
     .collection(AGENCY_EXPENSES_COLLECTION)
@@ -301,8 +308,10 @@ export async function sumExpensesForPeriod(params: {
   const fromKey = params.fromYear * 12 + params.fromMonth;
   const toKey = params.toYear * 12 + params.toMonth;
   const bySiteId = new Map<string, number>();
+  const unattributedRows: AgencyExpense[] = [];
   let unattributed = 0;
   let total = 0;
+  const known = params.knownSiteIds;
 
   for (const doc of snap.docs) {
     const exp = mapExpense(doc.id, (doc.data() ?? {}) as Record<string, unknown>);
@@ -312,15 +321,20 @@ export async function sumExpensesForPeriod(params: {
     const key = y * 12 + m;
     if (key < fromKey || key > toKey) continue;
     total = roundMoney(total + exp.amount);
-    if (exp.siteId) {
+    const siteId = String(exp.siteId ?? "").trim();
+    const hasKnownSite = Boolean(siteId) && (!known || known.has(siteId));
+    if (hasKnownSite) {
       bySiteId.set(
-        exp.siteId,
-        roundMoney((bySiteId.get(exp.siteId) ?? 0) + exp.amount)
+        siteId,
+        roundMoney((bySiteId.get(siteId) ?? 0) + exp.amount)
       );
     } else {
+      // No site, or site id that does not match an active site → agency spend.
       unattributed = roundMoney(unattributed + exp.amount);
+      unattributedRows.push(exp);
     }
   }
 
-  return { total, bySiteId, unattributed };
+  unattributedRows.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  return { total, bySiteId, unattributed, unattributedRows };
 }

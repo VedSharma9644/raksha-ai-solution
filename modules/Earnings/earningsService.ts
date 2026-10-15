@@ -125,7 +125,8 @@ async function loadReliefCostsForAgencyMonth(params: {
   }>
 > {
   const { agencyId, year, month } = params;
-  const daysInMonth = new Date(year, month, 0).getDate();
+  // Gregorian length — host-TZ independent (Cloud Run is UTC).
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const mm = String(month).padStart(2, "0");
   const startDate = `${year}-${mm}-01`;
   const endDate = `${year}-${mm}-${String(daysInMonth).padStart(2, "0")}`;
@@ -333,12 +334,14 @@ export async function buildEarningsSummary(params: {
     }
   }
 
+  const knownSiteIds = new Set(sites.map((s) => s.id));
   const expenseTotals = await sumExpensesForPeriod({
     agencyId,
     fromYear: from.year,
     fromMonth: from.month,
     toYear: to.year,
     toMonth: to.month,
+    knownSiteIds,
   });
 
   const siteRows: SiteEarningsRow[] = [];
@@ -385,13 +388,31 @@ export async function buildEarningsSummary(params: {
 
   siteRows.sort((a, b) => a.siteName.localeCompare(b.siteName));
 
+  const unattributedExpenses: SiteEarningsExpenseCost[] = (
+    expenseTotals.unattributedRows ?? []
+  ).map((e) => ({
+    expenseId: e.id,
+    date: e.date,
+    category: expenseCategoryLabel(e.category),
+    amount: e.amount,
+    guardName: e.guardName || "",
+    note: e.note || "",
+  }));
+
+  // Prefer line-item sum so Net always matches what we list as general expenses.
+  const generalFromRows = roundMoney(
+    unattributedExpenses.reduce((s, e) => s + e.amount, 0)
+  );
+  const moneyOutUnattributedExpenses = roundMoney(
+    generalFromRows > 0 ? generalFromRows : expenseTotals.unattributed
+  );
+
   const moneyIn = roundMoney(siteRows.reduce((s, r) => s + r.moneyIn, 0));
   const siteMoneyOut = roundMoney(
     siteRows.reduce((s, r) => s + r.moneyOut, 0)
   );
-  const moneyOut = roundMoney(
-    siteMoneyOut + expenseTotals.unattributed
-  );
+  // Agency money out = all site costs + agency-level spend (no site / orphan site).
+  const moneyOut = roundMoney(siteMoneyOut + moneyOutUnattributedExpenses);
   const net = roundMoney(moneyIn - moneyOut);
 
   return {
@@ -401,7 +422,8 @@ export async function buildEarningsSummary(params: {
     moneyIn,
     moneyOut,
     moneyOutExpenses: expenseTotals.total,
-    moneyOutUnattributedExpenses: expenseTotals.unattributed,
+    moneyOutUnattributedExpenses,
+    unattributedExpenses,
     net,
     result: marginResult(net),
     sites: siteRows,

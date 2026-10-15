@@ -1,4 +1,15 @@
 export {
+  configureAdminApi,
+  resolveAdminApiBase,
+  adminAuthHeaders,
+  adminFetch,
+  adminFetchBlob,
+  type GetIdToken,
+  type AdminAuthHeaderOptions,
+  type AdminFetchOptions,
+} from "./adminApi";
+
+export {
   APP_LANGUAGES,
   DEFAULT_LANGUAGE_ID,
   filterLanguages,

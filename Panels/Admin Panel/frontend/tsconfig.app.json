@@ -21,6 +21,7 @@
       "@raskha/invoices": ["../../../modules/Invoices/client.ts"],
       "@raskha/money-out": ["../../../modules/MoneyOut/client.ts"],
       "@raskha/shared": ["../../../shared/index.ts"],
+      "@raskha/web-ops": ["../../../modules/Web Ops/index.ts"],
       "@raskha/inventory-management": ["../../../modules/Inventory Management/index.ts"],
       "@raskha/scheduling": ["../../../modules/Scheduling/index.ts"],
       "@raskha/client-management": ["../../../modules/Client Management/index.ts"]

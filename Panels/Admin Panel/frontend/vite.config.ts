@@ -11,6 +11,10 @@ export default defineConfig({
   envDir: path.resolve(projectRoot, "../../.."),
   // Expose FIREBASE_* env vars (without VITE_ prefix) to the browser
   envPrefix: ["VITE_", "FIREBASE_"],
+  // Never prebundle Node-only Admin SDK into the browser (causes `process is not defined`).
+  optimizeDeps: {
+    exclude: ["firebase-admin", "@raskha/attendance"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(projectRoot, "src"),
@@ -36,6 +40,8 @@ export default defineConfig({
       // Resolve @raskha/client-management from TypeScript source
       "@raskha/client-management": path.resolve(projectRoot, "../../../modules/Client Management/index.ts"),
       "@raskha/shared": path.resolve(projectRoot, "../../../shared/index.ts"),
+      // Shared Admin/HR ops UI (scheduling, relief, leave, attendance, sites list)
+      "@raskha/web-ops": path.resolve(projectRoot, "../../../modules/Web Ops/index.ts"),
       // Resolve @raskha/branch-management from TypeScript source
       "@raskha/branch-management": path.resolve(projectRoot, "../../../modules/Branch Management/index.ts"),
       // Resolve @raskha/branch-stock from TypeScript source

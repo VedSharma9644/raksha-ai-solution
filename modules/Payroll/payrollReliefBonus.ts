@@ -3,6 +3,8 @@ import {
   ATTENDANCE_DAY_OVERRIDES_COLLECTION,
   attendanceOverrideDocIdFromReliefBonusId,
   attendanceReliefBonusDutyId,
+  daysInCalendarMonth,
+  dutyDateFromParts,
   isAttendanceReliefBonusDutyId,
   listAttendanceOverrideRecordsForGuard,
 } from "@raskha/attendance";
@@ -22,11 +24,10 @@ function monthBounds(year: number, month: number): {
   startDate: string;
   endDate: string;
 } {
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const mm = String(month).padStart(2, "0");
+  const daysInMonth = daysInCalendarMonth(year, month);
   return {
-    startDate: `${year}-${mm}-01`,
-    endDate: `${year}-${mm}-${String(daysInMonth).padStart(2, "0")}`,
+    startDate: dutyDateFromParts(year, month, 1),
+    endDate: dutyDateFromParts(year, month, daysInMonth),
   };
 }
 

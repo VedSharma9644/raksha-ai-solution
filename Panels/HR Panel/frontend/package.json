@@ -12,6 +12,7 @@
   "dependencies": {
     "@raskha/branch-management": "*",
     "@raskha/branch-stock": "*",
+    "@raskha/web-ops": "*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"

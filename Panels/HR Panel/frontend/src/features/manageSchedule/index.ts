@@ -3,4 +3,4 @@ export {
   type ManageScheduleScreenProps,
   type ManageScheduleOption,
   type ManageScheduleOptionId,
-} from "./ManageScheduleScreen";
+} from "@raskha/web-ops";

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import type { ProspectClient } from "@raskha/client-management";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../features/authentication";
 import {
   ProspectDetailScreen,
@@ -7,20 +9,7 @@ import {
   useProspectNotes,
 } from "../features/prospectClients";
 import type { ProspectFormValues } from "../features/prospectClients";
-import type { ProspectClient } from "@raskha/client-management";
-import { auth } from "../lib/firebase";
 import { APP_ROUTES } from "../app/routePaths";
-
-// ── Inline single-prospect fetch ──────────────────────────────────────────────
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV && import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-    return "http://localhost:3001";
-  }
-  return fromEnv || "http://localhost:3001";
-}
-const API_BASE = resolveAdminApiBase();
 
 function useProspectDetail(prospectId: string) {
   const { agency } = useAuthContext();
@@ -30,23 +19,15 @@ function useProspectDetail(prospectId: string) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!prospectId || !agency) { setIsLoading(false); return; }
+    if (!prospectId || !agency) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError("");
-    auth.currentUser
-      ?.getIdToken()
-      .then((token) =>
-        fetch(`${API_BASE}/api/prospects/${prospectId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      )
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? `Failed to load prospect (${res.status})`);
-        }
-        return res.json() as Promise<ProspectClient>;
-      })
+    adminFetch<ProspectClient>(`/api/prospects/${prospectId}`, {
+      requireAuth: false,
+    })
       .then(setProspect)
       .catch((err: unknown) => {
         const e = err as { message?: string };

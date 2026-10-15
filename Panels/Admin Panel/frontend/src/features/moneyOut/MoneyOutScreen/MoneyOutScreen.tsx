@@ -29,6 +29,7 @@ import {
   listAdvancesApi,
   listExpensesApi,
   repayAdvanceApi,
+  updateExpenseApi,
   voidAdvanceApi,
   voidExpenseApi,
 } from "../moneyOutApi";
@@ -105,6 +106,7 @@ export function MoneyOutScreen() {
   const [expSiteId, setExpSiteId] = useState("");
   const [expGuardId, setExpGuardId] = useState("");
   const [expNote, setExpNote] = useState("");
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
   const [repayAmount, setRepayAmount] = useState("");
   const [repayDate, setRepayDate] = useState(todayKey());
@@ -151,10 +153,10 @@ export function MoneyOutScreen() {
     setAdvances(rows);
   }
 
-  async function loadExpenses() {
+  async function loadExpenses(opts?: { year?: number; month?: number }) {
     const rows = await listExpensesApi({
-      year: Number(year),
-      month: Number(month),
+      year: opts?.year ?? Number(year),
+      month: opts?.month ?? Number(month),
     });
     setExpenses(rows);
   }
@@ -278,24 +280,75 @@ export function MoneyOutScreen() {
     }
   }
 
-  async function handleCreateExpense() {
+  function resetExpenseForm() {
+    setEditingExpenseId(null);
+    setExpDate(todayKey());
+    setExpAmount("");
+    setExpCategory("miscellaneous");
+    setExpSiteId("");
+    setExpGuardId("");
+    setExpNote("");
+  }
+
+  function startEditExpense(expense: AgencyExpense) {
+    setError("");
+    setEditingExpenseId(expense.id);
+    setExpDate(expense.date || todayKey());
+    setExpAmount(String(expense.amount ?? ""));
+    setExpCategory(expense.category || "miscellaneous");
+    setExpSiteId(expense.siteId || "");
+    setExpGuardId(expense.guardId || "");
+    setExpNote(expense.note || "");
+    setTab("expenses");
+  }
+
+  async function handleSaveExpense() {
     setIsSaving(true);
     setError("");
     try {
-      await createExpenseApi({
-        date: expDate,
-        amount: Number(expAmount),
-        category: expCategory,
-        siteId: expSiteId || undefined,
-        guardId: expGuardId || undefined,
-        note: expNote,
-      });
-      setExpAmount("");
-      setExpNote("");
-      await loadExpenses();
+      const amount = Number(expAmount);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw Object.assign(new Error("Enter a valid expense amount."), {
+          statusCode: 400,
+        });
+      }
+      if (editingExpenseId) {
+        await updateExpenseApi(editingExpenseId, {
+          date: expDate,
+          amount,
+          category: expCategory,
+          siteId: expSiteId || null,
+          guardId: expGuardId || null,
+          note: expNote,
+        });
+      } else {
+        await createExpenseApi({
+          date: expDate,
+          amount,
+          category: expCategory,
+          siteId: expSiteId || undefined,
+          guardId: expGuardId || undefined,
+          note: expNote,
+        });
+      }
+      // If the date moved to another month, keep the list on the expense month.
+      const [y, m] = expDate.split("-");
+      const listYear = y ? Number(y) : Number(year);
+      const listMonth = m ? Number(m) : Number(month);
+      if (y && m) {
+        setYear(y);
+        setMonth(String(listMonth));
+      }
+      resetExpenseForm();
+      await loadExpenses({ year: listYear, month: listMonth });
     } catch (err: unknown) {
       const e = err as { message?: string };
-      setError(e.message ?? "Failed to create expense.");
+      setError(
+        e.message ??
+          (editingExpenseId
+            ? "Failed to update expense."
+            : "Failed to create expense.")
+      );
     } finally {
       setIsSaving(false);
     }
@@ -314,6 +367,9 @@ export function MoneyOutScreen() {
     setError("");
     try {
       await voidExpenseApi(expense.id);
+      if (editingExpenseId === expense.id) {
+        resetExpenseForm();
+      }
       await loadExpenses();
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -608,10 +664,13 @@ export function MoneyOutScreen() {
         ) : (
           <div className="money-out__grid">
             <section className="money-out__panel">
-              <h2 className="money-out__panel-title">Add expense</h2>
+              <h2 className="money-out__panel-title">
+                {editingExpenseId ? "Edit expense" : "Add expense"}
+              </h2>
               <p className="money-out__hint">
-                Transport, food, accommodation, or misc. Optionally link a site
-                and/or guard. Counts in Earnings money out.
+                Transport, food, accommodation, or misc. Site and guard are
+                optional — leave Site empty for agency-wide costs (for example a
+                staff party). Those still reduce Earnings net profit.
               </p>
               <div className="money-out__form">
                 <TextField
@@ -659,13 +718,29 @@ export function MoneyOutScreen() {
                   value={expNote}
                   onChange={(e) => setExpNote(e.target.value)}
                 />
-                <Button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => void handleCreateExpense()}
-                >
-                  {isSaving ? "Saving…" : "Add expense"}
-                </Button>
+                <div className="money-out__form-actions">
+                  <Button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => void handleSaveExpense()}
+                  >
+                    {isSaving
+                      ? "Saving…"
+                      : editingExpenseId
+                        ? "Save changes"
+                        : "Add expense"}
+                  </Button>
+                  {editingExpenseId ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={isSaving}
+                      onClick={resetExpenseForm}
+                    >
+                      Cancel edit
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </section>
 
@@ -714,7 +789,15 @@ export function MoneyOutScreen() {
                           <td>{formatMoney(e.amount)}</td>
                           <td>{e.siteName || "—"}</td>
                           <td>{e.guardName || "—"}</td>
-                          <td>
+                          <td className="money-out__row-actions">
+                            <button
+                              type="button"
+                              className="money-out__link"
+                              disabled={isSaving}
+                              onClick={() => startEditExpense(e)}
+                            >
+                              Edit
+                            </button>
                             <button
                               type="button"
                               className="money-out__link money-out__link--danger"

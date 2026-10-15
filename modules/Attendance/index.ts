@@ -84,6 +84,27 @@ export {
 } from "./attendanceService";
 
 export {
+  IST_TIME_ZONE,
+  IST_OFFSET,
+  addDaysToDutyDate,
+  daysInCalendarMonth,
+  dutyDateFromParts,
+  eachDutyDateInMonth,
+  formatIstDutyDayLabel,
+  formatIstMonthLabel,
+  formatIstPunchDate,
+  formatIstPunchTime,
+  istWallClockToDate,
+  jsWeekdayFromDutyDate,
+  monthBoundsIst,
+  parseHhMm,
+  shiftWindowIst,
+  startOfIstDay,
+  weekdayFromDutyDate,
+  type DayOfWeek,
+} from "./dutyDate";
+
+export {
   INTERVAL_CHECKIN_GRACE_MINUTES,
   computeIntervalCheckinStatus,
   evaluateIntervalCheckinPunctuality,

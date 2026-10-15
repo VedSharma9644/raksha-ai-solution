@@ -40,12 +40,14 @@ export function isReliefReason(value: unknown): value is ReliefReasonKey {
   );
 }
 
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-export function toDutyDateKey(date = new Date()): string {
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+/** Civil calendar date in IST (YYYY-MM-DD) — not host local. */
+export function toDutyDateKey(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 function formatTimeRange(from: string, to: string): string {

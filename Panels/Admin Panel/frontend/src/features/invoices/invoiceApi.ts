@@ -4,55 +4,12 @@ import type {
   InvoiceStatus,
   SiteInvoice,
 } from "@raskha/invoices";
-import { auth } from "../../lib/firebase";
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    const forceRemote =
-      import.meta.env.VITE_ADMIN_API_FORCE_REMOTE === "true";
-    if (!forceRemote) {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
-
-async function authHeaders(json = true): Promise<Headers> {
-  const headers = new Headers();
-  if (json) headers.set("Content-Type", "application/json");
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error("You must be signed in to manage invoices.");
-  }
-  const token = await user.getIdToken();
-  headers.set("Authorization", `Bearer ${token}`);
-  return headers;
-}
-
-async function adminFetch<T>(
-  path: string,
-  init: RequestInit = {}
-): Promise<T> {
-  const headers = await authHeaders();
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-  });
-  const data = (await response.json().catch(() => ({}))) as T & {
-    error?: string;
-  };
-  if (!response.ok) {
-    throw new Error(data.error ?? `Request failed (${response.status})`);
-  }
-  return data;
-}
+import { adminFetch, adminFetchBlob } from "@raskha/shared";
 
 export async function fetchInvoiceSettingsApi(): Promise<AgencyInvoiceSettings> {
   const data = await adminFetch<{ settings: AgencyInvoiceSettings }>(
-    "/api/invoices/settings"
+    "/api/invoices/settings",
+    { errorMessage: "You must be signed in to manage invoices." }
   );
   return data.settings;
 }
@@ -65,6 +22,7 @@ export async function saveInvoiceSettingsApi(
     {
       method: "PUT",
       body: JSON.stringify({ settings }),
+      errorMessage: "You must be signed in to manage invoices.",
     }
   );
   return data.settings;
@@ -81,7 +39,8 @@ export async function listInvoicesApi(params?: {
   if (params?.siteId) qs.set("siteId", params.siteId);
   const q = qs.toString();
   const data = await adminFetch<{ invoices: SiteInvoice[] }>(
-    `/api/invoices${q ? `?${q}` : ""}`
+    `/api/invoices${q ? `?${q}` : ""}`,
+    { errorMessage: "You must be signed in to manage invoices." }
   );
   return data.invoices ?? [];
 }
@@ -94,13 +53,15 @@ export async function createInvoiceDraftApi(params: {
   const data = await adminFetch<{ invoice: SiteInvoice }>("/api/invoices/draft", {
     method: "POST",
     body: JSON.stringify(params),
+    errorMessage: "You must be signed in to manage invoices.",
   });
   return data.invoice;
 }
 
 export async function fetchInvoiceApi(invoiceId: string): Promise<SiteInvoice> {
   const data = await adminFetch<{ invoice: SiteInvoice }>(
-    `/api/invoices/${encodeURIComponent(invoiceId)}`
+    `/api/invoices/${encodeURIComponent(invoiceId)}`,
+    { errorMessage: "You must be signed in to manage invoices." }
   );
   return data.invoice;
 }
@@ -124,37 +85,30 @@ export async function updateInvoiceApi(
     {
       method: "PATCH",
       body: JSON.stringify(patch),
+      errorMessage: "You must be signed in to manage invoices.",
     }
   );
   return data.invoice;
 }
 
 export async function deleteInvoiceDraftApi(invoiceId: string): Promise<void> {
-  const headers = await authHeaders(false);
-  const response = await fetch(
-    `${API_BASE}/api/invoices/${encodeURIComponent(invoiceId)}`,
-    { method: "DELETE", headers }
+  const response = await adminFetch<Response>(
+    `/api/invoices/${encodeURIComponent(invoiceId)}`,
+    {
+      method: "DELETE",
+      json: false,
+      parseJson: false,
+      errorMessage: "You must be signed in to manage invoices.",
+    }
   );
   if (response.status === 204) return;
-  const data = (await response.json().catch(() => ({}))) as { error?: string };
-  if (!response.ok) {
-    throw new Error(data.error ?? `Request failed (${response.status})`);
-  }
 }
 
 export async function downloadInvoicePdfApi(invoiceId: string): Promise<void> {
-  const headers = await authHeaders(false);
-  const response = await fetch(
-    `${API_BASE}/api/invoices/${encodeURIComponent(invoiceId)}/pdf`,
-    { headers }
+  const blob = await adminFetchBlob(
+    `/api/invoices/${encodeURIComponent(invoiceId)}/pdf`,
+    { errorMessage: "You must be signed in to manage invoices." }
   );
-  if (!response.ok) {
-    const data = (await response.json().catch(() => ({}))) as {
-      error?: string;
-    };
-    throw new Error(data.error ?? `PDF download failed (${response.status})`);
-  }
-  const blob = await response.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

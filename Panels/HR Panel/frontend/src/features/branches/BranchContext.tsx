@@ -7,22 +7,9 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import type { Branch } from "@raskha/branch-management";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
-import { auth } from "../../lib/firebase";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function resolveAdminApiBase(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "");
-  if (import.meta.env.DEV) {
-    if (import.meta.env.VITE_ADMIN_API_FORCE_REMOTE !== "true") {
-      return "http://localhost:3001";
-    }
-  }
-  return fromEnv || "http://localhost:3001";
-}
-
-const API_BASE = resolveAdminApiBase();
 const LS_KEY = "raskha_hr_active_branch";
 
 // ─── Context value ────────────────────────────────────────────────────────────
@@ -76,18 +63,10 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(true);
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await user.getIdToken();
       // Fetch all branches the agency has, then filter to assigned ones
-      const res = await fetch(`${API_BASE}/api/branches`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const allBranches = await adminFetch<Branch[]>("/api/branches", {
+        requireAuth: false,
       });
-      if (!res.ok) return;
-      const allBranches = (await res.json()) as Branch[];
       const myBranches = allBranches
         .filter((b) => assignedIds.includes(b.id))
         .sort((a, b) => a.name.localeCompare(b.name));

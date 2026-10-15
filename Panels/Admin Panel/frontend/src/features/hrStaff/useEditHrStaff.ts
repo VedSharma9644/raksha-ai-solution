@@ -6,11 +6,9 @@ import {
 } from "@raskha/hr-management";
 import type { HrStaff } from "@raskha/hr-management";
 import { updateHrStaffPassword } from "@raskha/core";
+import { resolveAdminApiBase } from "@raskha/shared";
 import { db } from "../../lib/firebase";
 import type { HrStaffFormValues } from "./HrStaffForm";
-
-// Admin backend base URL — update for production
-const ADMIN_BACKEND_URL = "http://localhost:3001";
 
 export function useEditHrStaff(hrStaffId: string) {
   const navigate = useNavigate();
@@ -57,7 +55,11 @@ export function useEditHrStaff(hrStaffId: string) {
 
       // If a new password was entered, update it directly in Firebase Auth
       if (values.password) {
-        await updateHrStaffPassword(hrStaffId, values.password, ADMIN_BACKEND_URL);
+        await updateHrStaffPassword(
+          hrStaffId,
+          values.password,
+          resolveAdminApiBase()
+        );
       }
 
       navigate("/hr", { replace: true });

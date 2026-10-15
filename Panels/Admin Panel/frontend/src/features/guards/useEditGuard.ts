@@ -3,13 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getGuardById } from "@raskha/guard-management";
 import type { Guard, GuardGender } from "@raskha/guard-management";
+import { adminFetch } from "@raskha/shared";
 import { APP_ROUTES } from "../../app/routePaths";
-import { auth, db, storage } from "../../lib/firebase";
+import { db, storage } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff";
-
-// Admin backend base URL — mirrors useEditHrStaff pattern
-const ADMIN_BACKEND_URL =
-  import.meta.env.VITE_ADMIN_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001";
 
 async function uploadDocumentIfPresent(
   file: File | null,
@@ -85,65 +82,51 @@ export function useEditGuard(guardId: string) {
             : Promise.resolve(values.profilePictureUrl),
         ]);
 
-      await (async () => {
-        const token = await auth.currentUser?.getIdToken();
-        const res = await fetch(`${ADMIN_BACKEND_URL}/api/guards/${guardId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            fullName: values.fullName,
-            fatherName: values.fatherName,
-            motherName: values.motherName,
-            gender: (values.gender || "male") as GuardGender,
-            phone: values.phone,
-            email: values.email,
-            address: values.address,
-            caste: values.caste,
-            height: values.height,
-            aadhaarNumber: values.aadhaarNumber,
-            panNumber: values.panNumber,
-            employeeCode: values.employeeCode,
-            post: values.post,
-            joiningDate: values.joiningDate,
-            salary: values.salary,
-            experience: values.experience,
-            education: values.education,
-            assignedSiteId: values.assignedSiteId,
-            weeklyOffDays: values.weeklyOffDays,
-            guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
-            interestedCity: values.interestedCity,
-            shiftFrom: values.shiftFrom,
-            shiftTo: values.shiftTo,
-            characterCertificateUrl,
-            policeVerificationUrl,
-            profilePictureUrl,
-            bankAccount: values.bankAccount,
-            esiNumber: values.esiNumber,
-            pfNumber: values.pfNumber,
-            notes: values.notes,
-            branchId: values.branchId || null,
-          }),
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? "Failed to update guard.");
-        }
-      })();
+      await adminFetch(`/api/guards/${guardId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          fullName: values.fullName,
+          fatherName: values.fatherName,
+          motherName: values.motherName,
+          gender: (values.gender || "male") as GuardGender,
+          phone: values.phone,
+          email: values.email,
+          address: values.address,
+          caste: values.caste,
+          height: values.height,
+          aadhaarNumber: values.aadhaarNumber,
+          panNumber: values.panNumber,
+          employeeCode: values.employeeCode,
+          post: values.post,
+          joiningDate: values.joiningDate,
+          salary: values.salary,
+          experience: values.experience,
+          education: values.education,
+          assignedSiteId: values.assignedSiteId,
+          weeklyOffDays: values.weeklyOffDays,
+          guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
+          interestedCity: values.interestedCity,
+          shiftFrom: values.shiftFrom,
+          shiftTo: values.shiftTo,
+          characterCertificateUrl,
+          policeVerificationUrl,
+          profilePictureUrl,
+          bankAccount: values.bankAccount,
+          esiNumber: values.esiNumber,
+          pfNumber: values.pfNumber,
+          notes: values.notes,
+          branchId: values.branchId || null,
+        }),
+        requireAuth: false,
+      });
 
       // If a new password was supplied, update Firebase Auth via backend
       if (values.password) {
-        const res = await fetch(`${ADMIN_BACKEND_URL}/api/guards/${guardId}/password`, {
+        await adminFetch(`/api/guards/${guardId}/password`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password: values.password }),
+          requireAuth: false,
         });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? "Password update failed.");
-        }
       }
 
       navigate(APP_ROUTES.employeeList, { replace: true });

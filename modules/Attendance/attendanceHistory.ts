@@ -3,28 +3,26 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { ATTENDANCE_COLLECTION } from "./attendance";
 import { listAttendanceOverridesForGuard } from "./attendanceDayOverride";
 import {
+  addDaysToDutyDate,
+  daysInCalendarMonth,
+  dutyDateFromParts,
+  eachDutyDateInMonth,
+  formatIstMonthLabel,
   formatIstPunchTime,
   formatIstShortDate,
-  IST_TIME_ZONE,
+  istWallClockToDate,
+  jsWeekdayFromDutyDate,
+  monthBoundsIst,
+  shiftWindowIst,
   toDutyDateKey,
+  weekdayFromDutyDate,
+  type DayOfWeek,
 } from "./dutyDate";
 import { hydrateAssignmentsFromLiveSites } from "./rosterLive";
 
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
 const RELIEF_REQUESTS_COLLECTION = "reliefRequests";
 const LEAVE_REQUESTS_COLLECTION = "leaveRequests";
-
-type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-
-const JS_TO_DOW: DayOfWeek[] = [
-  "sun",
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-];
 
 export type AttendanceHistoryDayStatus =
   | "full"
@@ -135,61 +133,12 @@ type ScheduledDuty = {
   postName: string;
 };
 
-function monthBounds(year: number, month: number): { start: Date; end: Date } {
-  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-  const end = new Date(year, month, 1, 0, 0, 0, 0);
-  return { start, end };
-}
-
 const formatPunchTime = formatIstPunchTime;
 const formatShortDate = formatIstShortDate;
 
-function formatMonthLabel(year: number, month: number): string {
-  // Use noon UTC so the calendar month is stable regardless of host TZ.
-  return new Date(Date.UTC(year, month - 1, 1, 12)).toLocaleDateString("en-IN", {
-    timeZone: IST_TIME_ZONE,
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function mondayBasedWeekday(date: Date): number {
-  return (date.getDay() + 6) % 7;
-}
-
-function dutyDateFromParts(year: number, month: number, day: number): string {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function weekdayFromDutyDate(dutyDate: string): DayOfWeek {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  // Noon IST ≈ 06:30 UTC — stable weekday for India duty dates
-  const utc = new Date(Date.UTC(y, m - 1, d, 6, 30));
-  return JS_TO_DOW[utc.getUTCDay()] ?? "mon";
-}
-
-function parseHhMm(value: string): { hours: number; minutes: number } | null {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    return null;
-  }
-  return { hours: Number(match[1]), minutes: Number(match[2]) };
-}
-
-function shiftWindow(
-  dutyDate: string,
-  shiftFrom: string,
-  shiftTo: string
-): { start: Date; end: Date } {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const from = parseHhMm(shiftFrom) ?? { hours: 8, minutes: 0 };
-  const to = parseHhMm(shiftTo) ?? { hours: 20, minutes: 0 };
-  const start = new Date(y, m - 1, d, from.hours, from.minutes, 0, 0);
-  let end = new Date(y, m - 1, d, to.hours, to.minutes, 0, 0);
-  if (end <= start) {
-    end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
-  }
-  return { start, end };
+/** Mon=0 … Sun=6 for calendar grid leading empties (civil duty date). */
+function mondayBasedWeekdayFromDutyDate(dutyDate: string): number {
+  return (jsWeekdayFromDutyDate(dutyDate) + 6) % 7;
 }
 
 function formatDuration(from: Date, to: Date): string {
@@ -210,25 +159,8 @@ function estimateShiftHours(shiftFrom?: string, shiftTo?: string): number {
   if (!shiftFrom || !shiftTo) {
     return 12;
   }
-  const { start, end } = shiftWindow("2000-01-01", shiftFrom, shiftTo);
+  const { start, end } = shiftWindowIst("2000-01-01", shiftFrom, shiftTo);
   return Math.max(1, Math.round(durationHours(start, end)));
-}
-
-function eachDutyDateInMonth(year: number, month: number): string[] {
-  const days = new Date(year, month, 0).getDate();
-  const out: string[] = [];
-  for (let day = 1; day <= days; day += 1) {
-    out.push(dutyDateFromParts(year, month, day));
-  }
-  return out;
-}
-
-function addDaysToDutyDate(dutyDate: string, offset: number): string {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d + offset, 6, 30));
-  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(
-    dt.getUTCDate()
-  ).padStart(2, "0")}`;
 }
 
 function assignmentCoversDate(
@@ -290,7 +222,7 @@ async function loadPunches(
   month: number,
   postName?: string
 ): Promise<Map<string, PunchRow>> {
-  const { start, end } = monthBounds(year, month);
+  const { start, end } = monthBoundsIst(year, month);
   const startMs = start.getTime();
   const endMs = end.getTime();
   const snap = await getFirestore()
@@ -544,7 +476,7 @@ function classifyDay(params: {
   }
 
   if (isToday) {
-    const { end } = shiftWindow(
+    const { end } = shiftWindowIst(
       params.dutyDate,
       scheduled.shiftFrom,
       scheduled.shiftTo
@@ -594,8 +526,9 @@ function buildLog(params: {
   relief?: { method: string; handoverFrom?: string; assignedGuardName?: string };
 }): AttendanceHistoryLogDto | null {
   const { completion, dutyDate, scheduled, punch, relief } = params;
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const dateObj = new Date(y, m - 1, d, 12, 0, 0, 0);
+  const d = Number(dutyDate.slice(8, 10));
+  // Noon IST — label formatting must not depend on host TZ.
+  const dateObj = istWallClockToDate(dutyDate, 12, 0);
   const dateLabel = formatShortDate(dateObj).toUpperCase();
   const postLabel =
     punch?.postName || scheduled?.postName || scheduled?.shiftLabel || "Duty";
@@ -838,10 +771,9 @@ export async function listAttendanceHistory(params: {
   const { year, month } = params;
   const now = new Date();
   const todayKey = toDutyDateKey(now);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const isCurrentMonth =
-    now.getFullYear() === year && now.getMonth() + 1 === month;
-  const { start } = monthBounds(year, month);
+  const daysInMonth = daysInCalendarMonth(year, month);
+  const [todayYear, todayMonth] = todayKey.split("-").map(Number);
+  const isCurrentMonth = todayYear === year && todayMonth === month;
 
   const monthStart = dutyDateFromParts(year, month, 1);
   const monthEnd = dutyDateFromParts(year, month, daysInMonth);
@@ -978,7 +910,7 @@ export async function listAttendanceHistory(params: {
   // Newest first
   logs.sort((a, b) => (a.dutyDate! < b.dutyDate! ? 1 : -1));
 
-  const monthLabel = formatMonthLabel(year, month);
+  const monthLabel = formatIstMonthLabel(year, month);
   const worked = presentDays;
   const scheduledPast = [...scheduled.keys()].filter((d) => d <= todayKey).length;
   const coveragePct =
@@ -1008,7 +940,7 @@ export async function listAttendanceHistory(params: {
       halfDays,
     },
     calendarDays,
-    leadingEmpty: mondayBasedWeekday(start),
+    leadingEmpty: mondayBasedWeekdayFromDutyDate(monthStart),
     logs,
     filterCounts: {
       all: logs.length,

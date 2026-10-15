@@ -1,2 +1,4 @@
-export { SiteListScreen } from "./SiteListScreen";
-export type { SiteListScreenProps } from "./SiteListScreen";
+export {
+  SiteListScreen,
+  type SiteListScreenProps,
+} from "@raskha/web-ops";

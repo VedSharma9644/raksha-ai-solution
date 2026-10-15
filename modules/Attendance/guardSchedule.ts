@@ -1,22 +1,17 @@
 import { getFirestore, type Timestamp } from "firebase-admin/firestore";
 
 import { ATTENDANCE_COLLECTION } from "./attendance";
-import { istWallClockToDate, toDutyDateKey } from "./dutyDate";
+import {
+  addDaysToDutyDate,
+  formatIstDutyDayLabel,
+  shiftWindowIst,
+  toDutyDateKey,
+  weekdayFromDutyDate,
+  type DayOfWeek,
+} from "./dutyDate";
 import { hydrateAssignmentsFromLiveSites } from "./rosterLive";
 
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
-
-type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-
-const JS_TO_DOW: DayOfWeek[] = [
-  "sun",
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-];
 
 /** Live duty status for today's roster card (and scheduled for future days). */
 export type GuardScheduleDutyStatus =
@@ -66,28 +61,6 @@ type AssignmentRow = {
   siteName?: string;
 };
 
-function weekdayFromDutyDate(dutyDate: string): DayOfWeek {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const utc = new Date(Date.UTC(y, m - 1, d, 6, 30));
-  return JS_TO_DOW[utc.getUTCDay()] ?? "mon";
-}
-
-function addDaysToDutyDate(dutyDate: string, offset: number): string {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d + offset, 6, 30));
-  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
-}
-
-function formatDayLabel(dutyDate: string): string {
-  const [y, m, d] = dutyDate.split("-").map(Number);
-  const dt = new Date(y, m - 1, d, 12, 0, 0, 0);
-  return dt.toLocaleDateString("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-}
-
 function isNightDuty(shiftFrom: string, shiftTo: string): boolean {
   const parse = (v: string) => {
     const [h] = v.split(":").map(Number);
@@ -111,14 +84,6 @@ function formatTimeRange(shiftFrom: string, shiftTo: string): string {
     return `${String(hour12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
   };
   return `${toLabel(shiftFrom)} – ${toLabel(shiftTo)}`;
-}
-
-function parseHhMm(value: string): { hours: number; minutes: number } {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    return { hours: 8, minutes: 0 };
-  }
-  return { hours: Number(match[1]), minutes: Number(match[2]) };
 }
 
 type TodayPunchState = {
@@ -180,13 +145,11 @@ function resolveTodayDutyStatus(params: {
   now?: Date;
 }): { dutyStatus: GuardScheduleDutyStatus; statusLabel: string } {
   const now = params.now ?? new Date();
-  const from = parseHhMm(params.shiftFrom);
-  const to = parseHhMm(params.shiftTo);
-  const start = istWallClockToDate(params.dutyDate, from.hours, from.minutes);
-  let end = istWallClockToDate(params.dutyDate, to.hours, to.minutes);
-  if (end.getTime() <= start.getTime()) {
-    end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
-  }
+  const { start, end } = shiftWindowIst(
+    params.dutyDate,
+    params.shiftFrom,
+    params.shiftTo
+  );
 
   if (params.punch.hasOpenPunch) {
     const late =
@@ -315,7 +278,7 @@ export async function listGuardUpcomingSchedule(params: {
         restDays.push({
           id: `rest-${dutyDate}`,
           dutyDate,
-          dayLabel: formatDayLabel(dutyDate),
+          dayLabel: formatIstDutyDayLabel(dutyDate),
           siteName: defaultSiteName,
           postName: "Roster rest day",
           shiftFrom: "",
@@ -335,7 +298,7 @@ export async function listGuardUpcomingSchedule(params: {
         restDays.push({
           id: `rest-${dutyDate}`,
           dutyDate,
-          dayLabel: formatDayLabel(dutyDate),
+          dayLabel: formatIstDutyDayLabel(dutyDate),
           siteName: defaultSiteName,
           postName: "Roster rest day",
           shiftFrom: "",
@@ -370,7 +333,7 @@ export async function listGuardUpcomingSchedule(params: {
     shifts.push({
       id: `shift-${dutyDate}`,
       dutyDate,
-      dayLabel: formatDayLabel(dutyDate),
+      dayLabel: formatIstDutyDayLabel(dutyDate),
       siteName,
       postName,
       shiftFrom,

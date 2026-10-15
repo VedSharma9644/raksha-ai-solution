@@ -3,15 +3,18 @@ import { AppRouter } from "./app/AppRouter";
 import { ConfirmDialogProvider } from "./components/ConfirmDialog";
 import { AuthProvider } from "./features/authentication";
 import { BranchProvider } from "./features/branches";
+import { AdminWebOpsProvider } from "./features/webOps/AdminWebOpsProvider";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <BranchProvider>
-          <ConfirmDialogProvider>
-            <AppRouter />
-          </ConfirmDialogProvider>
+          <AdminWebOpsProvider>
+            <ConfirmDialogProvider>
+              <AppRouter />
+            </ConfirmDialogProvider>
+          </AdminWebOpsProvider>
         </BranchProvider>
       </AuthProvider>
     </BrowserRouter>
