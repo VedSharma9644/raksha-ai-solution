@@ -9,6 +9,7 @@ export interface LeaveRequest {
   endDate: string;
   reason: string;
   status: LeaveRequestStatus;
+  siteId?: string;
 }
 
 export const SAMPLE_LEAVE_REQUESTS: LeaveRequest[] = [

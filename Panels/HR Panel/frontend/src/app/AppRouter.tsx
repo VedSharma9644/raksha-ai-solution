@@ -8,9 +8,8 @@ import { GuardListPage } from "../pages/GuardListPage";
 import { ViewGuardPage } from "../pages/ViewGuardPage";
 import { HrDashboardPage } from "../pages/HrDashboardPage";
 import { InventoryPage } from "../pages/InventoryPage";
-import { AddInventoryItemPage } from "../pages/AddInventoryItemPage";
-import { EditInventoryItemPage } from "../pages/EditInventoryItemPage";
 import { BranchSelectionPage } from "../pages/BranchSelectionPage";
+import { NoBranchAssignedPage } from "../pages/NoBranchAssignedPage";
 import { LeaveManagementPage } from "../pages/LeaveManagementPage";
 import { ReliefManagementPage } from "../pages/ReliefManagementPage";
 import { SiteListPage } from "../pages/SiteListPage";
@@ -26,7 +25,11 @@ import { APP_ROUTES } from "./routePaths";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { hrStaff, isLoading } = useAuthContext();
-  const { needsBranchSelection, isLoading: branchLoading } = useBranchContext();
+  const {
+    needsBranchSelection,
+    hasNoAssignedBranches,
+    isLoading: branchLoading,
+  } = useBranchContext();
 
   if (isLoading || branchLoading) {
     return null;
@@ -34,6 +37,10 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!hrStaff) {
     return <Navigate to={APP_ROUTES.login} replace />;
+  }
+
+  if (hasNoAssignedBranches) {
+    return <Navigate to={APP_ROUTES.noBranchAssigned} replace />;
   }
 
   if (needsBranchSelection) {
@@ -95,6 +102,15 @@ export function AppRouter() {
       />
 
       <Route
+        path={APP_ROUTES.noBranchAssigned}
+        element={
+          <ProtectedBranchlessRoute>
+            <NoBranchAssignedPage />
+          </ProtectedBranchlessRoute>
+        }
+      />
+
+      <Route
         path={APP_ROUTES.dashboard}
         element={
           <ProtectedRoute>
@@ -142,21 +158,14 @@ export function AppRouter() {
           </ModuleRoute>
         }
       />
+      {/* HR no longer allocates stock — Admin owns branch distribution */}
       <Route
         path={APP_ROUTES.addInventoryItem}
-        element={
-          <ModuleRoute>
-            <AddInventoryItemPage />
-          </ModuleRoute>
-        }
+        element={<Navigate to={APP_ROUTES.manageInventory} replace />}
       />
       <Route
         path={APP_ROUTES.editInventoryItem}
-        element={
-          <ModuleRoute>
-            <EditInventoryItemPage />
-          </ModuleRoute>
-        }
+        element={<Navigate to={APP_ROUTES.manageInventory} replace />}
       />
       <Route
         path={APP_ROUTES.manageSchedule}

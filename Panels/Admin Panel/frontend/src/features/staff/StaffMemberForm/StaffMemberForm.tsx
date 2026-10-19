@@ -1,5 +1,7 @@
 import type { FormEvent, ChangeEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { listSitesByAgency } from "@raskha/site-management";
+import type { Site } from "@raskha/site-management";
 import { Button } from "../../../components/Button";
 import { FileField } from "../../../components/FileField";
 import { FormPanel } from "../../../components/FormPanel";
@@ -12,7 +14,9 @@ import type { StaffMemberFormValues, StaffRole } from "../staffFormTypes";
 import {
   EMPTY_STAFF_MEMBER_FORM,
 } from "../staffFormTypes";
+import { useAuthContext } from "../../authentication";
 import { useBranchContext } from "../../branches";
+import { db } from "../../../lib/firebase";
 import "./StaffMemberForm.css";
 
 const WEEKDAY_OPTIONS: { id: string; label: string }[] = [
@@ -52,7 +56,9 @@ export function StaffMemberForm({
   onSubmit,
   onCancel,
 }: StaffMemberFormProps) {
+  const { agency } = useAuthContext();
   const { branches } = useBranchContext();
+  const [sites, setSites] = useState<Site[]>([]);
   const [values, setValues] = useState<StaffMemberFormValues>(
     initialValues ?? EMPTY_STAFF_MEMBER_FORM,
   );
@@ -65,6 +71,21 @@ export function StaffMemberForm({
     excludeGuardId,
     enabled: checkContacts,
   });
+
+  useEffect(() => {
+    if (role !== "hr" || !agency?.id) return;
+    listSitesByAgency(db, agency.id)
+      .then(setSites)
+      .catch(() => setSites([]));
+  }, [role, agency?.id]);
+
+  const hrSitesForBranches = useMemo(() => {
+    const branchSet = new Set(values.assignedBranchIds);
+    if (branchSet.size === 0) return [];
+    return sites
+      .filter((s) => s.branchId && branchSet.has(s.branchId))
+      .sort((a, b) => a.siteName.localeCompare(b.siteName));
+  }, [sites, values.assignedBranchIds]);
 
   function updateField<K extends keyof StaffMemberFormValues>(
     field: K,
@@ -557,7 +578,7 @@ export function StaffMemberForm({
           disabled={isSubmitting}
         />
 
-        {/* ── Section: Branch Assignment (HR only) ── */}
+        {/* ── Section: Branch + Site Assignment (HR only) ── */}
         {role === "hr" && branches.length > 0 && (
           <>
             <p className="staff-member-form__section-label">Branch Assignment</p>
@@ -575,7 +596,18 @@ export function StaffMemberForm({
                       const ids = e.target.checked
                         ? [...values.assignedBranchIds, branch.id]
                         : values.assignedBranchIds.filter((id) => id !== branch.id);
-                      updateField("assignedBranchIds", ids);
+                      const allowed = new Set(
+                        sites
+                          .filter((s) => s.branchId && ids.includes(s.branchId))
+                          .map((s) => s.id)
+                      );
+                      setValues((current) => ({
+                        ...current,
+                        assignedBranchIds: ids,
+                        assignedSiteIds: current.assignedSiteIds.filter((id) =>
+                          allowed.has(id)
+                        ),
+                      }));
                     }}
                   />
                   <span>{branch.name}</span>
@@ -585,6 +617,41 @@ export function StaffMemberForm({
                 </label>
               ))}
             </div>
+            <p className="staff-member-form__section-label">Site Assignment</p>
+            <p className="staff-member-form__section-hint">
+              Select which sites this HR manages.
+            </p>
+            {values.assignedBranchIds.length === 0 ? (
+              <p className="staff-member-form__section-hint">
+                Select a branch first to choose sites.
+              </p>
+            ) : hrSitesForBranches.length === 0 ? (
+              <p className="staff-member-form__section-hint">
+                No sites allotted to the selected branch(es) yet.
+              </p>
+            ) : (
+              <div className="staff-member-form__branch-checkboxes">
+                {hrSitesForBranches.map((site) => (
+                  <label
+                    key={site.id}
+                    className="staff-member-form__branch-checkbox-label"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={values.assignedSiteIds.includes(site.id)}
+                      disabled={isSubmitting}
+                      onChange={(e) => {
+                        const ids = e.target.checked
+                          ? [...values.assignedSiteIds, site.id]
+                          : values.assignedSiteIds.filter((id) => id !== site.id);
+                        updateField("assignedSiteIds", ids);
+                      }}
+                    />
+                    <span>{site.siteName}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </>
         )}
 

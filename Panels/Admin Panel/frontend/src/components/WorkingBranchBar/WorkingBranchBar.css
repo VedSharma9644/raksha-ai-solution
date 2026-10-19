@@ -1,0 +1,35 @@
+.working-branch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 1rem;
+  margin: 0 0 1rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-on-surface);
+  font-size: 0.875rem;
+}
+
+.working-branch-bar__label strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.working-branch-bar__clear {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  padding: 0;
+}
+
+.working-branch-bar__clear:hover {
+  color: var(--color-primary-dark);
+}

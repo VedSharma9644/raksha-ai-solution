@@ -51,6 +51,7 @@ export function useEditHrStaff(hrStaffId: string) {
         phone: values.phone,
         notes: values.notes,
         assignedBranchIds: values.assignedBranchIds ?? [],
+        assignedSiteIds: values.assignedSiteIds ?? [],
       });
 
       // If a new password was entered, update it directly in Firebase Auth
@@ -80,6 +81,7 @@ export function useEditHrStaff(hrStaffId: string) {
         password: "",
         notes: hrStaff.notes,
         assignedBranchIds: hrStaff.assignedBranchIds ?? [],
+        assignedSiteIds: hrStaff.assignedSiteIds ?? [],
       }
     : undefined;
 

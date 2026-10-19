@@ -36,8 +36,8 @@
   padding: 0.65rem 0.85rem;
   border-radius: 0.5rem;
   border: 1px solid #fcd34d;
-  background: #fffbeb;
-  color: #92400e;
+  background: var(--color-warning-container);
+  color: var(--color-on-warning-container);
   font-size: 0.85rem;
 }
 
@@ -47,7 +47,7 @@
   padding: 0.65rem 0.85rem;
   border-radius: 0.5rem;
   border: 1px solid color-mix(in srgb, var(--color-primary, #0f766e) 30%, #e5e7eb);
-  background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, #fff);
+  background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, var(--color-surface));
   color: var(--color-text-primary, #111827);
   font-size: 0.85rem;
 }
@@ -64,7 +64,7 @@
   padding: 0.45rem 0.7rem;
   border-radius: 0.5rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
   color: var(--color-text-secondary, #6b7280);
   font: inherit;
   font-size: 0.85rem;
@@ -74,7 +74,7 @@
 
 .payroll-settings-form__day--on {
   border-color: color-mix(in srgb, var(--color-primary, #0f766e) 45%, #e5e7eb);
-  background: color-mix(in srgb, var(--color-primary, #0f766e) 12%, #fff);
+  background: color-mix(in srgb, var(--color-primary, #0f766e) 12%, var(--color-surface));
   color: var(--color-primary, #0f766e);
 }
 

@@ -282,7 +282,7 @@
 .assign-shift-modal__day-chip--on {
   background: var(--color-primary, #2563eb);
   border-color: var(--color-primary, #2563eb);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .assign-shift-modal__day-checkbox {
@@ -360,7 +360,7 @@
 
 .assign-shift-modal__save-btn {
   background: var(--color-primary, #2563eb);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .assign-shift-modal__delete-btn {

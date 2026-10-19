@@ -9,10 +9,12 @@ import { adminFetch } from "@raskha/shared";
 export async function listAdvancesApi(params?: {
   guardId?: string;
   status?: string;
+  branchId?: string | null;
 }): Promise<EmployeeAdvance[]> {
   const qs = new URLSearchParams();
   if (params?.guardId) qs.set("guardId", params.guardId);
   if (params?.status) qs.set("status", params.status);
+  if (params?.branchId) qs.set("branchId", params.branchId);
   const q = qs.toString();
   const data = await adminFetch<{ advances: EmployeeAdvance[] }>(
     `/api/money-out/advances${q ? `?${q}` : ""}`
@@ -73,6 +75,7 @@ export async function listExpensesApi(params?: {
   siteId?: string;
   guardId?: string;
   category?: ExpenseCategory;
+  branchId?: string | null;
 }): Promise<AgencyExpense[]> {
   const qs = new URLSearchParams();
   if (params?.year != null) qs.set("year", String(params.year));
@@ -80,6 +83,7 @@ export async function listExpensesApi(params?: {
   if (params?.siteId) qs.set("siteId", params.siteId);
   if (params?.guardId) qs.set("guardId", params.guardId);
   if (params?.category) qs.set("category", params.category);
+  if (params?.branchId) qs.set("branchId", params.branchId);
   const q = qs.toString();
   const data = await adminFetch<{ expenses: AgencyExpense[] }>(
     `/api/money-out/expenses${q ? `?${q}` : ""}`

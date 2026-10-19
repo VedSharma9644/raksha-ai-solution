@@ -27,10 +27,20 @@ type GuardRow = {
   employeeCode?: string;
   salary?: string;
   status?: string;
+  branchId?: string | null;
   weeklyOffDays?: string[];
   shiftFrom?: string;
   shiftTo?: string;
 };
+
+function matchesBranch(
+  recordBranchId: string | null | undefined,
+  filterBranchId: string | null | undefined
+): boolean {
+  if (!filterBranchId) return true;
+  const value = recordBranchId == null ? "" : String(recordBranchId).trim();
+  return value === "" || value === filterBranchId;
+}
 
 export type PayrollPreviewLine = Omit<PayrollLine, "runId" | "status"> & {
   status: "preview";
@@ -53,9 +63,11 @@ export async function buildPayrollPreview(params: {
   agencyId: string;
   year: number;
   month: number;
+  /** When set, only guards for this branch + unassigned. */
+  branchId?: string | null;
 }): Promise<PayrollPreviewResult> {
   const db = getFirestore();
-  const { agencyId, year, month } = params;
+  const { agencyId, year, month, branchId } = params;
 
   const settingsSnap = await db
     .collection(PAYROLL_SETTINGS_COLLECTION)
@@ -76,7 +88,8 @@ export async function buildPayrollPreview(params: {
 
   const guards = guardsSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }) as GuardRow)
-    .filter((g) => (g.status ?? "active") === "active");
+    .filter((g) => (g.status ?? "active") === "active")
+    .filter((g) => matchesBranch(g.branchId, branchId));
 
   const lines: PayrollPreviewLine[] = [];
   let skippedWithoutSalary = 0;

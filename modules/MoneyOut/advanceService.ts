@@ -91,8 +91,11 @@ export async function listEmployeeAdvances(params: {
   agencyId: string;
   guardId?: string;
   status?: EmployeeAdvance["status"] | "all";
+  /** When set, only advances for guards in this branch + unassigned. */
+  branchId?: string | null;
 }): Promise<EmployeeAdvance[]> {
-  const snap = await getFirestore()
+  const db = getFirestore();
+  const snap = await db
     .collection(EMPLOYEE_ADVANCES_COLLECTION)
     .where("agencyId", "==", params.agencyId)
     .get();
@@ -105,6 +108,23 @@ export async function listEmployeeAdvances(params: {
   }
   if (params.status && params.status !== "all") {
     rows = rows.filter((r) => r.status === params.status);
+  }
+  if (params.branchId) {
+    const guardsSnap = await db
+      .collection("guards")
+      .where("agencyId", "==", params.agencyId)
+      .get();
+    const allowed = new Set(
+      guardsSnap.docs
+        .filter((d) => {
+          const data = d.data() as { branchId?: string | null };
+          const value =
+            data.branchId == null ? "" : String(data.branchId).trim();
+          return value === "" || value === params.branchId;
+        })
+        .map((d) => d.id)
+    );
+    rows = rows.filter((r) => allowed.has(r.guardId));
   }
   rows.sort((a, b) => {
     if (a.status !== b.status) {

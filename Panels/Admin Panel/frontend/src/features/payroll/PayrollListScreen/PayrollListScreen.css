@@ -7,7 +7,7 @@
 }
 
 .payroll-list__row--needs-fix td {
-  background: color-mix(in srgb, #fef3c7 55%, transparent);
+  background: color-mix(in srgb, var(--color-warning-container) 55%, transparent);
 }
 
 .payroll-list__guard-link {
@@ -29,7 +29,7 @@
 
 .payroll-list__fix-att {
   border: 1px solid var(--color-border, #e5e7eb);
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 0.4rem;
   padding: 0.25rem 0.5rem;
   font: inherit;
@@ -40,13 +40,13 @@
 }
 
 .payroll-list__fix-att:hover {
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .payroll-list__fix-att--alert {
   border-color: #f59e0b;
-  background: #fffbeb;
-  color: #92400e;
+  background: var(--color-warning-container);
+  color: var(--color-on-warning-container);
 }
 
 .payroll-list__generate {
@@ -54,7 +54,7 @@
   padding: 1.15rem 1.25rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
 }
 
 .payroll-list__section-title {
@@ -103,7 +103,7 @@
 }
 
 .payroll-list__advance-cut {
-  color: #b42318;
+  color: var(--color-error);
   font-weight: 700;
 }
 
@@ -111,7 +111,7 @@
   overflow-x: auto;
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 0.75rem;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
 }
 
 .payroll-list__table {
@@ -133,7 +133,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-secondary, #6b7280);
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .payroll-list__table tr:last-child td {
@@ -157,12 +157,12 @@
   padding: 0.3rem 0.45rem;
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 0.4rem;
-  background: #fff;
+  background: var(--color-surface);
 }
 
 .payroll-list__salary-save {
   border: 1px solid var(--color-border, #e5e7eb);
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 0.4rem;
   padding: 0.25rem 0.5rem;
   font: inherit;
@@ -172,7 +172,7 @@
 }
 
 .payroll-list__salary-save:hover:not(:disabled) {
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .payroll-list__salary-save:disabled {
@@ -181,7 +181,7 @@
 }
 
 .payroll-list__error {
-  color: #b91c1c;
+  color: var(--color-error);
   margin: 0 0 1rem;
 }
 
@@ -203,7 +203,7 @@
   padding: 0.85rem 1rem;
   border-radius: 0.75rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
   text-align: left;
   cursor: pointer;
   font: inherit;
@@ -211,7 +211,7 @@
 
 .payroll-list__run:hover {
   border-color: #cbd5e1;
-  background: #f8fafc;
+  background: var(--color-surface-muted);
 }
 
 .payroll-list__run-main {
@@ -242,13 +242,13 @@
 }
 
 .payroll-list__badge--finalized {
-  color: #92400e;
-  background: #fffbeb;
+  color: var(--color-on-warning-container);
+  background: var(--color-warning-container);
 }
 
 .payroll-list__badge--paid {
-  color: #065f46;
-  background: #ecfdf5;
+  color: var(--color-on-success-container);
+  background: var(--color-success-container);
 }
 
 @media (max-width: 900px) {

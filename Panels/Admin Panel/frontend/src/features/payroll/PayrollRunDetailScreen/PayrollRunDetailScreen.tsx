@@ -9,6 +9,7 @@ import {
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
+import { useBranchContext } from "../../branches";
 import {
   downloadPayrollCsv,
   fetchPayrollRunApi,
@@ -25,6 +26,7 @@ function formatMoney(n: number): string {
 export function PayrollRunDetailScreen() {
   const { runId = "" } = useParams();
   const navigate = useNavigate();
+  const { activeBranchId } = useBranchContext();
   const [run, setRun] = useState<PayrollRun | null>(null);
   const [lines, setLines] = useState<PayrollLine[]>([]);
   const [salaryDrafts, setSalaryDrafts] = useState<Record<string, string>>({});
@@ -38,7 +40,7 @@ export function PayrollRunDetailScreen() {
     setIsLoading(true);
     setError("");
     try {
-      const data = await fetchPayrollRunApi(runId);
+      const data = await fetchPayrollRunApi(runId, activeBranchId);
       setRun(data.run);
       setLines(data.lines);
       const drafts: Record<string, string> = {};
@@ -56,7 +58,8 @@ export function PayrollRunDetailScreen() {
 
   useEffect(() => {
     void load();
-  }, [runId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runId, activeBranchId]);
 
   async function handleMarkRunPaid() {
     if (!runId) return;
@@ -127,7 +130,7 @@ export function PayrollRunDetailScreen() {
     setBusy(true);
     setError("");
     try {
-      await downloadPayrollCsv(runId);
+      await downloadPayrollCsv(runId, activeBranchId);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to download CSV.");

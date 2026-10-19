@@ -20,3 +20,4 @@ export {
   useInventoryItemDetail,
   useNavigateToInventory,
 } from "./inventoryHooks";
+export type { InventoryCatalogRow } from "./inventoryHooks";

@@ -22,6 +22,8 @@ export interface UpdateHrStaffParams {
   status?: HrStaffStatus;
   /** Branch IDs this HR staff member is allowed to access. */
   assignedBranchIds?: string[];
+  /** Site IDs this HR staff member manages. */
+  assignedSiteIds?: string[];
 }
 
 export async function getHrStaffById(

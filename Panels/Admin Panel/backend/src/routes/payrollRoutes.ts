@@ -77,6 +77,12 @@ function messageOf(error: unknown, fallback: string): string {
   return err.message ?? fallback;
 }
 
+function optionalBranchId(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  return trimmed || undefined;
+}
+
 /**
  * Thin HTTP adapter — payroll domain lives in @raskha/payroll.
  * Settings GET: admin or HR. Everything else: admin only.
@@ -156,7 +162,13 @@ export function createPayrollRoutes(): Router {
         return;
       }
 
-      const preview = await buildPayrollPreview({ agencyId, year, month });
+      const branchId = optionalBranchId(req.query.branchId);
+      const preview = await buildPayrollPreview({
+        agencyId,
+        year,
+        month,
+        branchId,
+      });
       res.json({ preview });
     } catch (error: unknown) {
       console.error("[payroll] preview failed", error);
@@ -195,8 +207,13 @@ export function createPayrollRoutes(): Router {
         return;
       }
 
-      const year = Number((req.body as { year?: unknown })?.year);
-      const month = Number((req.body as { month?: unknown })?.month);
+      const body = (req.body ?? {}) as {
+        year?: unknown;
+        month?: unknown;
+        branchId?: unknown;
+      };
+      const year = Number(body.year);
+      const month = Number(body.month);
       if (
         !Number.isInteger(year) ||
         !Number.isInteger(month) ||
@@ -211,6 +228,7 @@ export function createPayrollRoutes(): Router {
         agencyId,
         year,
         month,
+        branchId: optionalBranchId(body.branchId),
       });
       res.status(201).json({ run, lines });
     } catch (error: unknown) {
@@ -240,7 +258,8 @@ export function createPayrollRoutes(): Router {
       }
 
       const runId = String(req.params.runId ?? "");
-      const { run, lines } = await getPayrollRun({ agencyId, runId });
+      const branchId = optionalBranchId(req.query.branchId);
+      const { run, lines } = await getPayrollRun({ agencyId, runId, branchId });
       res.json({ run, lines });
     } catch (error: unknown) {
       res.status(statusCodeOf(error)).json({
@@ -443,6 +462,7 @@ export function createPayrollRoutes(): Router {
         const { csv, filename } = await exportPayrollRunCsv({
           agencyId,
           runId: String(req.params.runId ?? ""),
+          branchId: optionalBranchId(req.query.branchId),
         });
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
         res.setHeader(

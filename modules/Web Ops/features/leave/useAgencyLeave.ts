@@ -8,7 +8,7 @@ import {
 import type { LeaveRequest, LeaveRequestStatus } from "./leaveTypes";
 
 export function useAgencyLeave() {
-  const { activeBranchId } = useWebOps();
+  const { activeBranchId, role, assignedSiteIds } = useWebOps();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
@@ -19,7 +19,12 @@ export function useAgencyLeave() {
     setError(null);
     try {
       const data = await fetchAgencyLeaveRequests("all", branchId);
-      setLeaveRequests(data.requests);
+      let requests = data.requests;
+      if (role === "hr" && assignedSiteIds !== null) {
+        const allowed = new Set(assignedSiteIds);
+        requests = requests.filter((r) => r.siteId && allowed.has(r.siteId));
+      }
+      setLeaveRequests(requests);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setLeaveRequests([]);
@@ -27,7 +32,7 @@ export function useAgencyLeave() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [role, assignedSiteIds]);
 
   useEffect(() => {
     void load(activeBranchId);

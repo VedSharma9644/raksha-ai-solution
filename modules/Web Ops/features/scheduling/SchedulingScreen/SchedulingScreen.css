@@ -10,7 +10,7 @@
 .scheduling-screen__assign-btn {
   padding: 0.5rem 1rem;
   background: var(--color-primary, #2563eb);
-  color: #fff;
+  color: var(--color-on-primary);
   border: none;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.875rem;

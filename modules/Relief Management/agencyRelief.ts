@@ -65,6 +65,7 @@ export type AgencyReliefRequestDto = {
   reasonLabel: string;
   note: string;
   status: Exclude<ReliefRequestStatus, "withdrawn">;
+  siteId: string;
   siteName: string;
   postName: string;
   dutyDate: string;
@@ -104,6 +105,7 @@ function toAgencyDto(
     reasonLabel: RELIEF_REASON_LABELS[record.reason],
     note: record.note,
     status: record.status,
+    siteId: record.siteId || "",
     siteName: record.siteName || "",
     postName: record.postName || "",
     dutyDate: record.dutyDate,

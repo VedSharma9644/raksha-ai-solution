@@ -50,3 +50,9 @@
   color: var(--color-text-secondary, #718096);
   font-size: 0.8rem;
 }
+
+.hr-staff-form__field-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-danger, #c53030);
+}

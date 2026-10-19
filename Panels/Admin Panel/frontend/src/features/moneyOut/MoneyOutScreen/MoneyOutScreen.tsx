@@ -21,6 +21,8 @@ import { PageHeader } from "../../../components/PageHeader";
 import { SearchableSelect } from "../../../components/SearchableSelect";
 import { TextField } from "../../../components/TextField";
 import { useAuthContext } from "../../authentication";
+import { useBranchContext } from "../../branches";
+import { filterByBranch } from "../../../lib/branchFilter";
 import { EarningsPeriodSelect } from "../../earnings/EarningsPeriodSelect";
 import { db } from "../../../lib/firebase";
 import {
@@ -70,6 +72,7 @@ const RECOVERY_OPTIONS: Array<{ value: AdvanceRecoveryMode; label: string }> = [
 export function MoneyOutScreen() {
   const navigate = useNavigate();
   const { agency } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const { confirm } = useConfirmDialog();
   const now = new Date();
 
@@ -122,34 +125,46 @@ export function MoneyOutScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const branchGuards = useMemo(
+    () => filterByBranch(guards, activeBranchId),
+    [guards, activeBranchId]
+  );
+  const branchSites = useMemo(
+    () => filterByBranch(sites, activeBranchId),
+    [sites, activeBranchId]
+  );
+
   const guardOptions = useMemo(
     () => [
       { value: "", label: "Select guard…" },
-      ...guards.map((g) => ({
+      ...branchGuards.map((g) => ({
         value: g.id,
         label: g.employeeCode
           ? `${g.fullName || "Guard"} (${g.employeeCode})`
           : g.fullName || g.id,
       })),
     ],
-    [guards]
+    [branchGuards]
   );
 
   const siteOptions = useMemo(
     () => [
       { value: "", label: "No site (agency-wide)" },
-      ...sites.map((s) => ({
+      ...branchSites.map((s) => ({
         value: s.id,
         label: s.siteName || s.id,
       })),
     ],
-    [sites]
+    [branchSites]
   );
 
   const selectedAdvance = advances.find((a) => a.id === selectedAdvanceId) ?? null;
 
   async function loadAdvances() {
-    const rows = await listAdvancesApi({ status: advanceStatus });
+    const rows = await listAdvancesApi({
+      status: advanceStatus,
+      branchId: activeBranchId,
+    });
     setAdvances(rows);
   }
 
@@ -157,6 +172,7 @@ export function MoneyOutScreen() {
     const rows = await listExpensesApi({
       year: opts?.year ?? Number(year),
       month: opts?.month ?? Number(month),
+      branchId: activeBranchId,
     });
     setExpenses(rows);
   }
@@ -192,7 +208,7 @@ export function MoneyOutScreen() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, advanceStatus, year, month]);
+  }, [tab, advanceStatus, year, month, activeBranchId]);
 
   async function handleCreateAdvance() {
     if (!advGuardId) {

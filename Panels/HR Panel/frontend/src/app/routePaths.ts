@@ -1,6 +1,7 @@
 export const APP_ROUTES = {
   login: "/",
   selectBranch: "/select-branch",
+  noBranchAssigned: "/no-branch",
   dashboard: "/dashboard",
   generalSettings: "/general-settings",
   manageSchedule: "/manage-schedule",

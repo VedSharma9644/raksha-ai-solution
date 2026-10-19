@@ -23,6 +23,11 @@ export type WebOpsContextValue = {
   agencyId: string | null;
   /** Active branch filter; null = all branches (Admin) or unset. */
   activeBranchId: string | null;
+  /**
+   * HR site scope. `null` = no site restriction (Admin, or legacy HR without
+   * assignedSiteIds). Empty array = HR has no sites assigned.
+   */
+  assignedSiteIds: string[] | null;
   db: Firestore;
   getIdToken: GetIdToken;
   capabilities: WebOpsCapabilities;

@@ -16,8 +16,8 @@ const LS_KEY = "raskha_hr_active_branch";
 
 export interface BranchContextValue {
   /**
-   * Branches this HR staff member is assigned to.
-   * Empty array = no assignments yet.
+   * Active branches this HR staff member is assigned to.
+   * Empty array = no assignments yet (ask Admin to assign).
    */
   branches: Branch[];
   /**
@@ -29,6 +29,8 @@ export interface BranchContextValue {
   setActiveBranchId: (id: string | null) => void;
   /** True when HR has multiple branches and no branch is selected yet. */
   needsBranchSelection: boolean;
+  /** True when HR has zero assigned branches after load. */
+  hasNoAssignedBranches: boolean;
   isLoading: boolean;
   reload: () => Promise<void>;
 }
@@ -63,12 +65,10 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(true);
     try {
-      // Fetch all branches the agency has, then filter to assigned ones
-      const allBranches = await adminFetch<Branch[]>("/api/branches", {
-        requireAuth: false,
-      });
+      // Auth required — then keep only branches Admin assigned to this HR
+      const allBranches = await adminFetch<Branch[]>("/api/branches");
       const myBranches = allBranches
-        .filter((b) => assignedIds.includes(b.id))
+        .filter((b) => assignedIds.includes(b.id) && b.status !== "inactive")
         .sort((a, b) => a.name.localeCompare(b.name));
       setBranches(myBranches);
       // If stored activeBranchId is no longer in assigned list, reset to null
@@ -95,6 +95,8 @@ export function BranchProvider({ children }: { children: ReactNode }) {
     void load();
   }, [load]);
 
+  const hasNoAssignedBranches = !!hrStaff && !isLoading && branches.length === 0;
+
   return (
     <BranchContext.Provider
       value={{
@@ -102,6 +104,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
         activeBranchId,
         setActiveBranchId,
         needsBranchSelection: branches.length > 1 && activeBranchId === null,
+        hasNoAssignedBranches,
         isLoading,
         reload: load,
       }}

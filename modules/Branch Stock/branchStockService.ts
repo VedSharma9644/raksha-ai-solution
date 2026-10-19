@@ -1,7 +1,7 @@
 import {
   collection,
   doc,
-  addDoc,
+  setDoc,
   getDoc,
   getDocs,
   updateDoc,
@@ -33,50 +33,43 @@ export interface UpsertBranchStockParams {
 
 /**
  * Create or update the BranchStock record for a {branchId, itemId} pair.
- * If a record already exists it is updated; otherwise a new one is created.
+ * Uses a deterministic document ID so no prior list query is needed —
+ * avoiding compound-index and permission issues on empty collections.
  */
 export async function upsertBranchStock(
   db: Firestore,
   params: UpsertBranchStockParams,
 ): Promise<BranchStock> {
-  const existing = await getBranchStockByBranchAndItem(
-    db,
-    params.agencyId,
-    params.branchId,
-    params.itemId,
-  );
+  // Deterministic ID — safe to use as a Firestore doc ID
+  const stockId = `${params.agencyId}_${params.branchId}_${params.itemId}`;
+  const ref = doc(db, BRANCH_STOCK_COLLECTION, stockId);
 
-  const available = params.allocatedStock - (existing?.assignedStock ?? 0);
+  // Read existing to preserve assignedStock
+  const snap = await getDoc(ref);
+  const existingAssigned: number = snap.exists()
+    ? ((snap.data() as BranchStock).assignedStock ?? 0)
+    : 0;
+
+  const available = params.allocatedStock - existingAssigned;
   const status = computeBranchStockStatus(available, params.thresholdStock);
 
-  if (existing) {
-    await updateDoc(doc(db, BRANCH_STOCK_COLLECTION, existing.id), {
-      allocatedStock: params.allocatedStock,
-      thresholdStock: params.thresholdStock,
-      itemName: params.itemName,
-      status,
-      updatedAt: serverTimestamp(),
-    });
-    return { ...existing, allocatedStock: params.allocatedStock, thresholdStock: params.thresholdStock, status };
-  }
-
   const data = {
-    agencyId: params.agencyId,
-    branchId: params.branchId,
-    itemId: params.itemId,
-    itemName: params.itemName,
-    category: params.category,
-    unit: params.unit,
+    agencyId:       params.agencyId,
+    branchId:       params.branchId,
+    itemId:         params.itemId,
+    itemName:       params.itemName,
+    category:       params.category,
+    unit:           params.unit,
     allocatedStock: params.allocatedStock,
-    assignedStock: 0,
+    assignedStock:  existingAssigned,
     thresholdStock: params.thresholdStock,
     status,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    updatedAt:      serverTimestamp(),
+    ...(snap.exists() ? {} : { createdAt: serverTimestamp() }),
   };
 
-  const ref = await addDoc(collection(db, BRANCH_STOCK_COLLECTION), data);
-  return { id: ref.id, ...data } as unknown as BranchStock;
+  await setDoc(ref, data, { merge: true });
+  return { id: stockId, ...data } as unknown as BranchStock;
 }
 
 export async function getBranchStockById(
@@ -94,16 +87,11 @@ export async function getBranchStockByBranchAndItem(
   branchId: string,
   itemId: string,
 ): Promise<BranchStock | null> {
-  const q = query(
-    collection(db, BRANCH_STOCK_COLLECTION),
-    where("agencyId", "==", agencyId),
-    where("branchId", "==", branchId),
-    where("itemId", "==", itemId),
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...d.data() } as BranchStock;
+  // Use the deterministic ID instead of a compound query
+  const stockId = `${agencyId}_${branchId}_${itemId}`;
+  const snap = await getDoc(doc(db, BRANCH_STOCK_COLLECTION, stockId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as BranchStock;
 }
 
 /** All branch stock records for a single branch — used by HR Panel. */

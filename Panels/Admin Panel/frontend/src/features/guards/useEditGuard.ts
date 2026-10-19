@@ -177,6 +177,7 @@ export function useEditGuard(guardId: string) {
         notes: guard.notes ?? "",
         branchId: guard.branchId ?? "",
         assignedBranchIds: [],
+        assignedSiteIds: [],
         password: "",
         confirmPassword: "",
       }

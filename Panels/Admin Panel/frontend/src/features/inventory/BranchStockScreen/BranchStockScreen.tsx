@@ -30,7 +30,7 @@ export interface BranchStockScreenProps {
   isSaving?: boolean;
   saveError?: string;
   onBack: () => void;
-  onAllocate: (payload: AllocatePayload) => void | Promise<void>;
+  onAllocate: (payload: AllocatePayload) => void | Promise<void> | Promise<boolean>;
 }
 
 export function BranchStockScreen({
@@ -67,7 +67,7 @@ export function BranchStockScreen({
   }
 
   async function handleSave(branchId: string) {
-    await onAllocate({
+    const result = await onAllocate({
       branchId,
       itemId:         item.id,
       itemName:       item.name,
@@ -76,7 +76,10 @@ export function BranchStockScreen({
       allocatedStock: Number(allocatedInput) || 0,
       thresholdStock: Number(thresholdInput) || 0,
     });
-    setEditingBranchId(null);
+    // Stay in edit mode when allocate fails (returns false)
+    if (result !== false) {
+      setEditingBranchId(null);
+    }
   }
 
   return (
@@ -245,7 +248,8 @@ export function BranchStockScreen({
         )}
 
         <p className="branch-stock-screen__hint">
-          Set the allocated stock for each branch. HR staff then assign items to guards from their allocated pool.
+          Admin distributes agency stock to branches (cannot exceed Total Agency Stock).
+          HR staff then assign items to guards from their branch pool only.
         </p>
       </div>
     </AppScreenLayout>

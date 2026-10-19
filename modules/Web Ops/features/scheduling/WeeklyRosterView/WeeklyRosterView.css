@@ -65,7 +65,7 @@
 
 .weekly-roster__today-btn:hover {
   background: var(--color-primary, #2563eb);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 /* ── Grid ───────────────────────────────────────────────────────────────────── */
@@ -227,7 +227,7 @@
   height: 28px;
   border-radius: 50%;
   border: none;
-  color: #fff;
+  color: var(--color-on-primary);
   font-size: 0.6rem;
   font-weight: 700;
   cursor: pointer;
@@ -268,7 +268,7 @@
 
 .weekly-roster__cell-add-btn:hover {
   background: var(--color-primary, #2563eb);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 /* ── Past label ─────────────────────────────────────────────────────────────── */

@@ -22,10 +22,10 @@
 }
 
 .branch-form__error {
-  color: #b91c1c;
+  color: var(--color-error);
   font-size: 0.875rem;
   padding: 0.5rem 0.75rem;
-  background: #fee2e2;
+  background: var(--color-error-container);
   border-radius: 6px;
 }
 
@@ -34,4 +34,12 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-top: 0.5rem;
+}
+
+.branch-form__hint {
+  width: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  line-height: 1.4;
 }

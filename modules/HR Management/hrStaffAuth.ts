@@ -24,6 +24,8 @@ export interface CreateHrStaffParams {
   notes: string;
   /** Branch IDs this HR staff member is allowed to access. */
   assignedBranchIds?: string[];
+  /** Site IDs this HR staff member manages. */
+  assignedSiteIds?: string[];
 }
 
 /**
@@ -36,7 +38,17 @@ export async function createHrStaffAccount(
   firebaseConfig: object,
   params: CreateHrStaffParams
 ): Promise<HrStaff> {
-  const { agencyId, fullName, employeeCode, phone, email, password, notes, assignedBranchIds } = params;
+  const {
+    agencyId,
+    fullName,
+    employeeCode,
+    phone,
+    email,
+    password,
+    notes,
+    assignedBranchIds,
+    assignedSiteIds,
+  } = params;
 
   // Use a secondary app so the admin stays logged in
   const appName = `hr-creation-${Date.now()}`;
@@ -67,6 +79,10 @@ export async function createHrStaffAccount(
     email,
     notes,
     assignedBranchIds: assignedBranchIds ?? [],
+    // Only persist when Admin explicitly assigned sites (empty = legacy branch-wide)
+    ...(assignedSiteIds && assignedSiteIds.length > 0
+      ? { assignedSiteIds }
+      : {}),
     status: "active" as HrStaffStatus,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

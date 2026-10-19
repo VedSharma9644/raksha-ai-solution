@@ -94,6 +94,7 @@ export type AgencyLeaveRequestDto = {
   reason: string;
   note: string;
   status: Exclude<LeaveRequestStatus, "withdrawn">;
+  siteId: string;
   siteName: string;
   appliedAt: string | null;
 };
@@ -132,6 +133,7 @@ function toAgencyDto(record: LeaveRequestRecord): AgencyLeaveRequestDto | null {
     reason,
     note: record.note,
     status: record.status,
+    siteId: record.siteId || "",
     siteName: record.siteName || "",
     appliedAt: record.appliedAt?.toDate?.()?.toISOString?.() ?? null,
   };

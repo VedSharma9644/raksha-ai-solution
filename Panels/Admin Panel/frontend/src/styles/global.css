@@ -37,8 +37,24 @@ p {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+  color-scheme: inherit;
+}
+
+/* Native selects / options must follow theme (fixes white dropdowns in dark mode) */
+select,
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
 }
 
 a {

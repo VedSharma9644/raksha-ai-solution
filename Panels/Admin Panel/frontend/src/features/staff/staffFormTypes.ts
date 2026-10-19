@@ -55,6 +55,8 @@ export interface StaffMemberFormValues {
   branchId: string;
   /** For HR staff — which branches they can access */
   assignedBranchIds: string[];
+  /** For HR staff — which sites they manage */
+  assignedSiteIds: string[];
 
   // Login credentials (password only stored in Firebase Auth, never Firestore)
   // Required on Add; leave blank on Edit to keep existing password
@@ -98,6 +100,7 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   notes: "",
   branchId: "",
   assignedBranchIds: [],
+  assignedSiteIds: [],
   password: "",
   confirmPassword: "",
 };

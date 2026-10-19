@@ -5,8 +5,14 @@
   margin-top: 0.5rem;
 }
 
+.manage-schedule-screen__options .action-card {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  border-color: var(--color-border-strong);
+}
+
 .manage-schedule-screen__empty {
   margin: 1rem 0 0;
   font-size: 0.95rem;
-  color: var(--color-on-surface-variant, #6b7280);
+  color: var(--color-on-surface-variant);
 }

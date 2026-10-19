@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { bulkUpdateGuardSiteAssignment } from "@raskha/guard-management";
+import { adminFetch } from "../../lib/adminApi";
 import { useWebOps } from "../../context/WebOpsContext";
 import { useGuardList } from "../guards/useGuardList";
 import { useSiteList } from "./useSiteList";
@@ -18,8 +18,10 @@ export interface UseAssignGuardsReturn {
 }
 
 export function useAssignGuards(siteId: string): UseAssignGuardsReturn {
-  const { agencyId, db } = useWebOps();
-  const { guards, isLoading: guardsLoading, error: guardsError } = useGuardList();
+  const { agencyId } = useWebOps();
+  const { guards, isLoading: guardsLoading, error: guardsError } = useGuardList({
+    forSiteAssignment: true,
+  });
   const { sites, isLoading: sitesLoading } = useSiteList();
 
   const siteNameById = useMemo(() => {
@@ -73,17 +75,32 @@ export function useAssignGuards(siteId: string): UseAssignGuardsReturn {
     if (!agencyId) return;
     const addIds = [...selectedIds].filter((id) => !initialSelected.has(id));
     const removeIds = [...initialSelected].filter((id) => !selectedIds.has(id));
+    if (addIds.length === 0 && removeIds.length === 0) return;
     setIsSaving(true);
     setSaveError("");
     try {
-      await bulkUpdateGuardSiteAssignment(db, siteId, addIds, removeIds);
+      // Admin SDK via backend — reliable for both Admin and HR callers
+      await Promise.all([
+        ...addIds.map((id) =>
+          adminFetch(`/api/guards/${encodeURIComponent(id)}`, {
+            method: "PUT",
+            body: JSON.stringify({ assignedSiteId: siteId }),
+          })
+        ),
+        ...removeIds.map((id) =>
+          adminFetch(`/api/guards/${encodeURIComponent(id)}`, {
+            method: "PUT",
+            body: JSON.stringify({ assignedSiteId: "" }),
+          })
+        ),
+      ]);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setSaveError(e.message ?? "Failed to save assignment.");
     } finally {
       setIsSaving(false);
     }
-  }, [agencyId, db, siteId, selectedIds, initialSelected]);
+  }, [agencyId, siteId, selectedIds, initialSelected]);
 
   return {
     guards,

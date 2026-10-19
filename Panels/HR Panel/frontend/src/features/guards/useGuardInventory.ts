@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  listAssignmentsByGuard,
-  assignItemToGuard,
-  updateGuardAssignment,
-  removeGuardAssignment,
-} from "@raskha/inventory-management";
 import type { GuardInventoryAssignment } from "@raskha/inventory-management";
-import { adjustBranchAssignedStock } from "@raskha/branch-stock";
-import { db } from "../../lib/firebase";
+import { adminFetch } from "@raskha/shared";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 
@@ -22,8 +15,11 @@ export function useGuardInventory(guardId: string) {
   const load = useCallback(async () => {
     if (!guardId || !hrStaff?.agencyId) return;
     setIsLoading(true);
+    setError("");
     try {
-      const data = await listAssignmentsByGuard(db, guardId, hrStaff.agencyId);
+      const data = await adminFetch<GuardInventoryAssignment[]>(
+        `/api/guard-inventory/by-guard/${encodeURIComponent(guardId)}`
+      );
       setAssignments(data);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -49,19 +45,27 @@ export function useGuardInventory(guardId: string) {
     setIsSaving(true);
     setError("");
     try {
-      const newAssignment = await assignItemToGuard(db, {
-        agencyId: hrStaff.agencyId,
-        guardId,
-        itemId,
-        itemName,
-        category,
-        unit,
-        quantity,
-        branchId: activeBranchId ?? null,
-        branchStockId: branchStockId ?? null,
-        adjustBranchStock: branchStockId ? adjustBranchAssignedStock : undefined,
-      });
-      setAssignments((prev) => [...prev, newAssignment]);
+      const saved = await adminFetch<GuardInventoryAssignment & { merged?: boolean }>(
+        "/api/guard-inventory/assign",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            guardId,
+            itemId,
+            itemName,
+            category,
+            unit,
+            quantity,
+            branchId: activeBranchId ?? null,
+            branchStockId: branchStockId ?? null,
+          }),
+        }
+      );
+      // Keep one row per item — replace any prior rows for this itemId
+      setAssignments((prev) => [
+        ...prev.filter((a) => a.itemId !== itemId),
+        saved,
+      ]);
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to assign item.");
@@ -74,12 +78,22 @@ export function useGuardInventory(guardId: string) {
     setIsSaving(true);
     setError("");
     try {
-      await updateGuardAssignment(db, assignmentId, newQuantity, adjustBranchAssignedStock);
-      setAssignments((prev) =>
-        prev.map((a) =>
-          a.id === assignmentId ? { ...a, quantity: newQuantity } : a,
-        ),
+      const result = await adminFetch<{ id?: string; quantity?: number; deleted?: boolean }>(
+        `/api/guard-inventory/${encodeURIComponent(assignmentId)}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ quantity: newQuantity }),
+        }
       );
+      if (result.deleted || newQuantity === 0) {
+        setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+      } else {
+        setAssignments((prev) =>
+          prev.map((a) =>
+            a.id === assignmentId ? { ...a, quantity: newQuantity } : a,
+          ),
+        );
+      }
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to update assignment.");
@@ -92,7 +106,9 @@ export function useGuardInventory(guardId: string) {
     setIsSaving(true);
     setError("");
     try {
-      await removeGuardAssignment(db, assignmentId, adjustBranchAssignedStock);
+      await adminFetch(`/api/guard-inventory/${encodeURIComponent(assignmentId)}`, {
+        method: "DELETE",
+      });
       setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     } catch (err: unknown) {
       const e = err as { message?: string };

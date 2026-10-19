@@ -5,8 +5,10 @@ export function BranchSelector() {
   const { branches, activeBranchId, setActiveBranchId, isLoading } =
     useBranchContext();
 
-  // Don't render if there are no branches created yet
-  if (!isLoading && branches.length === 0) return null;
+  const activeBranches = branches.filter((b) => b.status !== "inactive");
+
+  // Don't render if there are no active branches
+  if (!isLoading && activeBranches.length === 0) return null;
 
   return (
     <div className="branch-selector">
@@ -21,7 +23,7 @@ export function BranchSelector() {
         disabled={isLoading}
       >
         <option value="">All Branches</option>
-        {branches.map((b) => (
+        {activeBranches.map((b) => (
           <option key={b.id} value={b.id}>
             {b.name}
           </option>

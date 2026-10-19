@@ -15,6 +15,11 @@
   margin: 0 auto;
 }
 
+.app-screen-layout__branch-bar {
+  max-width: var(--dashboard-max-width);
+  margin: 0 auto;
+}
+
 @media (max-width: 640px) {
   .app-screen-layout {
     padding: var(--space-md);

@@ -4,6 +4,7 @@ import type { EarningsReportPeriod, EarningsSummary } from "@raskha/earnings";
 import { APP_ROUTES, earningsSitePath } from "../../../app/routePaths";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
+import { useBranchContext } from "../../branches";
 import { EarningsPeriodSelect } from "../EarningsPeriodSelect";
 import {
   downloadEarningsCsvApi,
@@ -45,6 +46,7 @@ const MONTH_OPTIONS = [
 
 export function EarningsListScreen() {
   const navigate = useNavigate();
+  const { activeBranchId } = useBranchContext();
   const now = new Date();
   const [year, setYear] = useState(String(now.getFullYear()));
   const [month, setMonth] = useState(String(now.getMonth() + 1));
@@ -106,6 +108,7 @@ export function EarningsListScreen() {
         fromMonth: m,
         toYear: y,
         toMonth: m,
+        branchId: activeBranchId,
       });
       setSummary(data);
     } catch (err: unknown) {
@@ -124,7 +127,8 @@ export function EarningsListScreen() {
       return;
     }
     void load(y, m);
-  }, [year, month]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on branch/period
+  }, [year, month, activeBranchId]);
 
   async function handleExport(period: EarningsReportPeriod) {
     const y = Number(year);
@@ -136,7 +140,12 @@ export function EarningsListScreen() {
     setIsExporting(true);
     setError("");
     try {
-      await downloadEarningsCsvApi({ period, year: y, month: m });
+      await downloadEarningsCsvApi({
+        period,
+        year: y,
+        month: m,
+        branchId: activeBranchId,
+      });
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to download report.");

@@ -13,7 +13,12 @@ export function InventoryBranchStockPage() {
   const navigate = useNavigate();
 
   const { item, isLoading: itemLoading } = useInventoryItemDetail(id);
-  const { branchStocks, isLoading: stockLoading, reload } = useBranchStockByItem(id);
+  const {
+    branchStocks,
+    isLoading: stockLoading,
+    error: loadError,
+    reload,
+  } = useBranchStockByItem(id);
   const { branches } = useBranchContext();
 
   const { allocate, isSaving, error: saveError } = useAllocateToBranch(reload);
@@ -28,7 +33,7 @@ export function InventoryBranchStockPage() {
       branchStocks={branchStocks}
       isLoading={stockLoading}
       isSaving={isSaving}
-      saveError={saveError}
+      saveError={saveError || loadError}
       onBack={() => navigate(APP_ROUTES.inventoryList)}
       onAllocate={allocate}
     />

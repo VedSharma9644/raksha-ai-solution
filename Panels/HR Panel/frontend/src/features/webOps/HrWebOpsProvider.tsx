@@ -18,11 +18,21 @@ export function HrWebOpsProvider({ children }: { children: ReactNode }) {
     return user.getIdToken();
   }, []);
 
+  // Legacy HR docs without assignedSiteIds → null (all branch sites).
+  // Explicit [] means Admin cleared all site assignments.
+  const assignedSiteIds =
+    hrStaff == null
+      ? null
+      : hrStaff.assignedSiteIds === undefined
+        ? null
+        : hrStaff.assignedSiteIds;
+
   const value = useMemo<WebOpsContextValue>(
     () => ({
       role: "hr",
       agencyId: hrStaff?.agencyId ?? null,
       activeBranchId,
+      assignedSiteIds,
       db,
       getIdToken,
       capabilities: {
@@ -30,7 +40,7 @@ export function HrWebOpsProvider({ children }: { children: ReactNode }) {
         canEditSites: false,
       },
     }),
-    [hrStaff?.agencyId, activeBranchId, getIdToken]
+    [hrStaff?.agencyId, activeBranchId, assignedSiteIds, getIdToken]
   );
 
   return <WebOpsProvider value={value}>{children}</WebOpsProvider>;

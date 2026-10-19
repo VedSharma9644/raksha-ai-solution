@@ -1,11 +1,15 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { listSitesByAgency } from "@raskha/site-management";
+import type { Site } from "@raskha/site-management";
 import { Button } from "../../../components/Button";
 import { FormPanel } from "../../../components/FormPanel";
 import { PasswordField } from "../../../components/PasswordField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { TextField } from "../../../components/TextField";
+import { useAuthContext } from "../../authentication";
 import { useBranchContext } from "../../branches";
+import { db } from "../../../lib/firebase";
 import "./HrStaffForm.css";
 
 export interface HrStaffFormValues {
@@ -16,6 +20,7 @@ export interface HrStaffFormValues {
   password: string;
   notes: string;
   assignedBranchIds: string[];
+  assignedSiteIds: string[];
 }
 
 export const EMPTY_HR_STAFF_FORM: HrStaffFormValues = {
@@ -26,6 +31,7 @@ export const EMPTY_HR_STAFF_FORM: HrStaffFormValues = {
   password: "",
   notes: "",
   assignedBranchIds: [],
+  assignedSiteIds: [],
 };
 
 export interface HrStaffFormProps {
@@ -43,12 +49,32 @@ export function HrStaffForm({
   onSubmit,
   onCancel,
 }: HrStaffFormProps) {
+  const { agency } = useAuthContext();
   const { branches } = useBranchContext();
+  const [sites, setSites] = useState<Site[]>([]);
+  const [sitesLoading, setSitesLoading] = useState(false);
   const [values, setValues] = useState<HrStaffFormValues>({
     ...EMPTY_HR_STAFF_FORM,
     ...initialValues,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof HrStaffFormValues, string>>>({});
+
+  useEffect(() => {
+    if (!agency?.id) return;
+    setSitesLoading(true);
+    listSitesByAgency(db, agency.id)
+      .then(setSites)
+      .catch(() => setSites([]))
+      .finally(() => setSitesLoading(false));
+  }, [agency?.id]);
+
+  const sitesForSelectedBranches = useMemo(() => {
+    const branchSet = new Set(values.assignedBranchIds);
+    if (branchSet.size === 0) return [];
+    return sites
+      .filter((s) => s.branchId && branchSet.has(s.branchId))
+      .sort((a, b) => a.siteName.localeCompare(b.siteName));
+  }, [sites, values.assignedBranchIds]);
 
   function updateField<K extends keyof HrStaffFormValues>(
     field: K,
@@ -56,6 +82,26 @@ export function HrStaffForm({
   ) {
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  function setAssignedBranches(ids: string[]) {
+    const allowedSites = sites.filter(
+      (s) => s.branchId && ids.includes(s.branchId)
+    );
+    const allowedSiteIds = new Set(allowedSites.map((s) => s.id));
+    setValues((current) => ({
+      ...current,
+      assignedBranchIds: ids,
+      // Drop site picks that no longer fall under selected branches
+      assignedSiteIds: current.assignedSiteIds.filter((id) =>
+        allowedSiteIds.has(id)
+      ),
+    }));
+    setErrors((current) => ({
+      ...current,
+      assignedBranchIds: undefined,
+      assignedSiteIds: undefined,
+    }));
   }
 
   function validate(): boolean {
@@ -85,6 +131,14 @@ export function HrStaffForm({
       nextErrors.password = "Enter a password for this HR user.";
     } else if (values.password && values.password.length < 8) {
       nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    if (values.assignedBranchIds.length === 0) {
+      nextErrors.assignedBranchIds = "Select at least one branch.";
+    }
+
+    if (values.assignedSiteIds.length === 0) {
+      nextErrors.assignedSiteIds = "Select at least one site this HR will manage.";
     }
 
     setErrors(nextErrors);
@@ -177,7 +231,6 @@ export function HrStaffForm({
           disabled={isSubmitting}
         />
 
-        {/* ── Branch Assignment ── */}
         {branches.length > 0 && (
           <>
             <p className="hr-staff-form__section-label">Branch Assignment</p>
@@ -195,7 +248,7 @@ export function HrStaffForm({
                       const ids = e.target.checked
                         ? [...values.assignedBranchIds, branch.id]
                         : values.assignedBranchIds.filter((id) => id !== branch.id);
-                      updateField("assignedBranchIds", ids);
+                      setAssignedBranches(ids);
                     }}
                   />
                   <span>{branch.name}</span>
@@ -205,8 +258,50 @@ export function HrStaffForm({
                 </label>
               ))}
             </div>
+            {errors.assignedBranchIds ? (
+              <p className="hr-staff-form__field-error">{errors.assignedBranchIds}</p>
+            ) : null}
           </>
         )}
+
+        <p className="hr-staff-form__section-label">Site Assignment</p>
+        <p className="hr-staff-form__section-hint">
+          Select which sites this HR manages. They will only see guards,
+          attendance, leave, relief, and scheduling for these sites.
+        </p>
+        {sitesLoading ? (
+          <p className="hr-staff-form__section-hint">Loading sites…</p>
+        ) : values.assignedBranchIds.length === 0 ? (
+          <p className="hr-staff-form__section-hint">
+            Select a branch first to choose sites.
+          </p>
+        ) : sitesForSelectedBranches.length === 0 ? (
+          <p className="hr-staff-form__section-hint">
+            No sites allotted to the selected branch(es) yet.
+          </p>
+        ) : (
+          <div className="hr-staff-form__branch-checkboxes">
+            {sitesForSelectedBranches.map((site) => (
+              <label key={site.id} className="hr-staff-form__branch-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={values.assignedSiteIds.includes(site.id)}
+                  disabled={isSubmitting}
+                  onChange={(e) => {
+                    const ids = e.target.checked
+                      ? [...values.assignedSiteIds, site.id]
+                      : values.assignedSiteIds.filter((id) => id !== site.id);
+                    updateField("assignedSiteIds", ids);
+                  }}
+                />
+                <span>{site.siteName}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        {errors.assignedSiteIds ? (
+          <p className="hr-staff-form__field-error">{errors.assignedSiteIds}</p>
+        ) : null}
 
         <div className="form-panel__actions">
           <Button

@@ -74,7 +74,16 @@ export function createEarningsRoutes(): Router {
         return;
       }
 
-      const summary = await buildEarningsSummary({ agencyId, from, to });
+      const branchId =
+        typeof req.query.branchId === "string" && req.query.branchId.trim()
+          ? req.query.branchId.trim()
+          : undefined;
+      const summary = await buildEarningsSummary({
+        agencyId,
+        from,
+        to,
+        branchId,
+      });
       res.json({ summary });
     } catch (error: unknown) {
       console.error("[earnings] summary failed", error);
@@ -147,11 +156,16 @@ export function createEarningsRoutes(): Router {
         return;
       }
 
+      const branchId =
+        typeof req.query.branchId === "string" && req.query.branchId.trim()
+          ? req.query.branchId.trim()
+          : undefined;
       const { csv, filename } = await exportEarningsCsv({
         agencyId,
         period,
         year: ym.year,
         month: ym.month,
+        branchId,
       });
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader(

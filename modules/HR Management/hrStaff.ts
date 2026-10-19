@@ -13,6 +13,8 @@ export interface HrStaff {
   status: HrStaffStatus;
   /** Branch IDs this HR staff member is allowed to access. */
   assignedBranchIds?: string[];
+  /** Site IDs this HR staff member manages. When set, HR only sees these sites. */
+  assignedSiteIds?: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

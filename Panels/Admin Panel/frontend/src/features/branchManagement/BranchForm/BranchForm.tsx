@@ -136,6 +136,12 @@ export function BranchForm({
                 Delete Branch
               </Button>
             )}
+            {onDelete ? (
+              <p className="branch-form__hint">
+                Prefer setting Status to <strong>Inactive</strong> instead of deleting.
+                Delete is blocked while the branch still has guards, sites, or inventory.
+              </p>
+            ) : null}
           </div>
         </form>
       </div>

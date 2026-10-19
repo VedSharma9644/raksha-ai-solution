@@ -9,6 +9,8 @@ import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { SearchableSelect } from "../../../components/SearchableSelect";
 import { useAuthContext } from "../../authentication";
+import { useBranchContext } from "../../branches";
+import { filterByBranch } from "../../../lib/branchFilter";
 import { db } from "../../../lib/firebase";
 import { EarningsPeriodSelect } from "../../earnings/EarningsPeriodSelect";
 import {
@@ -39,6 +41,7 @@ const MONTH_OPTIONS = [
 export function InvoiceListScreen() {
   const navigate = useNavigate();
   const { agency } = useAuthContext();
+  const { activeBranchId } = useBranchContext();
   const now = new Date();
   const [year, setYear] = useState(String(now.getFullYear()));
   const [month, setMonth] = useState(String(now.getMonth() + 1));
@@ -60,26 +63,31 @@ export function InvoiceListScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const branchSites = useMemo(
+    () => filterByBranch(sites, activeBranchId),
+    [sites, activeBranchId]
+  );
+
   const siteOptions = useMemo(
     () => [
       { value: "", label: "All sites" },
-      ...sites.map((s) => ({
+      ...branchSites.map((s) => ({
         value: s.id,
         label: s.siteName || s.id,
       })),
     ],
-    [sites]
+    [branchSites]
   );
 
   const createSiteOptions = useMemo(
     () => [
       { value: "", label: "Select site…" },
-      ...sites.map((s) => ({
+      ...branchSites.map((s) => ({
         value: s.id,
         label: s.siteName || s.id,
       })),
     ],
-    [sites]
+    [branchSites]
   );
 
   async function loadInvoices() {
@@ -92,6 +100,7 @@ export function InvoiceListScreen() {
         year: y,
         month: m,
         siteId: siteId || undefined,
+        branchId: activeBranchId,
       });
       setInvoices(data);
     } catch (err: unknown) {
@@ -113,9 +122,26 @@ export function InvoiceListScreen() {
   }, [agency?.id]);
 
   useEffect(() => {
+    // Clear site filter if it no longer belongs to the working branch
+    if (
+      siteId &&
+      !branchSites.some((s) => s.id === siteId)
+    ) {
+      setSiteId("");
+    }
+    if (
+      createSiteId &&
+      !branchSites.some((s) => s.id === createSiteId)
+    ) {
+      setCreateSiteId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBranchId, branchSites]);
+
+  useEffect(() => {
     void loadInvoices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year, month, siteId]);
+  }, [year, month, siteId, activeBranchId]);
 
   async function handleCreate() {
     if (!createSiteId) {

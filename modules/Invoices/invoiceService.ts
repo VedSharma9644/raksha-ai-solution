@@ -115,8 +115,11 @@ export async function listSiteInvoices(params: {
   year?: number;
   month?: number;
   siteId?: string;
+  /** When set, only invoices for sites in this branch + unassigned sites. */
+  branchId?: string | null;
 }): Promise<SiteInvoice[]> {
-  const snap = await getFirestore()
+  const db = getFirestore();
+  const snap = await db
     .collection(SITE_INVOICES_COLLECTION)
     .where("agencyId", "==", params.agencyId)
     .get();
@@ -132,6 +135,23 @@ export async function listSiteInvoices(params: {
   }
   if (params.siteId) {
     rows = rows.filter((r) => r.siteId === params.siteId);
+  }
+  if (params.branchId) {
+    const sitesSnap = await db
+      .collection("sites")
+      .where("agencyId", "==", params.agencyId)
+      .get();
+    const allowedSiteIds = new Set(
+      sitesSnap.docs
+        .filter((d) => {
+          const data = d.data() as { branchId?: string | null };
+          const value =
+            data.branchId == null ? "" : String(data.branchId).trim();
+          return value === "" || value === params.branchId;
+        })
+        .map((d) => d.id)
+    );
+    rows = rows.filter((r) => allowedSiteIds.has(r.siteId));
   }
   rows.sort((a, b) => {
     if (a.period.year !== b.period.year) return b.period.year - a.period.year;

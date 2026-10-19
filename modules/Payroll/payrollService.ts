@@ -107,8 +107,9 @@ export async function generatePayrollRun(params: {
   agencyId: string;
   year: number;
   month: number;
+  branchId?: string | null;
 }): Promise<{ run: PayrollRun; lines: PayrollLine[] }> {
-  const { agencyId, year, month } = params;
+  const { agencyId, year, month, branchId } = params;
   const db = getFirestore();
 
   const agencyRuns = await db
@@ -141,7 +142,12 @@ export async function generatePayrollRun(params: {
     await batch.commit();
   }
 
-  const preview = await buildPayrollPreview({ agencyId, year, month });
+  const preview = await buildPayrollPreview({
+    agencyId,
+    year,
+    month,
+    branchId,
+  });
   const runRef = db.collection(PAYROLL_RUNS_COLLECTION).doc();
   const lines: PayrollLine[] = preview.lines.map((line) => ({
     ...line,
@@ -194,6 +200,8 @@ export async function generatePayrollRun(params: {
 export async function getPayrollRun(params: {
   agencyId: string;
   runId: string;
+  /** When set, only lines for guards in this branch + unassigned. */
+  branchId?: string | null;
 }): Promise<{ run: PayrollRun; lines: PayrollLine[] }> {
   const runSnap = await getFirestore()
     .collection(PAYROLL_RUNS_COLLECTION)
@@ -205,6 +213,24 @@ export async function getPayrollRun(params: {
   const run = { id: runSnap.id, ...runSnap.data() } as PayrollRun;
   if (run.agencyId !== params.agencyId) {
     throw httpError("Payroll run not found.", 404);
+  }
+
+  let allowedGuardIds: Set<string> | null = null;
+  if (params.branchId) {
+    const guardsSnap = await getFirestore()
+      .collection("guards")
+      .where("agencyId", "==", params.agencyId)
+      .get();
+    allowedGuardIds = new Set(
+      guardsSnap.docs
+        .filter((d) => {
+          const data = d.data() as { branchId?: string | null };
+          const value =
+            data.branchId == null ? "" : String(data.branchId).trim();
+          return value === "" || value === params.branchId;
+        })
+        .map((d) => d.id)
+    );
   }
 
   const lines = (await runSnap.ref.collection("lines").get()).docs
@@ -224,6 +250,9 @@ export async function getPayrollRun(params: {
       }
       return line;
     })
+    .filter((line) =>
+      allowedGuardIds ? allowedGuardIds.has(line.guardId) : true
+    )
     .sort((a, b) => a.guardName.localeCompare(b.guardName));
 
   return { run, lines };
@@ -547,6 +576,7 @@ export async function updatePayrollLine(params: {
 export async function exportPayrollRunCsv(params: {
   agencyId: string;
   runId: string;
+  branchId?: string | null;
 }): Promise<{ csv: string; filename: string }> {
   const { run, lines } = await getPayrollRun(params);
   const csv = linesToCsv(lines);

@@ -37,8 +37,23 @@ p {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+  color-scheme: inherit;
+}
+
+select,
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
 }
 
 a {

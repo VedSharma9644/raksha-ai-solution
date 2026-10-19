@@ -22,29 +22,46 @@ const EMPTY_STATS: AttendanceStats = {
 
 export function useAgencyAttendance() {
   const { sites, isLoading: sitesLoading, error: sitesError } = useSiteList();
-  const { activeBranchId } = useWebOps();
+  const { activeBranchId, role, assignedSiteIds } = useWebOps();
   const [date, setDate] = useState(todayIstDateKey);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats>(EMPTY_STATS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (selectedDate: string, branchId: string | null) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchAgencyAttendanceDay(selectedDate, branchId);
-      setRecords(data.records ?? []);
-      setStats(data.stats ?? EMPTY_STATS);
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      setRecords([]);
-      setStats(EMPTY_STATS);
-      setError(e.message ?? "Failed to load attendance.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const load = useCallback(
+    async (selectedDate: string, branchId: string | null) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await fetchAgencyAttendanceDay(selectedDate, branchId);
+        let nextRecords = data.records ?? [];
+        if (role === "hr" && assignedSiteIds !== null) {
+          const allowed = new Set(assignedSiteIds);
+          nextRecords = nextRecords.filter((r) => allowed.has(r.siteId));
+        }
+        setRecords(nextRecords);
+        if (role === "hr" && assignedSiteIds !== null) {
+          const presentIds = new Set(nextRecords.map((r) => r.guardId));
+          setStats({
+            presentToday: presentIds.size,
+            absentToday: 0,
+            onShift: nextRecords.filter((r) => !r.punchOutTime).length,
+          });
+        } else {
+          setStats(data.stats ?? EMPTY_STATS);
+        }
+      } catch (err: unknown) {
+        const e = err as { message?: string };
+        setRecords([]);
+        setStats(EMPTY_STATS);
+        setError(e.message ?? "Failed to load attendance.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [role, assignedSiteIds]
+  );
 
   useEffect(() => {
     void load(date, activeBranchId);

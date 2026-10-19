@@ -8,7 +8,7 @@
   padding: 1.15rem 1.25rem 1.25rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
   box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
 }
 
@@ -39,7 +39,7 @@
   flex-shrink: 0;
   padding: 0.4rem 0.75rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 12%, #fff);
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 12%, var(--color-surface));
   color: var(--color-primary, #0b6e4f);
   font-size: 0.82rem;
   font-weight: 700;
@@ -77,7 +77,7 @@
 
 .earnings-list__export-chip {
   border: 1px solid var(--color-border, #e5e7eb);
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   color: var(--color-on-surface, #111827);
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
@@ -92,7 +92,7 @@
 }
 
 .earnings-list__export-chip:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 10%, #fff);
+  background: color-mix(in srgb, var(--color-primary, #0b6e4f) 10%, var(--color-surface));
   border-color: color-mix(in srgb, var(--color-primary, #0b6e4f) 35%, #e5e7eb);
   color: var(--color-primary, #0b6e4f);
 }
@@ -106,9 +106,9 @@
   margin: 0;
   padding: 0.75rem 0.9rem;
   border-radius: 0.65rem;
-  background: #fef2f2;
+  background: var(--color-error-container);
   border: 1px solid #fecaca;
-  color: #991b1b;
+  color: var(--color-error);
   font-size: 0.9rem;
 }
 
@@ -131,43 +131,43 @@
   padding: 1.1rem 1.15rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
   min-height: 7.25rem;
 }
 
 .earnings-list__kpi--in {
-  background: linear-gradient(160deg, #ecfdf5 0%, #fff 58%);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
   border-color: #a7f3d0;
 }
 
 .earnings-list__kpi--out {
-  background: linear-gradient(160deg, #fff7ed 0%, #fff 58%);
+  background: color-mix(in srgb, var(--color-on-warning-container) 12%, var(--color-surface));
   border-color: #fed7aa;
 }
 
 .earnings-list__kpi--general {
-  background: linear-gradient(160deg, #eff6ff 0%, #fff 58%);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
   border-color: #bfdbfe;
 }
 
 .earnings-list__tfoot td {
   font-weight: 700;
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   border-bottom: none;
 }
 
 .earnings-list__kpi--profit {
-  background: linear-gradient(160deg, #ecfdf5 0%, #fff 55%);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
   border-color: #6ee7b7;
 }
 
 .earnings-list__kpi--loss {
-  background: linear-gradient(160deg, #fef2f2 0%, #fff 55%);
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
   border-color: #fca5a5;
 }
 
 .earnings-list__kpi--break_even {
-  background: linear-gradient(160deg, #f8fafc 0%, #fff 55%);
+  background: var(--color-surface-muted);
 }
 
 .earnings-list__kpi-label {
@@ -196,7 +196,7 @@
   padding: 1.15rem 1.25rem 1.25rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
 }
 
 .earnings-list__sites-head {
@@ -229,7 +229,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-text-secondary, #6b7280);
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   white-space: nowrap;
 }
 
@@ -238,7 +238,7 @@
 }
 
 .earnings-list__table tbody tr:hover td {
-  background: color-mix(in srgb, #f8fafc 80%, transparent);
+  background: color-mix(in srgb, var(--color-surface-muted) 80%, transparent);
 }
 
 .earnings-list__row--loss td {
@@ -280,7 +280,7 @@
   align-items: center;
   padding: 0.15rem 0.45rem;
   border-radius: 0.35rem;
-  background: #f1f5f9;
+  background: var(--color-surface-muted);
   font-size: 0.75rem;
   font-weight: 650;
   color: #334155;
@@ -309,12 +309,12 @@
 
 .earnings-list__badge--profit {
   background: #d1fae5;
-  color: #065f46;
+  color: var(--color-on-success-container);
 }
 
 .earnings-list__badge--loss {
   background: #fee2e2;
-  color: #991b1b;
+  color: var(--color-error);
 }
 
 .earnings-list__badge--break_even {

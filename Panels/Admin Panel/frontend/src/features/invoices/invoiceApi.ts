@@ -32,11 +32,13 @@ export async function listInvoicesApi(params?: {
   year?: number;
   month?: number;
   siteId?: string;
+  branchId?: string | null;
 }): Promise<SiteInvoice[]> {
   const qs = new URLSearchParams();
   if (params?.year != null) qs.set("year", String(params.year));
   if (params?.month != null) qs.set("month", String(params.month));
   if (params?.siteId) qs.set("siteId", params.siteId);
+  if (params?.branchId) qs.set("branchId", params.branchId);
   const q = qs.toString();
   const data = await adminFetch<{ invoices: SiteInvoice[] }>(
     `/api/invoices${q ? `?${q}` : ""}`,

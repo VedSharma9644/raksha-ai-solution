@@ -60,9 +60,15 @@ export function payrollCsvUrl(runId: string): string {
   return `${resolveAdminApiBase()}/api/payroll/runs/${encodeURIComponent(runId)}/export.csv`;
 }
 
-export async function downloadPayrollCsv(runId: string): Promise<void> {
+export async function downloadPayrollCsv(
+  runId: string,
+  branchId?: string | null
+): Promise<void> {
+  const qs = branchId
+    ? `?branchId=${encodeURIComponent(branchId)}`
+    : "";
   const blob = await adminFetchBlob(
-    `/api/payroll/runs/${encodeURIComponent(runId)}/export.csv`,
+    `/api/payroll/runs/${encodeURIComponent(runId)}/export.csv${qs}`,
     { errorMessage: "You must be signed in to manage payroll." }
   );
   const url = URL.createObjectURL(blob);
@@ -103,11 +109,13 @@ export async function listPayrollRunsApi(): Promise<PayrollRun[]> {
 
 export async function fetchPayrollPreviewApi(
   year?: number,
-  month?: number
+  month?: number,
+  branchId?: string | null
 ): Promise<PayrollPreview> {
   const params = new URLSearchParams();
   if (year != null) params.set("year", String(year));
   if (month != null) params.set("month", String(month));
+  if (branchId) params.set("branchId", branchId);
   const qs = params.toString();
   const data = await adminFetch<{ preview: PayrollPreview }>(
     `/api/payroll/preview${qs ? `?${qs}` : ""}`
@@ -117,22 +125,31 @@ export async function fetchPayrollPreviewApi(
 
 export async function generatePayrollRunApi(
   year: number,
-  month: number
+  month: number,
+  branchId?: string | null
 ): Promise<{ run: PayrollRun; lines: PayrollLine[] }> {
   return adminFetch<{ run: PayrollRun; lines: PayrollLine[] }>(
     "/api/payroll/runs",
     {
       method: "POST",
-      body: JSON.stringify({ year, month }),
+      body: JSON.stringify({
+        year,
+        month,
+        ...(branchId ? { branchId } : {}),
+      }),
     }
   );
 }
 
 export async function fetchPayrollRunApi(
-  runId: string
+  runId: string,
+  branchId?: string | null
 ): Promise<{ run: PayrollRun; lines: PayrollLine[] }> {
+  const qs = branchId
+    ? `?branchId=${encodeURIComponent(branchId)}`
+    : "";
   return adminFetch<{ run: PayrollRun; lines: PayrollLine[] }>(
-    `/api/payroll/runs/${encodeURIComponent(runId)}`
+    `/api/payroll/runs/${encodeURIComponent(runId)}${qs}`
   );
 }
 

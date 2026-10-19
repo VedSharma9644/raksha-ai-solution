@@ -8,7 +8,7 @@ export function AssignGuardsPage() {
   const { id: siteId = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { sites } = useSiteList();
+  const { sites, isLoading: sitesLoading } = useSiteList();
   const site = sites.find((s) => s.id === siteId);
   const siteName = site?.siteName ?? "Site";
 
@@ -30,6 +30,14 @@ export function AssignGuardsPage() {
     if (!saveError) {
       navigate(APP_ROUTES.siteList);
     }
+  }
+
+  if (!sitesLoading && siteId && !site) {
+    return (
+      <p role="alert" style={{ padding: "2rem", color: "red" }}>
+        You do not have access to this site.
+      </p>
+    );
   }
 
   return (

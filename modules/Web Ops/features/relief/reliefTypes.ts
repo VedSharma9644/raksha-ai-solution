@@ -9,6 +9,7 @@ export type ReliefRequest = {
   reasonLabel: string;
   note: string;
   status: ReliefRequestStatus;
+  siteId?: string;
   siteName: string;
   postName: string;
   dutyDate: string;

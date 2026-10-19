@@ -49,6 +49,7 @@
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
+  color: var(--color-on-surface);
 }
 
 .action-card__description {

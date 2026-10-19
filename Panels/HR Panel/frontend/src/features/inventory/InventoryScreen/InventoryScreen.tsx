@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { BranchInventoryRow } from "../inventoryHooks";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
-import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
@@ -17,16 +16,12 @@ export interface InventoryScreenProps {
   rows: BranchInventoryRow[];
   isLoading?: boolean;
   onBack: () => void;
-  onAddItem: () => void;
-  onSelectRow: (row: BranchInventoryRow) => void;
 }
 
 export function InventoryScreen({
   rows,
   isLoading = false,
   onBack,
-  onAddItem,
-  onSelectRow,
 }: InventoryScreenProps) {
   const [searchQuery, setSearchQuery]     = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -52,14 +47,9 @@ export function InventoryScreen({
       <div className="app-screen-layout__content inventory-screen">
         <PageHeader
           title="Branch Inventory"
-          subtitle="Manage allocated stock and guard assignments for your branch."
+          subtitle="Stock allocated to your branch. Assign items to guards from a guard’s profile."
           onBack={onBack}
           backLabel="Back to dashboard"
-          actions={
-            <Button type="button" onClick={onAddItem}>
-              + Set Stock
-            </Button>
-          }
         />
 
         {isLoading && (
@@ -110,19 +100,19 @@ export function InventoryScreen({
                     <th scope="col">Threshold</th>
                     <th scope="col">Unit</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="inventory-table__empty">
-                        No inventory items found. Admin must add master items first.
+                      <td colSpan={8} className="inventory-table__empty">
+                        No stock allocated to this branch yet. Ask your agency admin
+                        to distribute items from Manage Inventory → Branches.
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="inventory-table__empty">
+                      <td colSpan={8} className="inventory-table__empty">
                         No items match your filters.
                       </td>
                     </tr>
@@ -142,15 +132,6 @@ export function InventoryScreen({
                           <span className={`inventory-table__status inventory-table__status--${row.status}`}>
                             {STATUS_LABELS[row.status]}
                           </span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="inventory-table__edit-btn"
-                            onClick={() => onSelectRow(row)}
-                          >
-                            {row.hasBranchStock ? "Edit" : "Set Stock"}
-                          </button>
                         </td>
                       </tr>
                     ))

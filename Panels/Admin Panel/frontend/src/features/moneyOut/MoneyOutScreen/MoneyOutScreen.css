@@ -9,8 +9,8 @@
   gap: 0.35rem;
   padding: 0.3rem;
   border-radius: 0.85rem;
-  background: #f1f5f9;
-  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
   width: fit-content;
 }
 
@@ -21,23 +21,23 @@
   border-radius: 0.65rem;
   font: inherit;
   font-weight: 650;
-  color: #64748b;
+  color: var(--color-on-surface-variant);
   cursor: pointer;
 }
 
 .money-out__tab--active {
-  background: #fff;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  box-shadow: var(--shadow-surface);
 }
 
 .money-out__error {
   margin: 0;
   padding: 0.75rem 0.9rem;
   border-radius: 0.65rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: var(--color-error-container);
+  border: 1px solid color-mix(in srgb, var(--color-error) 35%, transparent);
+  color: var(--color-error);
 }
 
 .money-out__grid {
@@ -50,8 +50,8 @@
 .money-out__panel {
   padding: 1.1rem 1.2rem 1.25rem;
   border-radius: 1rem;
-  border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -69,12 +69,13 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 750;
+  color: var(--color-on-surface);
 }
 
 .money-out__hint {
   margin: 0;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-on-surface-variant);
   line-height: 1.45;
 }
 
@@ -86,7 +87,7 @@
 .money-out__form--inline {
   margin-top: 0.5rem;
   padding-top: 0.85rem;
-  border-top: 1px solid var(--color-border, #e5e7eb);
+  border-top: 1px solid var(--color-border);
 }
 
 .money-out__filters {
@@ -97,33 +98,35 @@
 
 .money-out__table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border, #e5e7eb);
+  border: 1px solid var(--color-border);
   border-radius: 0.75rem;
+  background: var(--color-surface);
 }
 
 .money-out__table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  color: var(--color-on-surface);
 }
 
 .money-out__table th,
 .money-out__table td {
   padding: 0.7rem 0.85rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .money-out__table th {
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--color-on-surface-variant);
+  background: var(--color-surface-muted);
 }
 
 .money-out__row--selected {
-  background: #f0fdf4;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .money-out__link {
@@ -132,7 +135,7 @@
   padding: 0;
   font: inherit;
   font-weight: 700;
-  color: var(--color-primary, #0b6e4f);
+  color: var(--color-primary);
   cursor: pointer;
 }
 
@@ -141,7 +144,7 @@
 }
 
 .money-out__link--danger {
-  color: #b91c1c;
+  color: var(--color-error);
 }
 
 .money-out__row-actions {
@@ -169,18 +172,18 @@
 }
 
 .money-out__badge--open {
-  background: #dbeafe;
-  color: #1e40af;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  color: var(--color-primary);
 }
 
 .money-out__badge--settled {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-container);
+  color: var(--color-on-success-container);
 }
 
 .money-out__badge--void {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-container);
+  color: var(--color-error);
 }
 
 .money-out__detail {
@@ -194,6 +197,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 750;
+  color: var(--color-on-surface);
 }
 
 @media (max-width: 960px) {

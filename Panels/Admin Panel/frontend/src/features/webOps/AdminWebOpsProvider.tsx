@@ -22,6 +22,7 @@ export function AdminWebOpsProvider({ children }: { children: ReactNode }) {
       role: "agency",
       agencyId: agency?.id ?? null,
       activeBranchId,
+      assignedSiteIds: null,
       db,
       getIdToken,
       capabilities: {

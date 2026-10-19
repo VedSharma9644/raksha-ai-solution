@@ -128,7 +128,7 @@ export function createBranchRoutes(): Router {
     }
   });
 
-  // DELETE /api/branches/:id — delete a branch
+  // DELETE /api/branches/:id — delete a branch (blocked if still in use)
   router.delete("/:id", async (req: Request, res: Response) => {
     try {
       const agencyId = (req as Request & { agencyId: string }).agencyId;
@@ -145,6 +145,26 @@ export function createBranchRoutes(): Router {
         res.status(403).json({ error: "Access denied." });
         return;
       }
+
+      // Block delete when branch still has linked records
+      const [guardsSnap, sitesSnap, stockSnap] = await Promise.all([
+        db.collection("guards").where("agencyId", "==", agencyId).where("branchId", "==", branchId).limit(1).get(),
+        db.collection("sites").where("agencyId", "==", agencyId).where("branchId", "==", branchId).limit(1).get(),
+        db.collection("branchStock").where("agencyId", "==", agencyId).where("branchId", "==", branchId).limit(1).get(),
+      ]);
+
+      const blockers: string[] = [];
+      if (!guardsSnap.empty) blockers.push("guards");
+      if (!sitesSnap.empty) blockers.push("sites");
+      if (!stockSnap.empty) blockers.push("inventory allocations");
+
+      if (blockers.length > 0) {
+        res.status(409).json({
+          error: `Cannot delete this branch while it still has ${blockers.join(", ")}. Reassign or clear them first, or set the branch to Inactive instead.`,
+        });
+        return;
+      }
+
       await ref.delete();
       res.json({ success: true });
     } catch (err: unknown) {

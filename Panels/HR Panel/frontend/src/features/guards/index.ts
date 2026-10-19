@@ -4,6 +4,7 @@ export { AddGuardScreen } from "./AddGuardScreen";
 export { GuardListScreen } from "./GuardListScreen";
 export { useAddGuard } from "./useAddGuard";
 export { useDeleteGuard } from "./useDeleteGuard";
+export { useGuardList } from "./useGuardList";
 export { useGuardInventory } from "./useGuardInventory";
 export { GuardInventoryPanel } from "./GuardInventoryPanel";
 export type { GuardInventoryPanelProps } from "./GuardInventoryPanel";

@@ -23,14 +23,26 @@ export function useGuardList() {
     setIsLoading(true);
     setError("");
 
+    const assignedSiteIds = hrStaff.assignedSiteIds;
+
     listGuardsByAgency(db, hrStaff.agencyId)
-      .then((data) => setGuards(filterByBranch(data, activeBranchId)))
+      .then((data) => {
+        let filtered = filterByBranch(data, activeBranchId);
+        // When Admin configured site assignment, only show those sites' guards
+        if (assignedSiteIds !== undefined) {
+          const allowed = new Set(assignedSiteIds);
+          filtered = filtered.filter(
+            (g) => g.assignedSiteId && allowed.has(g.assignedSiteId)
+          );
+        }
+        setGuards(filtered);
+      })
       .catch((err: unknown) => {
         const e = err as { message?: string };
         setError(e.message ?? "Failed to load guards.");
       })
       .finally(() => setIsLoading(false));
-  }, [hrStaff?.agencyId, activeBranchId, tick]);
+  }, [hrStaff?.agencyId, hrStaff?.assignedSiteIds, activeBranchId, tick]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
 

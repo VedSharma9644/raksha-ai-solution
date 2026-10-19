@@ -172,7 +172,7 @@
 }
 
 .payroll-breakdown-modal__deduct {
-  color: #b42318;
+  color: var(--color-error);
 }
 
 .payroll-breakdown-modal__amount {

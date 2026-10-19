@@ -10,6 +10,7 @@ type ApiLeaveRequest = {
   endDate: string;
   reason: string;
   status: LeaveRequestStatus;
+  siteId?: string;
 };
 
 type LeaveListResponse = {
@@ -32,6 +33,7 @@ function toLeaveRequest(item: ApiLeaveRequest): LeaveRequest {
     endDate: item.endDate,
     reason: item.reason,
     status: item.status,
+    siteId: item.siteId ?? "",
   };
 }
 

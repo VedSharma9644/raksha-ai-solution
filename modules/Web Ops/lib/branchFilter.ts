@@ -1,23 +1,30 @@
 /**
  * Utility helpers for branch-based filtering.
  *
- * When `activeBranchId` is null it means "All Branches" — no filter is applied.
- * When a specific branch is selected, only records with a matching `branchId`
- * (or with no `branchId` set, which means the record is agency-wide/unassigned)
- * are shown to the Admin. Strictly assigned records only show in their branch.
+ * Admin (strict=false):
+ * - activeBranchId = null → all records ("All Branches")
+ * - specific branch → matching branchId OR unassigned (branchId null)
+ *
+ * HR (strict=true):
+ * - activeBranchId = null → no records (must pick a working branch)
+ * - specific branch → ONLY records explicitly assigned to that branch
  */
 
 /**
  * Filter an array of records by the active branch.
  *
- * - Admin "All Branches" (activeBranchId = null): returns all records.
- * - Specific branch selected: returns records whose `branchId` matches OR
- *   whose `branchId` is null/undefined (unassigned records are visible in all branches).
+ * @param strict - When true (HR), unassigned records are never shown.
  */
 export function filterByBranch<T extends { branchId?: string | null }>(
   records: T[],
-  activeBranchId: string | null
+  activeBranchId: string | null,
+  strict = false
 ): T[] {
+  if (strict) {
+    if (activeBranchId === null) return [];
+    return records.filter((r) => r.branchId === activeBranchId);
+  }
+
   if (activeBranchId === null) return records;
   return records.filter(
     (r) => r.branchId === activeBranchId || r.branchId == null

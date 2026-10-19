@@ -45,8 +45,11 @@ export async function listAgencyExpenses(params: {
   guardId?: string;
   category?: ExpenseCategory;
   includeVoid?: boolean;
+  /** When set, only expenses for this branch (via site/guard) + unattributed. */
+  branchId?: string | null;
 }): Promise<AgencyExpense[]> {
-  const snap = await getFirestore()
+  const db = getFirestore();
+  const snap = await db
     .collection(AGENCY_EXPENSES_COLLECTION)
     .where("agencyId", "==", params.agencyId)
     .get();
@@ -72,6 +75,43 @@ export async function listAgencyExpenses(params: {
   }
   if (params.category) {
     rows = rows.filter((r) => r.category === params.category);
+  }
+  if (params.branchId) {
+    const [sitesSnap, guardsSnap] = await Promise.all([
+      db.collection("sites").where("agencyId", "==", params.agencyId).get(),
+      db.collection("guards").where("agencyId", "==", params.agencyId).get(),
+    ]);
+    const siteBranch = new Map<string, string>();
+    for (const d of sitesSnap.docs) {
+      const data = d.data() as { branchId?: string | null };
+      siteBranch.set(
+        d.id,
+        data.branchId == null ? "" : String(data.branchId).trim()
+      );
+    }
+    const guardBranch = new Map<string, string>();
+    for (const d of guardsSnap.docs) {
+      const data = d.data() as { branchId?: string | null };
+      guardBranch.set(
+        d.id,
+        data.branchId == null ? "" : String(data.branchId).trim()
+      );
+    }
+    const branchId = params.branchId;
+    rows = rows.filter((r) => {
+      const siteId = String(r.siteId ?? "").trim();
+      const guardId = String(r.guardId ?? "").trim();
+      if (siteId) {
+        const b = siteBranch.get(siteId) ?? "";
+        return b === "" || b === branchId;
+      }
+      if (guardId) {
+        const b = guardBranch.get(guardId) ?? "";
+        return b === "" || b === branchId;
+      }
+      // Unattributed agency expense — visible in every branch
+      return true;
+    });
   }
 
   rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""));

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { InventoryItem } from "@raskha/inventory-management";
+import type { InventoryCatalogRow } from "../inventoryHooks";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
@@ -14,7 +14,7 @@ const STATUS_LABELS = {
 } as const;
 
 export interface InventoryListScreenProps {
-  items: InventoryItem[];
+  items: InventoryCatalogRow[];
   isSeeding?: boolean;
   onBack: () => void;
   onAddItem: () => void;
@@ -59,8 +59,8 @@ export function InventoryListScreen({
     <AppScreenLayout>
       <div className="app-screen-layout__content inventory-list-screen">
         <PageHeader
-          title="Manage Inventory"
-          subtitle="Track stock levels for uniforms and equipment across your agency."
+          title="Agency Inventory Catalog"
+          subtitle="Agency-wide master items. Available = not yet allocated to branches. Use Branches to distribute stock."
           onBack={onBack}
           backLabel="Back to dashboard"
           actions={
@@ -93,14 +93,13 @@ export function InventoryListScreen({
             onChange={(e) => setStatusFilter(e.target.value)}
             placeholder="All statuses"
             options={[
-              { value: "in_stock",     label: "In Stock" },
-              { value: "low_stock",    label: "Low Stock" },
+              { value: "in_stock", label: "In Stock" },
+              { value: "low_stock", label: "Low Stock" },
               { value: "out_of_stock", label: "Out of Stock" },
             ]}
           />
         </div>
 
-        {/* Empty state */}
         {items.length === 0 && (
           <div className="inventory-list-screen__empty-state">
             <p>No inventory items yet.</p>
@@ -121,8 +120,9 @@ export function InventoryListScreen({
                   <th scope="col">Item</th>
                   <th scope="col">Category</th>
                   <th scope="col">Total</th>
-                  <th scope="col">Assigned</th>
-                  <th scope="col">Available</th>
+                  <th scope="col">Allocated to Branches</th>
+                  <th scope="col">Assigned to Guards</th>
+                  <th scope="col">Unallocated</th>
                   <th scope="col">Threshold</th>
                   <th scope="col">Unit</th>
                   <th scope="col">Status</th>
@@ -132,49 +132,59 @@ export function InventoryListScreen({
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="inventory-list-table__empty">
+                    <td colSpan={10} className="inventory-list-table__empty">
                       No items match your filters.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((item) => {
-                    const availableStock = item.totalStock - (item.assignedStock ?? 0);
-                    return (
-                      <tr key={item.id}>
-                        <td className="inventory-list-table__name">{item.name}</td>
-                        <td>{item.category}</td>
-                        <td className="inventory-list-table__stock">{item.totalStock}</td>
-                        <td className="inventory-list-table__assigned">{item.assignedStock ?? 0}</td>
-                        <td className={`inventory-list-table__available${availableStock <= 0 ? " inventory-list-table__available--zero" : ""}`}>
-                          {availableStock}
-                        </td>
-                        <td>{item.thresholdStock}</td>
-                        <td>{item.unit}</td>
-                        <td>
-                          <span className={`inventory-list-table__status inventory-list-table__status--${item.status}`}>
-                            {STATUS_LABELS[item.status]}
-                          </span>
-                        </td>
-                        <td className="inventory-list-table__actions">
-                          <button
-                            type="button"
-                            className="inventory-list-table__edit-btn"
-                            onClick={() => onSelectItem(item.id)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="inventory-list-table__branch-btn"
-                            onClick={() => onViewBranchStock(item.id)}
-                            title="View branch distribution"
-                          >
-                            🏢 Branches
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                  filtered.map((item) => (
+                    <tr key={item.id}>
+                      <td className="inventory-list-table__name">{item.name}</td>
+                      <td>{item.category}</td>
+                      <td className="inventory-list-table__stock">{item.totalStock}</td>
+                      <td className="inventory-list-table__assigned">
+                        {item.allocatedToBranches}
+                      </td>
+                      <td className="inventory-list-table__assigned">
+                        {item.assignedToGuards}
+                      </td>
+                      <td
+                        className={`inventory-list-table__available${
+                          item.unallocated <= 0
+                            ? " inventory-list-table__available--zero"
+                            : ""
+                        }`}
+                      >
+                        {item.unallocated}
+                      </td>
+                      <td>{item.thresholdStock}</td>
+                      <td>{item.unit}</td>
+                      <td>
+                        <span
+                          className={`inventory-list-table__status inventory-list-table__status--${item.status}`}
+                        >
+                          {STATUS_LABELS[item.status]}
+                        </span>
+                      </td>
+                      <td className="inventory-list-table__actions">
+                        <button
+                          type="button"
+                          className="inventory-list-table__edit-btn"
+                          onClick={() => onSelectItem(item.id)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="inventory-list-table__branch-btn"
+                          onClick={() => onViewBranchStock(item.id)}
+                          title="View branch distribution"
+                        >
+                          🏢 Branches
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -184,4 +194,3 @@ export function InventoryListScreen({
     </AppScreenLayout>
   );
 }
-

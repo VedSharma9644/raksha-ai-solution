@@ -10,6 +10,7 @@ type ApiReliefRequest = {
   reasonLabel: string;
   note: string;
   status: ReliefRequestStatus;
+  siteId?: string;
   siteName: string;
   postName: string;
   dutyDate: string;
@@ -40,6 +41,7 @@ function toReliefRequest(item: ApiReliefRequest): ReliefRequest {
     reasonLabel: item.reasonLabel,
     note: item.note,
     status: item.status,
+    siteId: item.siteId ?? "",
     siteName: item.siteName,
     postName: item.postName,
     dutyDate: item.dutyDate,

@@ -35,7 +35,11 @@ export function GuardInventoryPanel({
   const [quantity, setQuantity] = useState("1");
 
   const selectedRow = inventoryRows.find((r) => r.itemId === selectedItemId);
-  const assignableRows = inventoryRows.filter((r) => r.availableStock > 0);
+  const assignedItemIds = new Set(assignments.map((a) => a.itemId));
+  // Already-assigned items are edited via quantity on the row — don't re-add
+  const assignableRows = inventoryRows.filter(
+    (r) => r.availableStock > 0 && !assignedItemIds.has(r.itemId),
+  );
 
   async function handleAdd() {
     if (!selectedItemId || !selectedRow) return;
@@ -109,8 +113,9 @@ export function GuardInventoryPanel({
       {/* ── Add item row ── */}
       {assignableRows.length === 0 ? (
         <p className="guard-inventory-panel__no-stock">
-          No stock available for this branch yet.{" "}
-          Go to <strong>Inventory</strong> and use <em>"Set Stock"</em> to allocate items to this branch first.
+          {assignedItemIds.size > 0
+            ? "All available items are already assigned. Change the quantity on a row above to issue more."
+            : "No stock available for this branch yet. Ask an agency admin to allocate items to this branch from the Admin Panel inventory first."}
         </p>
       ) : (
       <div className="guard-inventory-panel__add-row">

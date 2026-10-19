@@ -56,10 +56,15 @@ export function createMoneyOutRoutes(): Router {
         statusRaw === "all"
           ? statusRaw
           : "all";
+      const branchId =
+        typeof req.query.branchId === "string" && req.query.branchId.trim()
+          ? req.query.branchId.trim()
+          : undefined;
       const advances = await listEmployeeAdvances({
         agencyId: req.agencyId!,
         guardId,
         status,
+        branchId,
       });
       res.json({ advances });
     } catch (error: unknown) {
@@ -186,6 +191,10 @@ export function createMoneyOutRoutes(): Router {
         typeof req.query.category === "string"
           ? (req.query.category as ExpenseCategory)
           : undefined;
+      const branchId =
+        typeof req.query.branchId === "string" && req.query.branchId.trim()
+          ? req.query.branchId.trim()
+          : undefined;
       const expenses = await listAgencyExpenses({
         agencyId: req.agencyId!,
         year: Number.isInteger(year) ? year : undefined,
@@ -193,6 +202,7 @@ export function createMoneyOutRoutes(): Router {
         siteId,
         guardId,
         category,
+        branchId,
       });
       res.json({ expenses });
     } catch (error: unknown) {

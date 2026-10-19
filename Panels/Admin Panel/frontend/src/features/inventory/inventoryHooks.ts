@@ -8,24 +8,28 @@ import {
   addInventoryItem,
 } from "@raskha/inventory-management";
 import type { InventoryItem } from "@raskha/inventory-management";
-import {
-  listBranchStockByAgency,
-  listBranchStockByItem,
-  upsertBranchStock,
-} from "@raskha/branch-stock";
 import type { BranchStock } from "@raskha/branch-stock";
+import { adminFetch } from "@raskha/shared";
 import { db } from "../../lib/firebase";
 import { useAuthContext } from "../authentication";
-import { useBranchContext } from "../branches";
 import type { InventoryItemFormValues } from "./inventoryFormTypes";
 import { APP_ROUTES } from "../../app/routePaths";
 
-// ── List (admin, agency-wide master items) ───────────────────────────────────
+/** Master catalog row enriched with branch distribution totals. */
+export interface InventoryCatalogRow extends InventoryItem {
+  /** Sum of allocatedStock across all branches */
+  allocatedToBranches: number;
+  /** Sum of assignedStock across all branches */
+  assignedToGuards: number;
+  /** totalStock − allocatedToBranches (still free to distribute) */
+  unallocated: number;
+}
+
+// ── List (admin, agency-wide master items + branch totals) ───────────────────
 
 export function useInventoryList() {
   const { agency } = useAuthContext();
-  const { activeBranchId } = useBranchContext();
-  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [items, setItems] = useState<InventoryCatalogRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [error, setError] = useState("");
@@ -34,16 +38,37 @@ export function useInventoryList() {
     if (!agency) return;
     setIsLoading(true);
     try {
-      const data = await listInventoryItemsByAgency(db, agency.id);
-      // Items are now agency-wide; activeBranchId is unused for master list
-      setItems(activeBranchId ? data : data);
+      const [master, stocks] = await Promise.all([
+        listInventoryItemsByAgency(db, agency.id),
+        adminFetch<BranchStock[]>("/api/branch-stock").catch(() => [] as BranchStock[]),
+      ]);
+
+      const byItem = new Map<string, { allocated: number; assigned: number }>();
+      for (const s of stocks) {
+        const cur = byItem.get(s.itemId) ?? { allocated: 0, assigned: 0 };
+        cur.allocated += Number(s.allocatedStock ?? 0);
+        cur.assigned += Number(s.assignedStock ?? 0);
+        byItem.set(s.itemId, cur);
+      }
+
+      setItems(
+        master.map((item) => {
+          const totals = byItem.get(item.id) ?? { allocated: 0, assigned: 0 };
+          return {
+            ...item,
+            allocatedToBranches: totals.allocated,
+            assignedToGuards: totals.assigned,
+            unallocated: Math.max(0, item.totalStock - totals.allocated),
+          };
+        })
+      );
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to load inventory.");
     } finally {
       setIsLoading(false);
     }
-  }, [agency, activeBranchId]);
+  }, [agency]);
 
   useEffect(() => {
     void load();
@@ -172,8 +197,12 @@ export function useBranchStockByItem(itemId: string) {
   const load = useCallback(async () => {
     if (!agency || !itemId) return;
     setIsLoading(true);
+    setError("");
     try {
-      const data = await listBranchStockByItem(db, agency.id, itemId);
+      // Backend uses Admin SDK — avoids client Firestore permission issues
+      const data = await adminFetch<BranchStock[]>(
+        `/api/branch-stock/by-item/${encodeURIComponent(itemId)}`
+      );
       setBranchStocks(data);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -200,7 +229,7 @@ export function useBranchStockByAgency() {
     if (!agency) return;
     setIsLoading(true);
     try {
-      const data = await listBranchStockByAgency(db, agency.id);
+      const data = await adminFetch<BranchStock[]>("/api/branch-stock");
       setBranchStocks(data);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -234,25 +263,30 @@ export function useAllocateToBranch(onSuccess?: () => void) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  async function allocate(params: AllocateToBranchParams) {
-    if (!agency) { setError("Not authenticated."); return; }
+  async function allocate(params: AllocateToBranchParams): Promise<boolean> {
+    if (!agency) { setError("Not authenticated."); return false; }
     setError("");
     setIsSaving(true);
     try {
-      await upsertBranchStock(db, {
-        agencyId:       agency.id,
-        branchId:       params.branchId,
-        itemId:         params.itemId,
-        itemName:       params.itemName,
-        category:       params.category,
-        unit:           params.unit,
-        allocatedStock: params.allocatedStock,
-        thresholdStock: params.thresholdStock,
+      // Backend uses Admin SDK — bypasses client Firestore security rules
+      await adminFetch("/api/branch-stock/allocate", {
+        method: "PUT",
+        body: JSON.stringify({
+          branchId:       params.branchId,
+          itemId:         params.itemId,
+          itemName:       params.itemName,
+          category:       params.category,
+          unit:           params.unit,
+          allocatedStock: params.allocatedStock,
+          thresholdStock: params.thresholdStock,
+        }),
       });
       onSuccess?.();
+      return true;
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to allocate stock.");
+      return false;
     } finally {
       setIsSaving(false);
     }

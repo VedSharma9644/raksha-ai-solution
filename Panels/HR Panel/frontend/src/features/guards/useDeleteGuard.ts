@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { deleteGuard } from "@raskha/guard-management";
+import { adminFetch } from "@raskha/shared";
 import { useConfirmDialog } from "../../components/ConfirmDialog";
-import { db } from "../../lib/firebase";
 
 export function useDeleteGuard() {
   const { confirm } = useConfirmDialog();
@@ -26,7 +25,10 @@ export function useDeleteGuard() {
     setIsDeleting(true);
 
     try {
-      await deleteGuard(db, guardId);
+      // Admin SDK via backend — HR cannot delete guards via client Firestore rules
+      await adminFetch(`/api/guards/${encodeURIComponent(guardId)}`, {
+        method: "DELETE",
+      });
       onSuccess?.();
     } catch (err: unknown) {
       const e = err as { message?: string };

@@ -10,6 +10,7 @@ import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
+import { useBranchContext } from "../../branches";
 import { PayrollGuardBreakdownModal } from "../PayrollGuardBreakdownModal";
 import {
   fetchPayrollPreviewApi,
@@ -33,6 +34,7 @@ function monthName(year: number, month: number): string {
 
 export function PayrollListScreen() {
   const navigate = useNavigate();
+  const { activeBranchId } = useBranchContext();
   const now = new Date();
   const [runs, setRuns] = useState<PayrollRun[]>([]);
   const [year, setYear] = useState(String(now.getFullYear()));
@@ -64,7 +66,7 @@ export function PayrollListScreen() {
     setIsLoadingPreview(true);
     setError("");
     try {
-      const data = await fetchPayrollPreviewApi(y, m);
+      const data = await fetchPayrollPreviewApi(y, m, activeBranchId);
       setPreview(data);
       const drafts: Record<string, string> = {};
       for (const line of data.lines) {
@@ -110,9 +112,15 @@ export function PayrollListScreen() {
 
   useEffect(() => {
     void loadRuns();
-    void loadPreview(now.getFullYear(), now.getMonth() + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial current month only
   }, []);
+
+  useEffect(() => {
+    const parsed = parsedYearMonth();
+    if (parsed) {
+      void loadPreview(parsed.y, parsed.m);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- branch/period reload
+  }, [activeBranchId, year, month]);
 
   function parsedYearMonth(): { y: number; m: number } | null {
     const y = Number(year);
@@ -141,7 +149,11 @@ export function PayrollListScreen() {
     setIsGenerating(true);
     setError("");
     try {
-      const { run } = await generatePayrollRunApi(parsed.y, parsed.m);
+      const { run } = await generatePayrollRunApi(
+        parsed.y,
+        parsed.m,
+        activeBranchId
+      );
       navigate(payrollRunPath(run.id));
     } catch (err: unknown) {
       const e = err as { message?: string };

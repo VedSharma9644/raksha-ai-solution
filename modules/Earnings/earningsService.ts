@@ -34,6 +34,7 @@ type SiteDoc = {
   siteName?: string;
   clientName?: string;
   status?: string;
+  branchId?: string | null;
   clientRateMaleMonthly?: number;
   clientRateFemaleMonthly?: number;
 };
@@ -46,8 +47,18 @@ type GuardDoc = {
   gender?: string;
   salary?: string;
   assignedSiteId?: string;
+  branchId?: string | null;
   status?: string;
 };
+
+function matchesBranch(
+  recordBranchId: string | null | undefined,
+  filterBranchId: string | null | undefined
+): boolean {
+  if (!filterBranchId) return true;
+  const value = recordBranchId == null ? "" : String(recordBranchId).trim();
+  return value === "" || value === filterBranchId;
+}
 
 type PayrollLineDoc = {
   guardId?: string;
@@ -264,8 +275,10 @@ export async function buildEarningsSummary(params: {
   agencyId: string;
   from: YearMonth;
   to: YearMonth;
+  /** When set, only sites (and related costs) for this branch + unassigned. */
+  branchId?: string | null;
 }): Promise<EarningsSummary> {
-  const { agencyId, from, to } = params;
+  const { agencyId, from, to, branchId } = params;
   if (!validateYearMonth(from.year, from.month) || !validateYearMonth(to.year, to.month)) {
     throw Object.assign(new Error("Provide a valid year and month range."), {
       statusCode: 400,
@@ -287,7 +300,8 @@ export async function buildEarningsSummary(params: {
 
   const sites = sitesSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }) as SiteDoc)
-    .filter((s) => (s.status ?? "active") !== "inactive");
+    .filter((s) => (s.status ?? "active") !== "inactive")
+    .filter((s) => matchesBranch(s.branchId, branchId));
 
   const guards = guardsSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }) as GuardDoc)
@@ -344,6 +358,14 @@ export async function buildEarningsSummary(params: {
     knownSiteIds,
   });
 
+  // When branch-scoped, expenses for other branches' sites must not become "general"
+  let unattributedExpenseRows = expenseTotals.unattributedRows ?? [];
+  if (branchId) {
+    unattributedExpenseRows = unattributedExpenseRows.filter(
+      (e) => !String(e.siteId ?? "").trim()
+    );
+  }
+
   const siteRows: SiteEarningsRow[] = [];
   for (const site of sites) {
     const assigned = guardsBySite.get(site.id) ?? [];
@@ -388,23 +410,19 @@ export async function buildEarningsSummary(params: {
 
   siteRows.sort((a, b) => a.siteName.localeCompare(b.siteName));
 
-  const unattributedExpenses: SiteEarningsExpenseCost[] = (
-    expenseTotals.unattributedRows ?? []
-  ).map((e) => ({
-    expenseId: e.id,
-    date: e.date,
-    category: expenseCategoryLabel(e.category),
-    amount: e.amount,
-    guardName: e.guardName || "",
-    note: e.note || "",
-  }));
+  const unattributedExpenses: SiteEarningsExpenseCost[] =
+    unattributedExpenseRows.map((e) => ({
+      expenseId: e.id,
+      date: e.date,
+      category: expenseCategoryLabel(e.category),
+      amount: e.amount,
+      guardName: e.guardName || "",
+      note: e.note || "",
+    }));
 
   // Prefer line-item sum so Net always matches what we list as general expenses.
-  const generalFromRows = roundMoney(
-    unattributedExpenses.reduce((s, e) => s + e.amount, 0)
-  );
   const moneyOutUnattributedExpenses = roundMoney(
-    generalFromRows > 0 ? generalFromRows : expenseTotals.unattributed
+    unattributedExpenses.reduce((s, e) => s + e.amount, 0)
   );
 
   const moneyIn = roundMoney(siteRows.reduce((s, r) => s + r.moneyIn, 0));
@@ -414,6 +432,9 @@ export async function buildEarningsSummary(params: {
   // Agency money out = all site costs + agency-level spend (no site / orphan site).
   const moneyOut = roundMoney(siteMoneyOut + moneyOutUnattributedExpenses);
   const net = roundMoney(moneyIn - moneyOut);
+  const siteExpenseTotal = roundMoney(
+    [...expenseTotals.bySiteId.values()].reduce((s, n) => s + n, 0)
+  );
 
   return {
     from,
@@ -421,7 +442,7 @@ export async function buildEarningsSummary(params: {
     monthCount: months.length,
     moneyIn,
     moneyOut,
-    moneyOutExpenses: expenseTotals.total,
+    moneyOutExpenses: roundMoney(siteExpenseTotal + moneyOutUnattributedExpenses),
     moneyOutUnattributedExpenses,
     unattributedExpenses,
     net,
@@ -553,6 +574,7 @@ export async function exportEarningsCsv(params: {
   period: EarningsReportPeriod;
   year: number;
   month: number;
+  branchId?: string | null;
 }): Promise<{ csv: string; filename: string }> {
   const { from, to } = resolveReportRange(
     params.period,
@@ -563,6 +585,7 @@ export async function exportEarningsCsv(params: {
     agencyId: params.agencyId,
     from,
     to,
+    branchId: params.branchId,
   });
   const csv = earningsSummaryToCsv(summary);
   const filename = `earnings-${params.period}-${params.year}-${String(params.month).padStart(2, "0")}.csv`;

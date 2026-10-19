@@ -8,9 +8,9 @@
   margin: 0;
   padding: 0.75rem 0.9rem;
   border-radius: 0.65rem;
-  background: #fef2f2;
+  background: var(--color-error-container);
   border: 1px solid #fecaca;
-  color: #991b1b;
+  color: var(--color-error);
 }
 
 .earnings-detail__hint {
@@ -24,7 +24,7 @@
   padding: 0.85rem 1rem;
   border-radius: 0.85rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: #f8fafc;
+  background: var(--color-surface-muted);
   font-size: 0.86rem;
   line-height: 1.5;
   color: var(--color-text-secondary, #6b7280);
@@ -43,17 +43,17 @@
   padding: 1.05rem 1.1rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
   min-height: 6.5rem;
 }
 
 .earnings-detail__totals > div:first-child {
-  background: linear-gradient(160deg, #ecfdf5 0%, #fff 58%);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
   border-color: #a7f3d0;
 }
 
 .earnings-detail__totals > div:nth-child(2) {
-  background: linear-gradient(160deg, #fff7ed 0%, #fff 58%);
+  background: color-mix(in srgb, var(--color-on-warning-container) 12%, var(--color-surface));
   border-color: #fed7aa;
 }
 
@@ -71,12 +71,12 @@
 }
 
 .earnings-detail__net--profit {
-  background: linear-gradient(160deg, #ecfdf5 0%, #fff 55%) !important;
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface)) !important;
   border-color: #6ee7b7 !important;
 }
 
 .earnings-detail__net--loss {
-  background: linear-gradient(160deg, #fef2f2 0%, #fff 55%) !important;
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface)) !important;
   border-color: #fca5a5 !important;
 }
 
@@ -96,19 +96,19 @@
 
 .earnings-detail__net--profit em {
   background: #d1fae5;
-  color: #065f46;
+  color: var(--color-on-success-container);
 }
 
 .earnings-detail__net--loss em {
   background: #fee2e2;
-  color: #991b1b;
+  color: var(--color-error);
 }
 
 .earnings-detail__section {
   padding: 1.1rem 1.2rem 1.2rem;
   border-radius: 1rem;
   border: 1px solid var(--color-border, #e5e7eb);
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--color-surface));
 }
 
 .earnings-detail__section-title {

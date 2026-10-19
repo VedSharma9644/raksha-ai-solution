@@ -24,9 +24,15 @@
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-on-surface);
+  color-scheme: inherit;
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base);
+}
+
+.select-field__input option {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
 }
 
 .select-field__input:focus {

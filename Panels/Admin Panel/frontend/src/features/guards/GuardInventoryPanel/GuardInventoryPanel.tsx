@@ -32,11 +32,14 @@ export function GuardInventoryPanel({
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState("1");
 
-  // Compute availableStock for each item
-  const itemsWithAvailable = inventoryItems.map((item) => ({
-    ...item,
-    availableStock: item.totalStock - (item.assignedStock ?? 0),
-  }));
+  const assignedItemIds = new Set(assignments.map((a) => a.itemId));
+  // Compute availableStock; hide items already on this guard (edit qty instead)
+  const itemsWithAvailable = inventoryItems
+    .map((item) => ({
+      ...item,
+      availableStock: item.totalStock - (item.assignedStock ?? 0),
+    }))
+    .filter((item) => item.availableStock > 0 && !assignedItemIds.has(item.id));
 
   const selectedItem = itemsWithAvailable.find((i) => i.id === selectedItemId);
 

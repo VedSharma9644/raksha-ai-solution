@@ -7,7 +7,6 @@ import {
   getGuardById,
   listGuardsByAgency,
   updateGuard,
-  deleteGuard,
 } from "@raskha/guard-management";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
 
@@ -192,10 +191,28 @@ export function createGuardRoutes(db: Firestore): Router {
     }
   });
 
-  // DELETE /api/guards/:id — delete a guard
-  router.delete("/:id", async (req: Request, res: Response) => {
+  // DELETE /api/guards/:id — delete a guard (Admin SDK — works for HR callers)
+  router.delete("/:id", requireAgencyCaller, async (req: AgencyAuthRequest, res: Response) => {
     try {
-      await deleteGuard(db, req.params.id);
+      const adminDb = getFirestore();
+      const { id } = req.params;
+      const snap = await adminDb.collection("guards").doc(id).get();
+      if (!snap.exists) {
+        res.status(404).json({ error: "Guard not found." });
+        return;
+      }
+      const data = snap.data() as { agencyId?: string };
+      if (data.agencyId !== req.agencyId) {
+        res.status(403).json({ error: "Access denied." });
+        return;
+      }
+      await adminDb.collection("guards").doc(id).delete();
+      // Best-effort: remove Auth user (may not exist for all records)
+      try {
+        await getAuth().deleteUser(id);
+      } catch {
+        /* ignore missing auth user */
+      }
       res.json({ success: true });
     } catch (error: unknown) {
       const err = error as { message?: string };

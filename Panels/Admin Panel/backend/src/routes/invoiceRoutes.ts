@@ -75,11 +75,16 @@ export function createInvoiceRoutes(): Router {
         req.query.month != null ? Number(req.query.month) : undefined;
       const siteId =
         typeof req.query.siteId === "string" ? req.query.siteId : undefined;
+      const branchId =
+        typeof req.query.branchId === "string" && req.query.branchId.trim()
+          ? req.query.branchId.trim()
+          : undefined;
       const invoices = await listSiteInvoices({
         agencyId: req.agencyId!,
         year: Number.isInteger(year) ? year : undefined,
         month: Number.isInteger(month) ? month : undefined,
         siteId,
+        branchId,
       });
       res.json({ invoices });
     } catch (error: unknown) {

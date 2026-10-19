@@ -5,18 +5,30 @@ import type {
 } from "@raskha/earnings";
 import { adminFetch, adminFetchBlob } from "@raskha/shared";
 
+function withBranch(
+  qs: URLSearchParams,
+  branchId?: string | null
+): URLSearchParams {
+  if (branchId) qs.set("branchId", branchId);
+  return qs;
+}
+
 export async function fetchEarningsSummaryApi(params: {
   fromYear: number;
   fromMonth: number;
   toYear: number;
   toMonth: number;
+  branchId?: string | null;
 }): Promise<EarningsSummary> {
-  const qs = new URLSearchParams({
-    fromYear: String(params.fromYear),
-    fromMonth: String(params.fromMonth),
-    toYear: String(params.toYear),
-    toMonth: String(params.toMonth),
-  });
+  const qs = withBranch(
+    new URLSearchParams({
+      fromYear: String(params.fromYear),
+      fromMonth: String(params.fromMonth),
+      toYear: String(params.toYear),
+      toMonth: String(params.toMonth),
+    }),
+    params.branchId
+  );
   const data = await adminFetch<{ summary: EarningsSummary }>(
     `/api/earnings/summary?${qs}`,
     { errorMessage: "You must be signed in to view earnings." }
@@ -48,12 +60,16 @@ export async function downloadEarningsCsvApi(params: {
   period: EarningsReportPeriod;
   year: number;
   month: number;
+  branchId?: string | null;
 }): Promise<void> {
-  const qs = new URLSearchParams({
-    period: params.period,
-    year: String(params.year),
-    month: String(params.month),
-  });
+  const qs = withBranch(
+    new URLSearchParams({
+      period: params.period,
+      year: String(params.year),
+      month: String(params.month),
+    }),
+    params.branchId
+  );
   const blob = await adminFetchBlob(`/api/earnings/export.csv?${qs}`, {
     errorMessage: "You must be signed in to view earnings.",
   });

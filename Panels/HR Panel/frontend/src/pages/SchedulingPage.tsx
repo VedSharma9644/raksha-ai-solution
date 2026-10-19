@@ -4,16 +4,31 @@ import { SchedulingScreen } from "../features/scheduling";
 import { useScheduling } from "../features/scheduling/useScheduling";
 import { useSaveShiftAssignment } from "../features/scheduling/useSaveShiftAssignment";
 import { useGuardList } from "../features/guards/useGuardList";
+import { useSiteList } from "../features/sites/useSiteList";
 
 export function SchedulingPage() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
+  const { sites, isLoading: sitesLoading } = useSiteList();
 
   const id = siteId ?? "";
-  const { site, assignments, isLoading, error, reload } = useScheduling(id);
+  // useSiteList already scopes to HR-assigned sites
+  const siteAllowed = !id || sites.some((s) => s.id === id);
+
+  const { site, assignments, isLoading, error, reload } = useScheduling(
+    !sitesLoading && siteAllowed ? id : ""
+  );
   const { guards } = useGuardList();
   const { isSaving, saveError, createAssignment, updateAssignment, removeAssignment } =
     useSaveShiftAssignment();
+
+  if (!sitesLoading && id && !siteAllowed) {
+    return (
+      <p role="alert" style={{ padding: "2rem", color: "red" }}>
+        You do not have access to this site.
+      </p>
+    );
+  }
 
   if (!isLoading && !site && !error) {
     return <p style={{ padding: "2rem" }}>Site not found.</p>;
