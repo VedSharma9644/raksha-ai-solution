@@ -102,17 +102,30 @@ export function RelieveSubmitActions({
         onPress={() => {
           void submit();
         }}
+        disabled={submitting || submitted}
+        accessibilityRole="button"
+        accessibilityLabel={ctaLabel}
       >
-        <MaterialIcons name={ctaIcon} size={26} color={appColors.onPrimary} />
-        <Text style={styles.primaryLabel}>{ctaLabel}</Text>
+        <MaterialIcons
+          name={ctaIcon}
+          size={22}
+          color={appColors.onPrimary}
+          style={styles.primaryIcon}
+        />
+        <Text style={styles.primaryLabel} numberOfLines={1}>
+          {ctaLabel}
+        </Text>
       </Pressable>
 
       <Pressable
         style={({ pressed }) => [styles.historyButton, pressed && styles.historyButtonPressed]}
         onPress={openIncomingReliefRequests}
+        accessibilityRole="button"
       >
-        <MaterialIcons name="history" size={22} color={appColors.onSurfaceVariant} />
-        <Text style={styles.historyLabel}>{relieveAGuardDefaults.historyLabel}</Text>
+        <MaterialIcons name="history" size={20} color={appColors.onSurfaceVariant} />
+        <Text style={styles.historyLabel} numberOfLines={1}>
+          {relieveAGuardDefaults.historyLabel}
+        </Text>
       </Pressable>
 
       {showToast ? (

@@ -48,10 +48,33 @@ export type MarkPunchInParams = {
 const formatPunchTime = formatIstPunchTime;
 const formatPunchDate = formatIstPunchDate;
 
+/** Whole meters for UI (GPS accuracy often arrives with long floats). */
+function formatAccuracyMeters(meters: number): string {
+  const n = Number.isFinite(meters) ? Math.max(0, Math.round(meters)) : 0;
+  return `${n}m`;
+}
+
+function formatGeofenceDetail(params: {
+  failed: boolean;
+  accuracyMeters: number;
+}): string {
+  return `Site Match: ${params.failed ? "0%" : "100%"} (Accuracy: ${formatAccuracyMeters(params.accuracyMeters)})`;
+}
+
 function decodeBase64Image(selfieBase64: string): Buffer {
   const cleaned = selfieBase64.replace(/^data:image\/\w+;base64,/, "");
   return Buffer.from(cleaned, "base64");
 }
+
+/**
+ * All attendance selfies live under this prefix so GCS Object Lifecycle can
+ * delete only images after retention without touching Firestore or other files.
+ * Retention: 120 days (~4 months) — see scripts/storage/attendance-selfie-lifecycle.json
+ */
+export const ATTENDANCE_SELFIE_STORAGE_PREFIX = "attendance/";
+
+/** Days before GCS lifecycle deletes selfie objects (must match lifecycle JSON). */
+export const ATTENDANCE_SELFIE_RETENTION_DAYS = 120;
 
 function buildSelfieStoragePath(params: {
   agencyId: string;
@@ -66,7 +89,7 @@ function buildSelfieStoragePath(params: {
   const suffix = params.loadTestId?.trim()
     ? `-${params.loadTestId.trim().slice(0, 64)}`
     : "";
-  return `attendance/${agencyId}/${siteId}/${guardId}/${params.purpose}-${Date.now()}${suffix}.jpg`;
+  return `${ATTENDANCE_SELFIE_STORAGE_PREFIX}${agencyId}/${siteId}/${guardId}/${params.purpose}-${Date.now()}${suffix}.jpg`;
 }
 
 function publicSelfieUrl(bucketName: string, storagePath: string): string {
@@ -178,6 +201,11 @@ export type OpenPunchInRecord = {
   selfieUrl?: string;
   punchInStatus?: string;
   minutesLate?: number;
+};
+
+/** Ended punch-in for a duty day (shift completed / handed over). */
+export type CompletedPunchInRecord = OpenPunchInRecord & {
+  punchedOutAt: Date | null;
 };
 
 function parseShiftHhMm(value: string): { hours: number; minutes: number } | null {
@@ -500,6 +528,102 @@ export async function getTodayOpenPunchIn(
     }
   }
 
+  return best;
+}
+
+function mapCompletedPunchIn(docSnap: {
+  id: string;
+  data: () => Record<string, unknown>;
+}): CompletedPunchInRecord | null {
+  const data = docSnap.data();
+  if (data.type && data.type !== "punch_in") {
+    return null;
+  }
+  if (data.shiftStatus !== "ended") {
+    return null;
+  }
+  const punchedAtRaw = data.punchedAt as Timestamp | undefined;
+  if (!punchedAtRaw?.toMillis) {
+    return null;
+  }
+  const punchedOutRaw = data.punchedOutAt as Timestamp | undefined;
+  const minutesLateRaw = Number(data.minutesLate);
+  const dutyDateRaw =
+    typeof data.dutyDate === "string" && data.dutyDate.trim()
+      ? data.dutyDate.trim()
+      : undefined;
+  return {
+    id: docSnap.id,
+    punchedAt: punchedAtRaw.toDate(),
+    punchedOutAt: punchedOutRaw?.toMillis
+      ? punchedOutRaw.toDate()
+      : null,
+    dutyDate: dutyDateRaw,
+    siteName:
+      (typeof data.siteName === "string" && data.siteName) || "Assigned Site",
+    postName:
+      (typeof data.postName === "string" && data.postName) || "Assigned Post",
+    selfieUrl: typeof data.selfieUrl === "string" ? data.selfieUrl : undefined,
+    punchInStatus:
+      typeof data.punchInStatus === "string" ? data.punchInStatus : undefined,
+    minutesLate: Number.isFinite(minutesLateRaw) ? minutesLateRaw : undefined,
+  };
+}
+
+async function findCompletedPunchForDutyDate(
+  guardId: string,
+  dutyDate: string
+): Promise<CompletedPunchInRecord | null> {
+  const db = getFirestore();
+  try {
+    const indexed = await db
+      .collection(ATTENDANCE_COLLECTION)
+      .where("guardId", "==", guardId)
+      .where("dutyDate", "==", dutyDate)
+      .get();
+
+    let best: CompletedPunchInRecord | null = null;
+    for (const docSnap of indexed.docs) {
+      const mapped = mapCompletedPunchIn(docSnap);
+      if (!mapped) {
+        continue;
+      }
+      if (!best || mapped.punchedAt.getTime() > best.punchedAt.getTime()) {
+        best = mapped;
+      }
+    }
+    return best;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Most recent completed (ended) punch-in for today's or overnight duty.
+ * Used so Home can show COMPLETED instead of MISSED after punch-out.
+ */
+export async function getTodayCompletedPunchIn(
+  guardId: string,
+  preferredDutyDate?: string | null
+): Promise<CompletedPunchInRecord | null> {
+  const todayKey = toDutyDateKey();
+  const yesterdayKey = addDaysToDutyDate(todayKey, -1);
+  const preferred = preferredDutyDate?.trim() || "";
+
+  const dutyDates = preferred
+    ? Array.from(new Set([preferred, todayKey, yesterdayKey]))
+    : [todayKey, yesterdayKey];
+
+  let best: CompletedPunchInRecord | null = null;
+  for (const dutyDate of dutyDates) {
+    const candidate = await findCompletedPunchForDutyDate(guardId, dutyDate);
+    if (!candidate) {
+      continue;
+    }
+    if (!best || candidate.punchedAt.getTime() > best.punchedAt.getTime()) {
+      best = candidate;
+    }
+  }
   return best;
 }
 
@@ -1038,15 +1162,31 @@ export async function markIntervalCheckin(
     punchInAt: open.punchedAt,
     lastCheckinAt,
     completedCount: prior.length,
+  const dutyDate =
+    open.dutyDate?.trim() || toDutyDateKey(open.punchedAt);
+  const shiftEndsAt = shiftWindowIst(
+    dutyDate,
+    params.guard.shiftFrom,
+    params.guard.shiftTo
+  ).end;
+  const window = computeIntervalCheckinStatus({
+    intervalMinutes,
+    shiftActive: true,
+    punchInAt: open.punchedAt,
+    lastCheckinAt,
+    completedCount: prior.length,
+    shiftEndsAt,
   });
 
   if (window.status !== "due" && window.status !== "late") {
-    if (window.status === "missed") {
+    if (window.status === "complete") {
       throw Object.assign(
         new Error(
-          "This check-in was missed. Wait for the next check-in window."
+          "Interval photo check-ins for this shift are done. Use End shift when you are ready to leave."
         ),
         { statusCode: 400 }
+      );
+    }
       );
     }
     if (window.status === "waiting" && window.dueAt) {
@@ -1106,7 +1246,6 @@ export async function markIntervalCheckin(
   const docRef = await db.collection(ATTENDANCE_COLLECTION).add({
     guardId: params.guard.guardId,
     agencyId: params.guard.agencyId,
-    siteId: params.guard.assignedSiteId,
     type: "interval_checkin",
     shiftPunchInId: open.id,
     dutyDate,

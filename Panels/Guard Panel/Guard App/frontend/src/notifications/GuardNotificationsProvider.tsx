@@ -17,8 +17,12 @@ import {
   unregisterPushToken,
   type GuardNotificationDto,
 } from '../api/guard-api';
+import { useForegroundInterval } from '../hooks/useForegroundInterval';
 import { useGuardAppNavigation } from '../navigation/useGuardAppNavigation';
-import { requestRosterSync } from '../sync/rosterSync';
+import {
+  NOTIFICATIONS_FOREGROUND_POLL_MS,
+  requestRosterSync,
+} from '../sync/rosterSync';
 import {
   addNotificationReceivedListener,
   addNotificationResponseReceivedListener,
@@ -224,37 +228,41 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
     }
   }, [isAuthenticated]);
 
-  // Inbox polling + focus refresh for near-realtime updates
+  // Inbox poll only while foregrounded; one refresh on resume via the hook.
   useEffect(() => {
     if (!isAuthenticated || !authToken) {
       return;
     }
-
     void refresh();
-    const interval = setInterval(() => {
-      void refresh();
-    }, 25_000);
+  }, [authToken, isAuthenticated, refresh]);
 
+  useForegroundInterval(
+    () => {
+      void refresh();
+    },
+    NOTIFICATIONS_FOREGROUND_POLL_MS,
+    Boolean(isAuthenticated && authToken),
+  );
+
+  // Local shift reminders when returning to foreground (no network poll).
+  useEffect(() => {
+    if (!isAuthenticated || !guardUser) {
+      return;
+    }
     const onAppState = (state: AppStateStatus) => {
-      if (state === 'active') {
-        void refresh();
-        if (guardUser) {
-          void rescheduleShiftReminders({
-            shiftFrom: guardUser.shiftFrom,
-            shiftTo: guardUser.shiftTo,
-            siteName: guardUser.siteName,
-            shiftActive,
-          });
-        }
+      if (state !== 'active') {
+        return;
       }
+      void rescheduleShiftReminders({
+        shiftFrom: guardUser.shiftFrom,
+        shiftTo: guardUser.shiftTo,
+        siteName: guardUser.siteName,
+        shiftActive,
+      });
     };
     const sub = AppState.addEventListener('change', onAppState);
-
-    return () => {
-      clearInterval(interval);
-      sub.remove();
-    };
-  }, [authToken, guardUser, isAuthenticated, refresh, shiftActive]);
+    return () => sub.remove();
+  }, [guardUser, isAuthenticated, shiftActive]);
 
   // Foreground + tap handlers (local emitter APIs — safe in Expo Go)
   useEffect(() => {

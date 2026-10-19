@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppAlertProvider } from './src/alerts/AppAlertProvider';
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { LanguageProvider } from './src/i18n';
+import { GuardDutyAssignmentProvider } from './src/hooks/useGuardDutyAssignment';
 import { GuardAppNavigationProvider } from './src/navigation/GuardAppNavigationProvider';
 import { GuardAppRoot } from './src/navigation/GuardAppRoot';
 import { GuardNotificationsProvider } from './src/notifications/GuardNotificationsProvider';
@@ -41,9 +42,11 @@ export default function App() {
         <LanguageProvider>
           <AppAlertProvider>
             <GuardAppNavigationProvider>
-              <GuardNotificationsProvider>
-                <GuardAppRoot />
-              </GuardNotificationsProvider>
+              <GuardDutyAssignmentProvider>
+                <GuardNotificationsProvider>
+                  <GuardAppRoot />
+                </GuardNotificationsProvider>
+              </GuardDutyAssignmentProvider>
             </GuardAppNavigationProvider>
           </AppAlertProvider>
         </LanguageProvider>

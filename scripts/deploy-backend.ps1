@@ -178,7 +178,8 @@ $envYaml = ($envVars | ForEach-Object {
 }) -join "`n"
 [System.IO.File]::WriteAllText($envFile, $envYaml + "`n", $utf8NoBom)
 
-# Guard morning-rush: warm instance, 2 CPU, higher concurrency for signed-URL + light JSON
+# Guard: 2 CPU / 1Gi for selfie signed-URL bursts; min 0 to avoid idle warm-instance cost
+# (accept ~1–2s cold start after idle — polls pause in background so overnight scale-to-zero is fine)
 $Memory = "512Mi"
 $Cpu = "1"
 $MinInstances = 0
@@ -187,7 +188,7 @@ $Concurrency = 80
 if ($Panel -eq "guard") {
   $Memory = "1Gi"
   $Cpu = "2"
-  $MinInstances = 1
+  $MinInstances = 0
   $MaxInstances = 20
   $Concurrency = 80
 }

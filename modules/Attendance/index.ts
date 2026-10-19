@@ -26,6 +26,7 @@ export {
   getDemoGuardContext,
   getGuardContextById,
   type AuthenticateGuardParams,
+  type GuardLoginMethod,
 } from "./guardAuth";
 
 export {
@@ -45,6 +46,7 @@ export {
 export {
   normalizePhone,
   isValidIndianMobile,
+  isValidGuardEmployeeCode,
   phoneLookupVariants,
 } from "./phone";
 
@@ -55,6 +57,7 @@ export {
 
 export {
   getTodayOpenPunchIn,
+  getTodayCompletedPunchIn,
   markPunchIn,
   markPunchOut,
   markIntervalCheckin,
@@ -69,6 +72,8 @@ export {
   getPunchInWindowStatus,
   PUNCH_IN_EARLY_MINUTES,
   PUNCH_IN_LATE_GRACE_MINUTES,
+  ATTENDANCE_SELFIE_STORAGE_PREFIX,
+  ATTENDANCE_SELFIE_RETENTION_DAYS,
   createSelfieUploadUrl,
   toDutyDateKey,
   type MarkPunchInParams,

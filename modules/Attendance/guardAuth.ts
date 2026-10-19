@@ -17,11 +17,20 @@ import {
 import { getSiteGeofenceById } from "./siteLookup";
 import { resolveTodayDuty } from "./todayDuty";
 
+/** How the client intends to identify the guard (prevents phone ↔ ID cross-entry). */
+export type GuardLoginMethod = "phone" | "employeeCode" | "auto";
+
 export type AuthenticateGuardParams = {
   /** Mobile number, employee / Guard ID, or email */
   identifier: string;
   password: string;
   demoMode?: boolean;
+  /**
+   * `phone` → lookup by mobile only.
+   * `employeeCode` → lookup by Guard ID only (rejects mobile-shaped values).
+   * `auto` → legacy: try email / phone / employeeCode in order.
+   */
+  loginMethod?: GuardLoginMethod;
 };
 
 type GuardDoc = Guard;
@@ -211,11 +220,29 @@ export async function findGuardByIdentifier(
   }
 
   if (trimmed.includes("@")) {
-    const byEmail = await findGuardByEmail(trimmed);
-    if (byEmail) {
-      return byEmail;
-    }
+  identifier: string,
+  loginMethod: GuardLoginMethod = "auto"
+): Promise<GuardDoc | null> {
+  const trimmed = identifier.trim();
+  if (!trimmed) {
+    return null;
   }
+
+  if (loginMethod === "phone") {
+    if (!isValidIndianMobile(trimmed)) {
+      return null;
+    }
+    return findGuardByPhone(trimmed);
+  }
+
+  if (loginMethod === "employeeCode") {
+    if (
+      isValidIndianMobile(trimmed) ||
+      /^\d{10,}$/.test(trimmed.replace(/\s/g, ""))
+    ) {
+      return null;
+    }
+    return findGuardByEmployeeCode(trimmed);
 
   if (isValidIndianMobile(trimmed) || normalizePhone(trimmed).length >= 10) {
     const byPhone = await findGuardByPhone(trimmed);
@@ -296,6 +323,15 @@ export async function authenticateGuard(
   try {
     const guard = await findGuardByIdentifier(identifier);
     if (guard) {
+  const loginMethod: GuardLoginMethod = params.loginMethod ?? "auto";
+
+  if (!identifier || !password) {
+    return null;
+  }
+
+  try {
+    const guard = await findGuardByIdentifier(identifier, loginMethod);
+    if (guard) {
       const email = await resolveLoginEmail(guard);
       if (!email) {
         // Real guard exists but has no Auth email — do not silently map to demo.
@@ -314,11 +350,4 @@ export async function authenticateGuard(
   }
 
   if (demoMode) {
-    const matched = demoContext(identifier, password);
-    if (matched) {
-      return withLiveRosterDuty(matched);
-    }
-  }
-
-  return null;
-}
+    const matched = demoContext(identifier, password, loginMethod);

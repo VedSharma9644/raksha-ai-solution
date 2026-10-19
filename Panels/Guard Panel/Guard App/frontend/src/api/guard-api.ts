@@ -41,7 +41,8 @@ export type IntervalCheckinWindowStatus =
   | 'waiting'
   | 'due'
   | 'late'
-  | 'missed';
+  | 'missed'
+  | 'complete';
 
 export type IntervalCheckinStatus = {
   enabled: boolean;
@@ -59,6 +60,11 @@ export type TodayShiftStatus = {
   shiftActive: boolean;
   openPunchInId: string | null;
   punchedAt: string | null;
+  /** Present after a successful punch-out for today's duty. */
+  punchedOutAt?: string | null;
+  /** True when today's punch-in exists and shiftStatus is ended. */
+  shiftCompleted?: boolean;
+  completedPunchInId?: string | null;
   punchInStatus?: string | null;
   minutesLate?: number | null;
   siteName?: string;
@@ -235,11 +241,12 @@ async function parseJson<T>(response: Response): Promise<T> {
 export async function loginGuard(
   identifier: string,
   password: string,
+  loginMethod: 'phone' | 'employeeCode' = 'employeeCode',
 ): Promise<{ token: string; guard: GuardSessionUser }> {
   const response = await fetch(`${guardApiConfig.baseUrl}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identifier, password }),
+    body: JSON.stringify({ identifier, password, loginMethod }),
   });
   return parseJson(response);
 }

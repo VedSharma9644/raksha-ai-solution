@@ -1,8 +1,11 @@
 import { Router, type Request, type Response } from "express";
 import {
   authenticateGuard,
+  isValidGuardEmployeeCode,
+  isValidIndianMobile,
   requestGuardLoginOtp,
   verifyGuardLoginOtp,
+  type GuardLoginMethod,
 } from "@raskha/attendance";
 
 import { createSession } from "../sessionStore";
@@ -72,6 +75,16 @@ export function createAuthRoutes(): Router {
       const password =
         typeof req.body?.password === "string" ? req.body.password : "";
 
+   * Body: { identifier | employeeCode | phone | guardId, password, loginMethod? }
+   */
+  router.post("/login", async (req: Request, res: Response) => {
+    try {
+      const body = req.body as Record<string, unknown>;
+      const identifier = readIdentifier(body);
+      const password =
+        typeof req.body?.password === "string" ? req.body.password : "";
+      const loginMethod = readLoginMethod(body);
+
       if (!identifier || !password) {
         res.status(400).json({
           error: "Mobile number or Guard ID, and password, are required.",
@@ -79,23 +92,45 @@ export function createAuthRoutes(): Router {
         return;
       }
 
-      const guard = await authenticateGuard({
-        identifier,
-        password,
-        demoMode: isDemoMode(),
-      });
-
-      if (!guard) {
-        res.status(401).json({
-          error: "Invalid mobile / Guard ID or password.",
+      if (loginMethod === "phone" && !isValidIndianMobile(identifier)) {
+        res.status(400).json({
+          error:
+            "Enter a valid 10-digit mobile number. Use Guard ID login for employee codes.",
         });
         return;
       }
 
-      const token = await createSession(guard);
-      res.json(sessionPayload(token, guard));
-    } catch (error: unknown) {
-      const err = error as { message?: string };
+      if (loginMethod === "employeeCode") {
+        if (isValidIndianMobile(identifier)) {
+          res.status(400).json({
+            error:
+              "That looks like a mobile number. Use Mobile Number login instead of Guard ID.",
+          });
+          return;
+        }
+        if (!isValidGuardEmployeeCode(identifier)) {
+          res.status(400).json({
+            error: "Enter a valid Guard ID (employee code), not a mobile number.",
+          });
+          return;
+        }
+      }
+
+      const guard = await authenticateGuard({
+        identifier,
+        password,
+        demoMode: isDemoMode(),
+        loginMethod,
+      });
+
+      if (!guard) {
+        res.status(401).json({
+          error:
+            loginMethod === "phone"
+              ? "Invalid mobile number or password."
+              : loginMethod === "employeeCode"
+                ? "Invalid Guard ID or password."
+                : "Invalid mobile / Guard ID or password.",
       res.status(500).json({ error: err.message ?? "Login failed." });
     }
   });

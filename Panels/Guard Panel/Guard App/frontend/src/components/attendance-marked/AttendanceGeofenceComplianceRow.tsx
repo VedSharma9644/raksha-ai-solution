@@ -5,9 +5,13 @@ import { attendanceMarkedDefaults } from '../../constants/attendance-marked-defa
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { attendanceGeofenceComplianceRowStyles as styles } from '../../styles/attendance-geofence-compliance-row.styles';
+import { formatGeofenceDetailForDisplay } from '../../utils/format-geofence-detail';
 
 export function AttendanceGeofenceComplianceRow() {
   const { lastPunchResult } = useGuardAppNavigation();
+  const detail = formatGeofenceDetailForDisplay(
+    lastPunchResult?.geofenceDetail ?? attendanceMarkedDefaults.geofenceDetail,
+  );
 
   return (
     <View style={styles.row}>
@@ -17,9 +21,7 @@ export function AttendanceGeofenceComplianceRow() {
         </View>
         <View style={styles.copy}>
           <Text style={styles.title}>{attendanceMarkedDefaults.geofenceTitle}</Text>
-          <Text style={styles.detail}>
-            {lastPunchResult?.geofenceDetail ?? attendanceMarkedDefaults.geofenceDetail}
-          </Text>
+          <Text style={styles.detail}>{detail}</Text>
         </View>
       </View>
       <Text style={styles.result}>

@@ -5,6 +5,7 @@ import {
   createSelfieUploadUrl,
   getPunchInWindowStatus,
   getSiteGeofenceById,
+  getTodayCompletedPunchIn,
   getTodayOpenPunchIn,
   listAttendanceHistory,
   listIntervalCheckinsForShift,
@@ -13,6 +14,7 @@ import {
   markPunchIn,
   markPunchOut,
   resolveTodayDuty,
+  shiftWindowIst,
   toDutyDateKey,
   type SiteGeofenceContext,
   type TodayDutyResolution,
@@ -468,25 +470,52 @@ export function createAttendanceRoutes(): Router {
 
       const open = await getTodayOpenPunchIn(req.guard.guardId);
       const duty = await applyRosterDutyToRequest(req);
+      const completed =
+        open
+          ? null
+          : await getTodayCompletedPunchIn(
+              req.guard.guardId,
+              duty?.dutyDate ?? null
+            );
       const site = await resolveAssignedSite(req);
       if (site && req.guard) {
         req.guard.siteName = site.siteName;
       }
 
       const siteName =
-        open?.siteName || req.guard.siteName || duty?.siteName || "";
+        open?.siteName ||
+        completed?.siteName ||
+        req.guard.siteName ||
+        duty?.siteName ||
+        "";
       const postName =
-        open?.postName || req.guard.postName || duty?.postName || "";
+        open?.postName ||
+        completed?.postName ||
+        req.guard.postName ||
+        duty?.postName ||
+        "";
 
       const prior = open ? await listIntervalCheckinsForShift(open.id) : [];
       const lastCheckinAt =
         prior.length > 0 ? prior[prior.length - 1]!.punchedAt : null;
+      const dutyDateForWindow =
+        open?.dutyDate?.trim() ||
+        duty?.dutyDate ||
+        (open?.punchedAt ? toDutyDateKey(open.punchedAt) : toDutyDateKey());
+      const shiftEndsAt = open
+        ? shiftWindowIst(
+            dutyDateForWindow,
+            req.guard.shiftFrom,
+            req.guard.shiftTo
+          ).end
+        : null;
       const intervalCheckin = computeIntervalCheckinStatus({
         intervalMinutes: site?.intervalCheckinMinutes ?? null,
         shiftActive: Boolean(open),
         punchInAt: open?.punchedAt ?? null,
         lastCheckinAt,
         completedCount: prior.length,
+        shiftEndsAt,
       });
       const punchInWindow = getPunchInWindowStatus({
         shiftFrom: req.guard.shiftFrom,
@@ -510,16 +539,23 @@ export function createAttendanceRoutes(): Router {
       res.json({
         shiftActive: Boolean(open),
         openPunchInId: open?.id ?? null,
-        punchedAt: open?.punchedAt?.toISOString?.() ?? null,
-        punchInStatus: open?.punchInStatus ?? null,
-        minutesLate: open?.minutesLate ?? null,
+        punchedAt:
+          open?.punchedAt?.toISOString?.() ??
+          completed?.punchedAt?.toISOString?.() ??
+          null,
+        punchedOutAt: completed?.punchedOutAt?.toISOString?.() ?? null,
+        shiftCompleted: Boolean(completed),
+        completedPunchInId: completed?.id ?? null,
+        punchInStatus:
+          open?.punchInStatus ?? completed?.punchInStatus ?? null,
+        minutesLate: open?.minutesLate ?? completed?.minutesLate ?? null,
         siteName,
         postName,
         assignedSiteId: req.guard.assignedSiteId,
         shiftFrom: req.guard.shiftFrom,
         shiftTo: req.guard.shiftTo,
         shiftLabel: duty?.shiftLabel,
-        dutyDate: duty?.dutyDate ?? null,
+        dutyDate: duty?.dutyDate ?? completed?.dutyDate ?? null,
         dutySource: duty?.source ?? "profile",
         earlierShiftCount: duty?.earlierShiftCount ?? 0,
         hasLaterReplacement: duty?.hasLaterReplacement ?? false,

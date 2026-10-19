@@ -14,6 +14,25 @@ export function isValidIndianMobile(raw: string): boolean {
   return /^[6-9]\d{9}$/.test(normalizePhone(raw));
 }
 
+/**
+ * Guard employee / Guard ID codes — not a mobile number.
+ * Allows letters, digits, and . _ - (HR employee codes).
+ */
+export function isValidGuardEmployeeCode(raw: string): boolean {
+  const trimmed = String(raw ?? "").trim();
+  if (!trimmed || trimmed.length < 2 || trimmed.length > 32) {
+    return false;
+  }
+  if (isValidIndianMobile(trimmed)) {
+    return false;
+  }
+  // Pure 10+ digit strings are phone attempts, not IDs.
+  if (/^\d{10,}$/.test(trimmed.replace(/\s/g, ""))) {
+    return false;
+  }
+  return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmed);
+}
+
 /** Variants commonly stored by HR / Admin forms. */
 export function phoneLookupVariants(raw: string): string[] {
   const normalized = normalizePhone(raw);

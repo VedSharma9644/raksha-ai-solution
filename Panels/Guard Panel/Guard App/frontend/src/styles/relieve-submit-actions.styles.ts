@@ -8,14 +8,16 @@ export const relieveSubmitActionsStyles = StyleSheet.create({
     paddingTop: appSpacing.sm,
   },
   primaryButton: {
-    minHeight: 64,
+    minHeight: 56,
     borderRadius: appRadii.xl,
     backgroundColor: appColors.primaryContainer,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingHorizontal: appSpacing.md,
+    gap: appSpacing.sm,
+    paddingVertical: appSpacing.md,
+    paddingHorizontal: appSpacing.lg,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -27,12 +29,18 @@ export const relieveSubmitActionsStyles = StyleSheet.create({
   },
   primaryButtonPressed: {
     opacity: 0.92,
-    transform: [{ translateY: 1 }],
+  },
+  primaryIcon: {
+    marginTop: 1,
   },
   primaryLabel: {
     ...appTypography.labelXl,
     color: appColors.onPrimary,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
+    flexShrink: 1,
+    textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   historyButton: {
     minHeight: 52,
@@ -41,8 +49,9 @@ export const relieveSubmitActionsStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: appSpacing.md,
+    gap: appSpacing.sm,
+    paddingVertical: appSpacing.sm,
+    paddingHorizontal: appSpacing.lg,
   },
   historyButtonPressed: {
     backgroundColor: appColors.surfaceContainer,
@@ -50,6 +59,10 @@ export const relieveSubmitActionsStyles = StyleSheet.create({
   historyLabel: {
     ...appTypography.labelLg,
     color: appColors.onSurface,
+    flexShrink: 1,
+    textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   toast: {
     marginTop: appSpacing.sm,

@@ -44,6 +44,14 @@ vi.mock("@raskha/attendance", () => ({
   authenticateGuard: (...args: unknown[]) => authenticateGuard(...args),
   requestGuardLoginOtp: (...args: unknown[]) => requestGuardLoginOtp(...args),
   verifyGuardLoginOtp: (...args: unknown[]) => verifyGuardLoginOtp(...args),
+  isValidIndianMobile: (raw: string) => /^[6-9]\d{9}$/.test(String(raw).replace(/\D/g, "")),
+  isValidGuardEmployeeCode: (raw: string) => {
+    const trimmed = String(raw ?? "").trim();
+    if (!trimmed || trimmed.length < 2 || trimmed.length > 32) return false;
+    if (/^[6-9]\d{9}$/.test(trimmed.replace(/\D/g, ""))) return false;
+    if (/^\d{10,}$/.test(trimmed.replace(/\s/g, ""))) return false;
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(trimmed);
+  },
 }));
 
 vi.mock("@raskha/leave", () => ({
@@ -128,12 +136,50 @@ describe("Guard App API auth", () => {
       authenticateGuard.mockResolvedValue(demoGuard);
       const res = await request(app)
         .post("/api/auth/login")
-        .send({ identifier: "RKS-0001", password: "demo1234" });
+        .send({
+          identifier: "RKS-0001",
+          password: "demo1234",
+          loginMethod: "employeeCode",
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.token).toBeTruthy();
       expect(res.body.guard.employeeCode).toBe("RKS-0001");
       expect(res.body.guard.fullName).toBe("Test Guard");
+      expect(authenticateGuard).toHaveBeenCalledWith(
+        expect.objectContaining({
+          identifier: "RKS-0001",
+          loginMethod: "employeeCode",
+        }),
+      );
+    });
+
+    it("400 when Guard ID login receives a mobile number", async () => {
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({
+          identifier: "9876543210",
+          password: "demo1234",
+          loginMethod: "employeeCode",
+        });
+
+      expect(res.status).toBe(400);
+      expect(String(res.body.error)).toMatch(/mobile number/i);
+      expect(authenticateGuard).not.toHaveBeenCalled();
+    });
+
+    it("400 when phone login receives a Guard ID", async () => {
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({
+          identifier: "RKS-0001",
+          password: "demo1234",
+          loginMethod: "phone",
+        });
+
+      expect(res.status).toBe(400);
+      expect(String(res.body.error)).toMatch(/mobile number/i);
+      expect(authenticateGuard).not.toHaveBeenCalled();
     });
   });
 

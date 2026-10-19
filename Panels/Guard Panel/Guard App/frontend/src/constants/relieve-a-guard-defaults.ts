@@ -82,10 +82,10 @@ export const reliefReasonChips: {
 
 export function buildReliefCtaLabel(method: ReliefMethodKey): string {
   if (method === 'remaining') {
-    return 'Request remaining-shift handover';
+    return 'Request handover';
   }
   if (method === 'cover') {
-    return 'Request full shift cover';
+    return 'Request full cover';
   }
   return 'Request shift swap';
 }

@@ -20,6 +20,13 @@ import { useLanguage } from '../../i18n';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { loginAuthCardStyles as styles } from '../../styles/login-auth-card.styles';
 import { appColors } from '../../theme';
+import {
+  isValidGuardEmployeeCode,
+  isValidLoginMobile,
+  normalizeLoginPhone,
+  sanitizeGuardIdInput,
+  sanitizePhoneInput,
+} from '../../utils/login-credentials';
 
 export function LoginAuthCard() {
   const { signIn } = useGuardAppNavigation();
@@ -70,9 +77,34 @@ export function LoginAuthCard() {
       return;
     }
 
+    if (mode === 'phone') {
+      const phone = normalizeLoginPhone(credential);
+      if (!isValidLoginMobile(phone)) {
+        showAlert(
+          'Login',
+          'Enter a valid 10-digit mobile number (starting with 6–9). Use Guard ID tab for employee codes.',
+        );
+        return;
+      }
+    } else if (!isValidGuardEmployeeCode(credential)) {
+      showAlert(
+        'Login',
+        isValidLoginMobile(credential)
+          ? 'That looks like a mobile number. Switch to the Mobile Number tab to sign in with phone.'
+          : 'Enter a valid Guard ID (employee code from HR), not a mobile number.',
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const result = await loginGuard(credential.trim(), password);
+      const identifier =
+        mode === 'phone' ? normalizeLoginPhone(credential) : credential.trim();
+      const result = await loginGuard(
+        identifier,
+        password,
+        mode === 'phone' ? 'phone' : 'employeeCode',
+      );
       signIn(result.token, result.guard);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Login failed.';
@@ -83,8 +115,8 @@ export function LoginAuthCard() {
   };
 
   const sendResetOtp = async (phoneOverride?: string) => {
-    const phone = (phoneOverride ?? resetPhone).replace(/\D/g, '');
-    if (phone.length !== 10) {
+    const phone = normalizeLoginPhone(phoneOverride ?? resetPhone);
+    if (!isValidLoginMobile(phone)) {
       showAlert('OTP', 'Enter a valid 10-digit mobile number.');
       return;
     }
@@ -223,11 +255,17 @@ export function LoginAuthCard() {
               <TextInput
                 style={styles.textInput}
                 value={credential}
-                onChangeText={setCredential}
+                onChangeText={(text) =>
+                  setCredential(
+                    mode === 'phone'
+                      ? sanitizePhoneInput(text)
+                      : sanitizeGuardIdInput(text),
+                  )
+                }
                 onFocus={() => setCredentialFocused(true)}
                 onBlur={() => setCredentialFocused(false)}
                 keyboardType={mode === 'phone' ? 'phone-pad' : 'default'}
-                maxLength={mode === 'phone' ? 10 : 20}
+                maxLength={mode === 'phone' ? 10 : 32}
                 placeholder={
                   mode === 'phone'
                     ? t('login.phonePlaceholder')
@@ -235,6 +273,8 @@ export function LoginAuthCard() {
                 }
                 placeholderTextColor="rgba(112, 121, 121, 0.6)"
                 autoCapitalize={mode === 'phone' ? 'none' : 'characters'}
+                autoCorrect={false}
+                textContentType={mode === 'phone' ? 'telephoneNumber' : 'username'}
               />
               {credential.length > 0 ? (
                 <Pressable style={styles.clearButton} onPress={() => setCredential('')}>
@@ -281,13 +321,15 @@ export function LoginAuthCard() {
             <TextInput
               style={styles.textInput}
               value={resetPhone}
-              onChangeText={setResetPhone}
+              onChangeText={(text) => setResetPhone(sanitizePhoneInput(text))}
               onFocus={() => setPhoneFocused(true)}
               onBlur={() => setPhoneFocused(false)}
               keyboardType="phone-pad"
               maxLength={10}
               placeholder={t('login.phonePlaceholder')}
               placeholderTextColor="rgba(112, 121, 121, 0.6)"
+              autoCorrect={false}
+              textContentType="telephoneNumber"
             />
           </View>
         </View>

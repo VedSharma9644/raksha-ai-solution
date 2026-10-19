@@ -1,15 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { showAlert } from '../../alerts/appAlert';
-
-import {
-  checkGeofence,
-  fetchTodayShift,
-  type IntervalCheckinStatus,
-} from '../../api/guard-api';
+import { checkGeofence } from '../../api/guard-api';
+import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { rescheduleIntervalCheckinReminder } from '../../notifications/intervalCheckinReminders';
 import { intervalCheckinBannerStyles as styles } from '../../styles/interval-checkin-banner.styles';
@@ -28,69 +24,40 @@ function formatClock(iso: string | null | undefined): string {
   });
 }
 
+/** Uses the shared /today duty provider — does not fetch on its own. */
 export function IntervalCheckinBanner() {
   const {
     authToken,
-    shiftActive,
     openPatrolSession,
     setCameraUnlocked,
     setLastKnownLocation,
     setPatrolMode,
-    guardUser,
   } = useGuardAppNavigation();
+  const duty = useGuardDutyAssignment();
+  const status = duty.intervalCheckin;
 
-  const [status, setStatus] = useState<IntervalCheckinStatus | null>(null);
   const [checking, setChecking] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const lastReminderKeyRef = useRef<string>('');
-
-  const statusKeyRef = useRef('');
-
-  const refresh = useCallback(async () => {
-    if (!authToken || !shiftActive) {
-      setStatus(null);
-      setLoading(false);
-      lastReminderKeyRef.current = '';
-      statusKeyRef.current = '';
-      await rescheduleIntervalCheckinReminder(null).catch(() => undefined);
-      return;
-    }
-    try {
-      const today = await fetchTodayShift(authToken);
-      const next = today.intervalCheckin ?? null;
-      const statusKey = next
-        ? `${next.status}|${next.dueAt ?? ''}|${next.nextDueAt ?? ''}|${next.completedCount}`
-        : '';
-      if (statusKey !== statusKeyRef.current) {
-        statusKeyRef.current = statusKey;
-        setStatus(next);
-      }
-      const reminderKey = statusKey;
-      if (reminderKey && reminderKey !== lastReminderKeyRef.current) {
-        lastReminderKeyRef.current = reminderKey;
-        await rescheduleIntervalCheckinReminder(
-          next,
-          today.siteName || guardUser?.siteName,
-        ).catch(() => undefined);
-      }
-    } catch {
-      // Keep last status
-    } finally {
-      setLoading(false);
-    }
-  }, [authToken, guardUser?.siteName, shiftActive]);
+  const lastReminderKeyRef = useRef('');
 
   useEffect(() => {
-    void refresh();
-    const timer = setInterval(() => {
-      void refresh();
-    }, 30_000);
-    return () => clearInterval(timer);
-  }, [refresh]);
+    if (!duty.shiftActive || !status?.enabled) {
+      lastReminderKeyRef.current = '';
+      void rescheduleIntervalCheckinReminder(null).catch(() => undefined);
+      return;
+    }
+    const reminderKey = `${status.status}|${status.dueAt ?? ''}|${status.nextDueAt ?? ''}|${status.completedCount}`;
+    if (reminderKey === lastReminderKeyRef.current) {
+      return;
+    }
+    lastReminderKeyRef.current = reminderKey;
+    void rescheduleIntervalCheckinReminder(status, duty.siteName).catch(
+      () => undefined,
+    );
+  }, [duty.shiftActive, duty.siteName, status]);
 
   const startCheckin = async () => {
     if (!authToken) {
-      Alert.alert('Session', 'Please log in again to check in.');
+      showAlert('Session', 'Please log in again to check in.');
       return;
     }
     setChecking(true);
@@ -98,7 +65,7 @@ export function IntervalCheckinBanner() {
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
+        showAlert(
           'Location required',
           'Enable GPS to verify you are at the duty site before check-in.',
         );
@@ -120,7 +87,7 @@ export function IntervalCheckinBanner() {
         'interval_checkin',
       );
       if (!result.unlocked) {
-        Alert.alert(
+        showAlert(
           'Geofence',
           result.message || 'You are outside the site geofence.',
         );
@@ -133,13 +100,13 @@ export function IntervalCheckinBanner() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Unable to verify location.';
-      Alert.alert('Geofence check failed', message);
+      showAlert('Geofence check failed', message);
     } finally {
       setChecking(false);
     }
   };
 
-  if (loading || !shiftActive || !status?.enabled) {
+  if (!duty.shiftActive || !status?.enabled) {
     return null;
   }
 
@@ -155,7 +122,9 @@ export function IntervalCheckinBanner() {
         ? styles.cardDue
         : status.status === 'missed'
           ? styles.cardMissed
-          : styles.cardWaiting;
+          : status.status === 'complete'
+            ? styles.cardWaiting
+            : styles.cardWaiting;
 
   const title =
     status.status === 'due'
@@ -164,7 +133,9 @@ export function IntervalCheckinBanner() {
         ? 'Late check-in window'
         : status.status === 'missed'
           ? 'Check-in missed'
-          : 'Next interval check-in';
+          : status.status === 'complete'
+            ? 'Interval photos complete'
+            : 'Next interval check-in';
 
   const body =
     status.status === 'due'
@@ -173,14 +144,18 @@ export function IntervalCheckinBanner() {
         ? `You are past the due time (${formatClock(status.dueAt)}). Check in before ${formatClock(status.graceEndsAt)}.`
         : status.status === 'missed'
           ? `Missed check-in at ${formatClock(status.dueAt)}. Next window opens at ${formatClock(status.nextDueAt)}.`
-          : `Next photo check-in at ${formatClock(status.nextDueAt)} (every ${status.intervalMinutes} min).`;
+          : status.status === 'complete'
+            ? 'No more interval photos for this shift. End your shift when you are ready to leave.'
+            : `Next photo check-in at ${formatClock(status.nextDueAt)} (every ${status.intervalMinutes} min).`;
 
   const icon =
     status.status === 'missed'
       ? 'event-busy'
-      : status.status === 'waiting'
-        ? 'schedule'
-        : 'camera-alt';
+      : status.status === 'complete'
+        ? 'check-circle'
+        : status.status === 'waiting'
+          ? 'schedule'
+          : 'camera-alt';
 
   return (
     <View style={[styles.card, cardStyle]}>

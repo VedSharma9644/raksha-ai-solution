@@ -1,18 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  AppState,
-  Text,
-  View,
-  type AppStateStatus,
-} from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 import {
   fetchGuardSchedule,
   type GuardScheduleShiftDto,
 } from '../../api/guard-api';
 import type { UpcomingShiftItem } from '../../constants/upcoming-schedule-defaults';
+import { useForegroundInterval } from '../../hooks/useForegroundInterval';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import {
   ROSTER_FOREGROUND_POLL_MS,
@@ -148,21 +143,12 @@ export function ScheduleUpcomingShiftsSection({
     });
   }, [load]);
 
-  useEffect(() => {
-    const onState = (state: AppStateStatus) => {
-      if (state === 'active') {
-        void load({ silent: true });
-      }
-    };
-    const sub = AppState.addEventListener('change', onState);
-    const interval = setInterval(() => {
+  useForegroundInterval(
+    () => {
       void load({ silent: true });
-    }, ROSTER_FOREGROUND_POLL_MS);
-    return () => {
-      sub.remove();
-      clearInterval(interval);
-    };
-  }, [load]);
+    },
+    ROSTER_FOREGROUND_POLL_MS,
+  );
 
   const items = useMemo(() => {
     const filtered = rows.filter((row) =>

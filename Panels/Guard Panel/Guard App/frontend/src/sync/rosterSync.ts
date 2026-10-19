@@ -37,5 +37,15 @@ export function requestRosterSync(reason = 'manual'): void {
   });
 }
 
-/** Silent background poll while the Guard app is open (ms). */
-export const ROSTER_FOREGROUND_POLL_MS = 30_000;
+/**
+ * Silent /today + schedule poll while the Guard app is foregrounded (ms).
+ * 60–90s is enough: interval windows are minutes long with ~15 min grace.
+ * Timers must pause when AppState is not `active` (see useForegroundInterval).
+ */
+export const ROSTER_FOREGROUND_POLL_MS = 60_000;
+
+/**
+ * Inbox poll while foregrounded (ms). 60–120s keeps the bell reasonably
+ * fresh without hammering Cloud Run; push + resume still refresh immediately.
+ */
+export const NOTIFICATIONS_FOREGROUND_POLL_MS = 90_000;

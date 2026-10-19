@@ -1,7 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { fetchTodayShift, type TodayShiftStatus } from '../api/guard-api';
+import {
+  fetchTodayShift,
+  type IntervalCheckinStatus,
+  type TodayShiftStatus,
+} from '../api/guard-api';
 import { useGuardAppNavigation } from '../navigation/useGuardAppNavigation';
 import {
   ROSTER_FOREGROUND_POLL_MS,
@@ -19,6 +31,7 @@ import {
   minutesPastShiftStart,
   todayShiftHeading,
 } from '../utils/shift-display';
+import { useForegroundInterval } from './useForegroundInterval';
 
 export type DutyBadgeTone = 'neutral' | 'warning' | 'danger' | 'success';
 
@@ -44,6 +57,8 @@ export type GuardDutyAssignmentView = {
   dutySource: 'roster' | 'profile';
   hasLaterReplacement: boolean;
   assignmentId: string | null;
+  /** Shared /today interval window — single fetch for Home banner + duty UI. */
+  intervalCheckin: IntervalCheckinStatus | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
 };
@@ -57,6 +72,8 @@ function todaySignature(data: TodayShiftStatus | null): string {
     data.shiftActive ? '1' : '0',
     data.openPunchInId ?? '',
     data.punchedAt ?? '',
+    data.punchedOutAt ?? '',
+    data.shiftCompleted ? '1' : '0',
     data.punchInStatus ?? '',
     data.siteName ?? '',
     data.postName ?? '',
@@ -70,6 +87,7 @@ function todaySignature(data: TodayShiftStatus | null): string {
     data.intervalCheckinMinutes ?? '',
     data.intervalCheckin?.status ?? '',
     data.intervalCheckin?.dueAt ?? '',
+    data.intervalCheckin?.graceEndsAt ?? '',
     data.intervalCheckin?.nextDueAt ?? '',
     data.intervalCheckin?.completedCount ?? '',
     data.punchInWindow?.open === false ? '0' : '1',
@@ -77,7 +95,18 @@ function todaySignature(data: TodayShiftStatus | null): string {
   ].join('|');
 }
 
-export function useGuardDutyAssignment(): GuardDutyAssignmentView {
+const GuardDutyAssignmentContext =
+  createContext<GuardDutyAssignmentView | null>(null);
+
+/**
+ * Single owner of GET /attendance/today for the authenticated session.
+ * All screens should read via useGuardDutyAssignment() — do not fetch /today elsewhere.
+ */
+export function GuardDutyAssignmentProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const {
     authToken,
     guardUser,
@@ -144,29 +173,22 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
     });
   }, [refresh]);
 
-  useEffect(() => {
-    const onState = (state: AppStateStatus) => {
-      if (state === 'active') {
-        void refresh({ silent: true });
-      }
-    };
-    const sub = AppState.addEventListener('change', onState);
-    // Background data poll — never toggles loading UI.
-    const poll = setInterval(() => {
+  useForegroundInterval(
+    () => {
       void refresh({ silent: true });
-    }, ROSTER_FOREGROUND_POLL_MS);
-    // Countdown / delay labels only — once a minute, no network.
+    },
+    ROSTER_FOREGROUND_POLL_MS,
+    Boolean(authToken),
+  );
+
+  useEffect(() => {
     const clock = setInterval(() => {
       setTick((value) => value + 1);
     }, 60_000);
-    return () => {
-      sub.remove();
-      clearInterval(poll);
-      clearInterval(clock);
-    };
-  }, [refresh]);
+    return () => clearInterval(clock);
+  }, []);
 
-  return useMemo(() => {
+  const value = useMemo((): GuardDutyAssignmentView => {
     void tick; // recompute countdown/delay every minute
     const shiftFrom = today?.shiftFrom || guardUser?.shiftFrom || '08:00';
     const shiftTo = today?.shiftTo || guardUser?.shiftTo || '20:00';
@@ -196,6 +218,8 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       shiftActive,
     });
 
+    const shiftCompleted = Boolean(today?.shiftCompleted);
+
     if (shiftActive) {
       const lateLogin =
         punchInStatus?.toLowerCase() === 'late' ||
@@ -203,6 +227,16 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       statusBadge = lateLogin ? 'ON DUTY\nLATE LOGIN' : 'ON DUTY';
       statusText = lateLogin ? 'Late check-in' : 'Checked in on time';
       badgeTone = lateLogin ? 'warning' : 'success';
+    } else if (shiftCompleted) {
+      const lateLogin =
+        punchInStatus?.toLowerCase() === 'late' ||
+        punchInStatus?.toLowerCase() === 'late login';
+      statusBadge = 'COMPLETED';
+      statusText = lateLogin
+        ? 'Shift completed (late check-in)'
+        : 'Shift completed';
+      badgeTone = 'success';
+      countdownLabel = 'Shift ended';
     } else if (delayedWaiting) {
       statusBadge = 'DELAYED';
       statusText = 'Late for duty';
@@ -253,8 +287,25 @@ export function useGuardDutyAssignment(): GuardDutyAssignmentView {
       dutySource,
       hasLaterReplacement,
       assignmentId: today?.assignmentId ?? null,
+      intervalCheckin: today?.intervalCheckin ?? null,
       isLoading,
       refresh: () => refresh({ silent: false }),
     };
   }, [guardUser, isLoading, navShiftActive, refresh, tick, today]);
+
+  return (
+    <GuardDutyAssignmentContext.Provider value={value}>
+      {children}
+    </GuardDutyAssignmentContext.Provider>
+  );
+}
+
+export function useGuardDutyAssignment(): GuardDutyAssignmentView {
+  const ctx = useContext(GuardDutyAssignmentContext);
+  if (!ctx) {
+    throw new Error(
+      'useGuardDutyAssignment must be used within GuardDutyAssignmentProvider',
+    );
+  }
+  return ctx;
 }
