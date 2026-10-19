@@ -19,7 +19,7 @@ export type CheckGeofenceParams = {
 };
 
 const EARTH_RADIUS_METERS = 6_371_000;
-export const DEFAULT_GEOFENCE_RADIUS_METERS = 150;
+export const DEFAULT_GEOFENCE_RADIUS_METERS = 50;
 
 export function haversineMeters(
   lat1: number,

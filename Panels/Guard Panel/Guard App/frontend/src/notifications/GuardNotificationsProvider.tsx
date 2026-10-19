@@ -48,6 +48,7 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
     shiftActive,
     openLeaveTimeOff,
     openShiftDetails,
+    openIncomingReliefRequests,
     goHome,
     isAuthenticated,
   } = useGuardAppNavigation();
@@ -72,6 +73,14 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
         return;
       }
       if (
+        screen === 'incomingReliefRequests' ||
+        type === 'relief_decision' ||
+        type === 'relief_assignment'
+      ) {
+        openIncomingReliefRequests();
+        return;
+      }
+      if (
         screen === 'shiftDetails' ||
         type === 'shift_start_reminder' ||
         type === 'login_reminder' ||
@@ -90,7 +99,12 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
         goHome();
       }
     },
-    [goHome, openLeaveTimeOff, openShiftDetails],
+    [
+      goHome,
+      openIncomingReliefRequests,
+      openLeaveTimeOff,
+      openShiftDetails,
+    ],
   );
 
   const refresh = useCallback(async () => {
@@ -244,32 +258,45 @@ export function GuardNotificationsProvider({ children }: { children: ReactNode }
 
   // Foreground + tap handlers (local emitter APIs — safe in Expo Go)
   useEffect(() => {
-    const received = addNotificationReceivedListener((event) => {
-      const data = event.notification.request.content.data as
-        | Record<string, unknown>
-        | undefined;
-      const type = typeof data?.type === 'string' ? data.type : '';
-      if (type === 'roster_update' || data?.refresh === 'roster') {
-        requestRosterSync('push:roster_update');
+    // addNotificationReceivedListener passes a Notification directly (not { notification }).
+    const received = addNotificationReceivedListener((notification) => {
+      try {
+        const data = notification.request.content.data as
+          | Record<string, unknown>
+          | undefined;
+        const type = typeof data?.type === 'string' ? data.type : '';
+        if (type === 'roster_update' || data?.refresh === 'roster') {
+          requestRosterSync('push:roster_update');
+        }
+        void refresh();
+      } catch {
+        // Ignore malformed notification payloads — never crash the app shell.
       }
-      void refresh();
     });
     const response = addNotificationResponseReceivedListener((event) => {
-      const data = event.notification.request.content.data as
-        | Record<string, unknown>
-        | undefined;
-      navigateFromData(data);
-      void refresh();
+      try {
+        const data = event.notification.request.content.data as
+          | Record<string, unknown>
+          | undefined;
+        navigateFromData(data);
+        void refresh();
+      } catch {
+        // Ignore malformed notification responses.
+      }
     });
 
-    void getLastNotificationResponseAsync().then((last) => {
-      if (!last) {
-        return;
-      }
-      navigateFromData(
-        last.notification.request.content.data as Record<string, unknown> | undefined,
-      );
-    });
+    void getLastNotificationResponseAsync()
+      .then((last) => {
+        if (!last) {
+          return;
+        }
+        navigateFromData(
+          last.notification.request.content.data as
+            | Record<string, unknown>
+            | undefined,
+        );
+      })
+      .catch(() => undefined);
 
     return () => {
       received.remove();

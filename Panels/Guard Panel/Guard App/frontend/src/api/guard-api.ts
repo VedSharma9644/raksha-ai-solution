@@ -67,6 +67,8 @@ export type TodayShiftStatus = {
   shiftFrom?: string;
   shiftTo?: string;
   shiftLabel?: string;
+  /** Roster duty date (YYYY-MM-DD IST); may be yesterday for overnight. */
+  dutyDate?: string | null;
   dutySource?: 'roster' | 'profile';
   earlierShiftCount?: number;
   hasLaterReplacement?: boolean;
@@ -76,10 +78,23 @@ export type TodayShiftStatus = {
   punchInWindow?: {
     open: boolean;
     graceMinutes: number;
+    earlyMinutes?: number;
     minutesPastStart: number | null;
+    minutesUntilOpen?: number | null;
+    opensAt?: string | null;
     closesAt: string | null;
     message: string | null;
   };
+  /** Mid-shift end requires an approved relief assignee. */
+  punchOutEligibility?: {
+    early: boolean;
+    allowed: boolean;
+    reliefAssigned: boolean;
+    reliefRequestId?: string;
+    reliefAssigneeName?: string;
+    shiftEndsAt: string | null;
+    message: string | null;
+  } | null;
 };
 export type GeofenceCheckResult = {
   unlocked: boolean;
@@ -98,6 +113,7 @@ export type AttendanceHistoryDayStatus =
   | 'today'
   | 'off'
   | 'leave'
+  | 'relief'
   | 'present'
   | 'empty';
 
@@ -111,6 +127,7 @@ export type AttendanceHistoryLogDto = {
     | 'upcoming'
     | 'weeklyOff'
     | 'leave'
+    | 'relief'
     | 'present';
   statusLabel: string;
   dateLabel: string;
@@ -192,9 +209,25 @@ export type GuardScheduleResponse = {
 };
 
 async function parseJson<T>(response: Response): Promise<T> {
-  const data = (await response.json()) as T & { error?: string };
+  const raw = await response.text();
+  let data: (T & { error?: string }) | null = null;
+  if (raw) {
+    try {
+      data = JSON.parse(raw) as T & { error?: string };
+    } catch {
+      const looksHtml = raw.trimStart().startsWith('<');
+      throw new Error(
+        looksHtml
+          ? `Server returned a non-JSON response (${response.status}). Salary API may not be available on this server yet.`
+          : `Invalid server response (${response.status}).`,
+      );
+    }
+  }
   if (!response.ok) {
-    throw new Error(data.error ?? `Request failed (${response.status})`);
+    throw new Error(data?.error ?? `Request failed (${response.status})`);
+  }
+  if (!data) {
+    throw new Error(`Empty server response (${response.status}).`);
   }
   return data;
 }
@@ -239,6 +272,7 @@ export async function checkGeofence(
   lat: number,
   lng: number,
   accuracyMeters = 5,
+  purpose?: 'punch_in' | 'punch_out' | 'interval_checkin',
 ): Promise<GeofenceCheckResult> {
   const response = await fetch(`${guardApiConfig.baseUrl}/api/attendance/geofence-check`, {
     method: 'POST',
@@ -246,7 +280,7 @@ export async function checkGeofence(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ lat, lng, accuracyMeters }),
+    body: JSON.stringify({ lat, lng, accuracyMeters, purpose }),
   });
   return parseJson(response);
 }
@@ -850,5 +884,86 @@ export async function markGuardNotificationsRead(
     },
     body: JSON.stringify(params),
   });
+  return parseJson(response);
+}
+
+export type PayrollDayBreakdownDto = {
+  presentDays: number;
+  halfDays: number;
+  missedDays: number;
+  leaveDays: number;
+  weeklyOffDays: number;
+  payableDays: number;
+};
+
+export type PayrollPeriodDto = {
+  startDate: string;
+  endDate: string;
+  label: string;
+  year: number;
+  month: number;
+};
+
+export type AdvanceDeductionRowDto = {
+  advanceId: string;
+  installmentId: string;
+  purpose: string;
+  amount: number;
+  recoveryMode?: 'emi' | 'next_payroll' | 'cash';
+  installmentIndex?: number;
+  emiMonths?: number;
+  label?: string;
+};
+
+export type ReliefDutyBonusRowDto = {
+  reliefRequestId: string;
+  dutyDate: string;
+  siteName: string;
+  postName: string;
+  shiftFrom: string;
+  shiftTo: string;
+  requesterName: string;
+  method: string;
+  amount: number;
+};
+
+export type GuardPayrollBreakdownDto = {
+  guardId: string;
+  guardName: string;
+  employeeCode: string;
+  monthlySalary: number;
+  period: PayrollPeriodDto;
+  breakdown: PayrollDayBreakdownDto;
+  dayRate: number;
+  attendanceGross: number;
+  reliefDuties: ReliefDutyBonusRowDto[];
+  reliefBonusTotal: number;
+  advanceDeductions: AdvanceDeductionRowDto[];
+  advanceDeductionTotal: number;
+  estimatedGross: number;
+  estimatedNet: number;
+};
+
+export type MyPayrollResponse = {
+  breakdown: GuardPayrollBreakdownDto;
+  asOf: string;
+  disclaimer: string;
+};
+
+export async function fetchMyPayroll(
+  token: string,
+  year?: number,
+  month?: number,
+): Promise<MyPayrollResponse> {
+  const params = new URLSearchParams();
+  if (year != null) params.set('year', String(year));
+  if (month != null) params.set('month', String(month));
+  const qs = params.toString();
+  const response = await fetch(
+    `${guardApiConfig.baseUrl}/api/payroll/me${qs ? `?${qs}` : ''}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   return parseJson(response);
 }

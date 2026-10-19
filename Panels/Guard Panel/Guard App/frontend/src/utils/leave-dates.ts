@@ -1,20 +1,21 @@
-export function startOfDay(date: Date): Date {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
+import {
+  addDaysToIstDutyDate,
+  istWallClockToDate,
+  toIstDutyDateKey,
+} from './ist-date';
+
+/** Start of the IST calendar day for a Date (or today). */
+export function startOfDay(date: Date = new Date()): Date {
+  return istWallClockToDate(toIstDutyDateKey(date), 0, 0);
 }
 
 export function addDays(date: Date, days: number): Date {
-  const next = startOfDay(date);
-  next.setDate(next.getDate() + days);
-  return next;
+  const key = addDaysToIstDutyDate(toIstDutyDateKey(date), days);
+  return istWallClockToDate(key, 12, 0);
 }
 
 export function toDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  return toIstDutyDateKey(date);
 }
 
 export function inclusiveDayCount(start: Date, end: Date): number {
@@ -27,21 +28,31 @@ export function inclusiveDayCount(start: Date, end: Date): number {
 }
 
 export function formatLeaveDayValue(date: Date): string {
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  return date.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+  });
 }
 
 export function formatLeaveDayMeta(date: Date): string {
-  const weekday = date.toLocaleDateString('en-IN', { weekday: 'long' });
-  const today = startOfDay(new Date());
-  const tomorrow = addDays(today, 1);
+  const weekday = date.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long',
+  });
+  const todayKey = toIstDutyDateKey();
+  const tomorrowKey = addDaysToIstDutyDate(todayKey, 1);
   const key = toDateKey(date);
-  if (key === toDateKey(today)) {
+  if (key === todayKey) {
     return `${weekday} (Today)`;
   }
-  if (key === toDateKey(tomorrow)) {
+  if (key === tomorrowKey) {
     return `${weekday} (Tomorrow)`;
   }
-  const diffDays = Math.round((startOfDay(date).getTime() - today.getTime()) / 86_400_000);
+  const todayMs = istWallClockToDate(todayKey, 0, 0).getTime();
+  const diffDays = Math.round(
+    (startOfDay(date).getTime() - todayMs) / 86_400_000,
+  );
   if (diffDays > 0 && diffDays <= 7) {
     return `${weekday} (This week)`;
   }
@@ -62,8 +73,11 @@ export function defaultLeaveRange(): { start: Date; end: Date } {
   return { start, end };
 }
 
-export function resolveLeavePreset(presetKey: string): { start: Date; end: Date } | null {
-  const today = startOfDay(new Date());
+export function resolveLeavePreset(
+  presetKey: string,
+): { start: Date; end: Date } | null {
+  const todayKey = toIstDutyDateKey();
+  const today = istWallClockToDate(todayKey, 12, 0);
   if (presetKey === 'tomorrow') {
     const start = addDays(today, 1);
     return { start, end: start };
@@ -73,7 +87,10 @@ export function resolveLeavePreset(presetKey: string): { start: Date; end: Date 
     return { start, end: addDays(start, 1) };
   }
   if (presetKey === 'weekend') {
-    const day = today.getDay(); // 0 Sun … 6 Sat
+    // IST weekday via noon UTC≈IST for the duty key
+    const [y, m, d] = todayKey.split('-').map(Number);
+    const utc = new Date(Date.UTC(y, m - 1, d, 6, 30));
+    const day = utc.getUTCDay(); // 0 Sun … 6 Sat
     const daysUntilSat = (6 - day + 7) % 7 || 7;
     const start = addDays(today, daysUntilSat);
     return { start, end: addDays(start, 1) };

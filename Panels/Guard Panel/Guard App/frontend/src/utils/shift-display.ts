@@ -1,5 +1,7 @@
 /** Shared formatting for assigned shift times shown on Home + Schedule. */
 
+import { shiftWindowIst, toIstDutyDateKey } from './ist-date';
+
 export function parseHhMm(value: string): { hours: number; minutes: number } | null {
   const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
   if (!match) {
@@ -71,33 +73,18 @@ export function todayShiftHeading(shiftFrom: string, shiftTo: string): string {
   return `TODAY'S SHIFT • ${kind}`;
 }
 
-function shiftMomentToday(hhmm: string, now: Date): Date | null {
-  const parsed = parseHhMm(hhmm);
-  if (!parsed) {
-    return null;
-  }
-  const at = new Date(now);
-  at.setSeconds(0, 0);
-  at.setHours(parsed.hours, parsed.minutes, 0, 0);
-  return at;
-}
-
 export function getShiftWindow(params: {
   shiftFrom: string;
   shiftTo: string;
   now?: Date;
+  dutyDate?: string;
 }): { start: Date; end: Date } | null {
   const now = params.now ?? new Date();
-  const start = shiftMomentToday(params.shiftFrom, now);
-  let end = shiftMomentToday(params.shiftTo, now);
-  if (!start || !end) {
+  const dutyDate = params.dutyDate ?? toIstDutyDateKey(now);
+  if (!parseHhMm(params.shiftFrom) || !parseHhMm(params.shiftTo)) {
     return null;
   }
-  if (end <= start) {
-    end = new Date(end);
-    end.setDate(end.getDate() + 1);
-  }
-  return { start, end };
+  return shiftWindowIst(dutyDate, params.shiftFrom, params.shiftTo);
 }
 
 /** True when current time is after shift start and before shift end. */
@@ -146,15 +133,15 @@ export function formatCountdownLabel(params: {
   now?: Date;
 }): string {
   const now = params.now ?? new Date();
-  const start = shiftMomentToday(params.shiftFrom, now);
-  let end = shiftMomentToday(params.shiftTo, now);
-  if (!start || !end) {
+  const window = getShiftWindow({
+    shiftFrom: params.shiftFrom,
+    shiftTo: params.shiftTo,
+    now,
+  });
+  if (!window) {
     return '';
   }
-  if (end <= start) {
-    end = new Date(end);
-    end.setDate(end.getDate() + 1);
-  }
+  const { start, end } = window;
 
   if (params.shiftActive) {
     const minsLeft = Math.floor((end.getTime() - now.getTime()) / 60_000);
@@ -187,9 +174,12 @@ export function formatCountdownLabel(params: {
 }
 
 export function formatTodayBadge(now = new Date()): string {
-  const day = now.getDate();
-  const month = now.toLocaleString('en-IN', { month: 'short' });
-  return `Today • ${day} ${month}`;
+  const label = now.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+  });
+  return `Today • ${label}`;
 }
 
 export function firstNameFromFullName(fullName: string): string {

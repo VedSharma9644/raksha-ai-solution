@@ -6,6 +6,7 @@ import {
 import {
   notifyReliefAssignment,
   notifyReliefDecision,
+  notifyRosterUpdate,
 } from "@raskha/notifications";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -122,6 +123,28 @@ export function createReliefRoutes(): Router {
             requesterName: result.guardName,
             methodLabel: result.methodLabel,
             dutyDate: result.dutyDate,
+          }).catch(() => undefined);
+
+          void notifyRosterUpdate({
+            guardId: result.assignedGuardId,
+            agencyId: result.agencyId,
+            action: "assigned",
+            siteName: result.siteName,
+            shiftLabel: result.shiftLabel,
+            shiftStartTime: result.shiftFrom,
+            shiftEndTime: result.shiftTo,
+          }).catch(() => undefined);
+        }
+
+        if (result.guardId) {
+          void notifyRosterUpdate({
+            guardId: result.guardId,
+            agencyId: result.agencyId,
+            action: "updated",
+            siteName: result.siteName,
+            shiftLabel: result.shiftLabel || "Relief handover",
+            shiftStartTime: result.shiftFrom,
+            shiftEndTime: result.shiftTo,
           }).catch(() => undefined);
         }
 

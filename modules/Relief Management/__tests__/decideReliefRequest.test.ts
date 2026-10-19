@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const update = vi.fn();
 const requestGet = vi.fn();
 const guardGet = vi.fn();
+const assignmentAdd = vi.fn();
 
 vi.mock("firebase-admin/firestore", () => ({
   Timestamp: { now: () => ({ seconds: 1, nanoseconds: 0 }) },
+  FieldValue: { serverTimestamp: () => "SERVER_TS" },
   getFirestore: () => ({
     collection: (name: string) => ({
       doc: (id: string) => {
@@ -15,17 +17,35 @@ vi.mock("firebase-admin/firestore", () => ({
         if (name === "guards") {
           return { get: () => guardGet(id) };
         }
+        if (name === "attendanceRecords") {
+          return { update: vi.fn().mockResolvedValue(undefined) };
+        }
         return { get: vi.fn(), update: vi.fn() };
       },
-      // Supports .where().get() and .where().where().get() (roster + attendance checks)
+      add: (data: unknown) => {
+        if (name === "shiftAssignments") {
+          return assignmentAdd(data);
+        }
+        return Promise.resolve({ id: "doc-1" });
+      },
+      // Supports .where().get() and .where().where().get() (roster + attendance + leave)
       where: () => ({
         where: () => ({
+          where: () => ({
+            get: vi.fn().mockResolvedValue({ docs: [] }),
+          }),
           get: vi.fn().mockResolvedValue({ docs: [] }),
         }),
         get: vi.fn().mockResolvedValue({ docs: [] }),
       }),
     }),
   }),
+}));
+
+vi.mock("@raskha/attendance", () => ({
+  getTodayOpenPunchIn: vi.fn().mockResolvedValue(null),
+  weekdayFromDutyDate: () => "wed",
+  ATTENDANCE_COLLECTION: "attendanceRecords",
 }));
 
 const { decideReliefRequest } = await import("../agencyRelief");
@@ -42,6 +62,7 @@ function pendingSnap(agencyId: string, guardId = "guard-requester") {
       dutyDate: "2026-10-08",
       siteId: "site-a",
       siteName: "Site A",
+      postName: "Gate",
       shiftFrom: "08:00",
       shiftTo: "20:00",
     }),
@@ -53,6 +74,8 @@ describe("decideReliefRequest security rules", () => {
     update.mockReset();
     requestGet.mockReset();
     guardGet.mockReset();
+    assignmentAdd.mockReset();
+    assignmentAdd.mockResolvedValue({ id: "assign-1" });
   });
 
   it("IDOR: wrong agency cannot approve another agency’s request → 403", async () => {
@@ -167,6 +190,39 @@ describe("decideReliefRequest security rules", () => {
       expect.objectContaining({
         status: "rejected",
         rejectionRemark: "Coverage unavailable",
+      })
+    );
+  });
+
+  it("approve writes shiftAssignments for assignee", async () => {
+    requestGet.mockResolvedValue(pendingSnap("agency-1"));
+    guardGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        agencyId: "agency-1",
+        fullName: "Cover Guard",
+        employeeCode: "RKS-1001",
+      }),
+    });
+    update.mockResolvedValue(undefined);
+
+    const result = await decideReliefRequest({
+      agencyId: "agency-1",
+      requestId: "req-1",
+      decision: "approved",
+      assignedGuardId: "guard-cover",
+      decidedByName: "Admin",
+    });
+
+    expect(result.status).toBe("approved");
+    expect(result.assignmentId).toBe("assign-1");
+    expect(assignmentAdd).toHaveBeenCalledWith(
+      expect.objectContaining({
+        guardId: "guard-cover",
+        siteId: "site-a",
+        effectiveFrom: "2026-10-08",
+        effectiveTo: "2026-10-08",
+        reliefRequestId: "req-1",
       })
     );
   });

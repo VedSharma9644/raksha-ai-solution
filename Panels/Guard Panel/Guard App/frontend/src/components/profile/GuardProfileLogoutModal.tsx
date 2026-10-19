@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Modal, Pressable, Text, View } from 'react-native';
 
-import { guardProfileDefaults } from '../../constants/guard-profile-defaults';
+import { useLanguage } from '../../i18n';
 import { guardProfileModalsStyles as styles } from '../../styles/guard-profile-modals.styles';
 import { appColors } from '../../theme';
 
@@ -16,6 +16,8 @@ export function GuardProfileLogoutModal({
   onCancel,
   onConfirm,
 }: GuardProfileLogoutModalProps) {
+  const { t } = useLanguage();
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.logoutBackdrop}>
@@ -24,21 +26,21 @@ export function GuardProfileLogoutModal({
             <MaterialIcons name="warning" size={28} color={appColors.onErrorContainer} />
           </View>
           <View>
-            <Text style={styles.logoutTitle}>{guardProfileDefaults.logoutModalTitle}</Text>
-            <Text style={styles.logoutMessage}>{guardProfileDefaults.logoutModalMessage}</Text>
+            <Text style={styles.logoutTitle}>{t('profile.logoutConfirmTitle')}</Text>
+            <Text style={styles.logoutMessage}>{t('profile.logoutConfirmMessage')}</Text>
           </View>
           <View style={styles.logoutActions}>
             <Pressable
               style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
               onPress={onCancel}
             >
-              <Text style={styles.cancelLabel}>{guardProfileDefaults.logoutCancel}</Text>
+              <Text style={styles.cancelLabel}>{t('common.cancel')}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}
               onPress={onConfirm}
             >
-              <Text style={styles.confirmLabel}>{guardProfileDefaults.logoutConfirm}</Text>
+              <Text style={styles.confirmLabel}>{t('profile.logoutConfirm')}</Text>
             </Pressable>
           </View>
         </View>

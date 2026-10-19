@@ -203,7 +203,11 @@ export async function listAgencyAttendanceForDate(params: {
     if (!punchedAt) {
       continue;
     }
-    const punchInDate = toIstDateKey(punchedAt);
+    const storedDutyDate =
+      typeof doc.data.dutyDate === "string" && doc.data.dutyDate.trim()
+        ? doc.data.dutyDate.trim()
+        : "";
+    const punchInDate = storedDutyDate || toIstDateKey(punchedAt);
     if (punchInDate !== params.date) {
       continue;
     }

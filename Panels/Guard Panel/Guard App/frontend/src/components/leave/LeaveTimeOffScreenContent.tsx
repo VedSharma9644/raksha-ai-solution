@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import {
   fetchLeaveRequests,

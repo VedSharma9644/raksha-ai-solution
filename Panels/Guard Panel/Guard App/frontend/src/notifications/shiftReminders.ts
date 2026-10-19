@@ -1,3 +1,4 @@
+import { shiftWindowIst, toIstDutyDateKey } from '../utils/ist-date';
 import {
   cancelScheduledNotificationAsync,
   getAllScheduledNotificationsAsync,
@@ -15,22 +16,6 @@ type ShiftReminderPlan = {
   /** Minutes from now; must be > 0 */
   minutesFromNow: number;
 };
-
-function parseShiftToday(hhmm: string, now: Date): Date | null {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
-  if (!match) {
-    return null;
-  }
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
-    return null;
-  }
-  const at = new Date(now);
-  at.setSeconds(0, 0);
-  at.setHours(hours, minutes, 0, 0);
-  return at;
-}
 
 function minutesUntil(target: Date, now: Date): number {
   return Math.floor((target.getTime() - now.getTime()) / 60_000);
@@ -54,16 +39,10 @@ export async function rescheduleShiftReminders(params: {
   );
 
   const now = new Date();
-  const start = parseShiftToday(params.shiftFrom, now);
-  const end = parseShiftToday(params.shiftTo, now);
-  if (!start || !end) {
-    return;
-  }
-
-  // Overnight shift: end is next calendar day
-  if (end <= start) {
-    end.setDate(end.getDate() + 1);
-  }
+  const dutyDate = toIstDutyDateKey(now);
+  const window = shiftWindowIst(dutyDate, params.shiftFrom, params.shiftTo);
+  const start = window.start;
+  const end = window.end;
 
   const site = params.siteName?.trim() || 'your site';
   const plans: ShiftReminderPlan[] = [];

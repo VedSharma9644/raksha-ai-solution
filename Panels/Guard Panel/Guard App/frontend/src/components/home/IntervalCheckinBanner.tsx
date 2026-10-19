@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import {
   checkGeofence,
@@ -110,7 +112,13 @@ export function IntervalCheckinBanner() {
       const accuracyMeters = position.coords.accuracy ?? 5;
       setLastKnownLocation({ lat, lng, accuracyMeters });
 
-      const result = await checkGeofence(authToken, lat, lng, accuracyMeters);
+      const result = await checkGeofence(
+        authToken,
+        lat,
+        lng,
+        accuracyMeters,
+        'interval_checkin',
+      );
       if (!result.unlocked) {
         Alert.alert(
           'Geofence',

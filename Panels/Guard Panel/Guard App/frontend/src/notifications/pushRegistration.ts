@@ -44,7 +44,9 @@ async function ensureAndroidChannel(): Promise<void> {
     importance: AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#00464a',
-    sound: 'default',
+    // Do not set sound: 'default' — Expo treats that as a custom file and warns
+    // when it is not listed under expo-notifications plugin `sounds`.
+    // Omitting sound uses the platform default notification sound.
   });
 }
 

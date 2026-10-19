@@ -9,10 +9,10 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { IncomingReliefRequestsScreen } from '../screens/IncomingReliefRequestsScreen';
 import { LeaveTimeOffScreen } from '../screens/LeaveTimeOffScreen';
 import { LoginScreen } from '../screens/LoginScreen';
-import { MainTabPlaceholderScreen } from '../screens/MainTabPlaceholderScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { PatrolSessionScreen } from '../screens/PatrolSessionScreen';
 import { RelieveAGuardScreen } from '../screens/RelieveAGuardScreen';
+import { SalaryTabScreen } from '../screens/SalaryTabScreen';
 import { ShiftDetailsScreen } from '../screens/ShiftDetailsScreen';
 import { UpcomingScheduleScreen } from '../screens/UpcomingScheduleScreen';
 import { useGuardAppNavigation } from './useGuardAppNavigation';
@@ -49,13 +49,7 @@ export function GuardAppRoot() {
   } else if (mainTab === 'attendance') {
     screen = <AttendanceHistoryScreen />;
   } else if (mainTab === 'more') {
-    screen = (
-      <MainTabPlaceholderScreen
-        screenTitle="More"
-        activeTab="more"
-        message="Additional guard tools and settings will appear here."
-      />
-    );
+    screen = <SalaryTabScreen />;
   }
 
   return (

@@ -21,6 +21,7 @@ function statusStyles(kind: AttendanceHistoryLogDto['kind']) {
       return { badge: styles.statusUpcoming, text: styles.statusTextUpcoming };
     case 'weeklyOff':
     case 'leave':
+    case 'relief':
       return { badge: styles.statusOff, text: styles.statusTextOff };
     case 'full':
     case 'present':
@@ -31,7 +32,10 @@ function statusStyles(kind: AttendanceHistoryLogDto['kind']) {
 
 export function AttendanceDailyLogCard({ item }: AttendanceDailyLogCardProps) {
   const status = statusStyles(item.kind);
-  const isOff = item.kind === 'weeklyOff' || item.kind === 'leave';
+  const isOff =
+    item.kind === 'weeklyOff' ||
+    item.kind === 'leave' ||
+    item.kind === 'relief';
   const isMissed = item.kind === 'missed';
   const hasDetails = Boolean(item.detailPrimaryValue);
 

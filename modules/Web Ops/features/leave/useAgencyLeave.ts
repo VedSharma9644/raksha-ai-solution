@@ -39,14 +39,22 @@ export function useAgencyLeave() {
   }, [activeBranchId, load]);
 
   const updateStatus = useCallback(
-    async (leaveId: string, status: LeaveRequestStatus) => {
+    async (
+      leaveId: string,
+      status: LeaveRequestStatus,
+      remark?: string
+    ) => {
       if (status !== "approved" && status !== "rejected") {
         return;
+      }
+      if (status === "rejected" && !remark?.trim()) {
+        setError("A rejection remark is required.");
+        throw new Error("A rejection remark is required.");
       }
       setIsUpdatingId(leaveId);
       setError(null);
       try {
-        await decideAgencyLeaveRequest(leaveId, status);
+        await decideAgencyLeaveRequest(leaveId, status, remark?.trim());
         setLeaveRequests((current) =>
           current.map((request) =>
             request.id === leaveId ? { ...request, status } : request

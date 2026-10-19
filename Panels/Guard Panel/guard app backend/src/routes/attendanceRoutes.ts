@@ -8,10 +8,12 @@ import {
   getTodayOpenPunchIn,
   listAttendanceHistory,
   listIntervalCheckinsForShift,
+  evaluatePunchOutEligibility,
   markIntervalCheckin,
   markPunchIn,
   markPunchOut,
   resolveTodayDuty,
+  toDutyDateKey,
   type SiteGeofenceContext,
   type TodayDutyResolution,
 } from "@raskha/attendance";
@@ -26,7 +28,7 @@ import {
 } from "../sessionStore";
 
 function isDemoMode(): boolean {
-  return process.env.ATTENDANCE_DEMO_MODE !== "false";
+  return process.env.ATTENDANCE_DEMO_MODE === "true";
 }
 
 function readLoadTestId(req: AuthedRequest): string | undefined {
@@ -111,11 +113,39 @@ export function createAttendanceRoutes(): Router {
       const lat = Number(req.body?.lat);
       const lng = Number(req.body?.lng);
       const accuracyMeters = Number(req.body?.accuracyMeters ?? 5);
-      await applyRosterDutyToRequest(req);
+      const purpose =
+        typeof req.body?.purpose === "string" ? req.body.purpose.trim() : "";
+      const duty = await applyRosterDutyToRequest(req);
       const site = await resolveAssignedSite(req);
 
       if (site && req.guard) {
         req.guard.siteName = site.siteName;
+      }
+
+      // Block camera unlock for punch-in outside the early/late window.
+      if (purpose === "punch_in" && req.guard) {
+        const open = await getTodayOpenPunchIn(req.guard.guardId);
+        const punchInWindow = getPunchInWindowStatus({
+          shiftFrom: req.guard.shiftFrom,
+          shiftTo: req.guard.shiftTo,
+          dutyDate: duty?.dutyDate,
+          shiftActive: Boolean(open),
+        });
+        if (!punchInWindow.open) {
+          res.status(403).json({
+            unlocked: false,
+            cameraUnlocked: false,
+            status: "window_closed",
+            accuracyMeters: Number.isFinite(accuracyMeters) ? accuracyMeters : 5,
+            distanceMeters: null,
+            message:
+              punchInWindow.message ||
+              "Punch-in is only open from 15 minutes before shift start until 15 minutes after.",
+            punchInWindow,
+            site: null,
+          });
+          return;
+        }
       }
 
       const result = checkGeofence({
@@ -149,7 +179,9 @@ export function createAttendanceRoutes(): Router {
       });
     } catch (error: unknown) {
       const err = error as { message?: string };
-      res.status(500).json({ error: err.message ?? "Geofence check failed." });
+      res.status(statusCodeOf(error, 500)).json({
+        error: err.message ?? "Geofence check failed.",
+      });
     }
   });
 
@@ -218,7 +250,7 @@ export function createAttendanceRoutes(): Router {
         return;
       }
 
-      await applyRosterDutyToRequest(req);
+      const duty = await applyRosterDutyToRequest(req);
       const site = await resolveAssignedSite(req);
       if (site) {
         req.guard.siteName = site.siteName;
@@ -257,6 +289,7 @@ export function createAttendanceRoutes(): Router {
         site,
         demoMode: isDemoMode(),
         loadTestId: readLoadTestId(req),
+        dutyDate: duty?.dutyDate,
       });
 
       res.status(201).json(result);
@@ -293,7 +326,7 @@ export function createAttendanceRoutes(): Router {
 
       if (!selfieBase64 && !selfieStoragePath) {
         res.status(400).json({
-          error: "selfieStoragePath or selfieBase64 is required.",
+          error: "End-shift selfie is required to end your shift.",
         });
         return;
       }
@@ -457,8 +490,22 @@ export function createAttendanceRoutes(): Router {
       });
       const punchInWindow = getPunchInWindowStatus({
         shiftFrom: req.guard.shiftFrom,
+        shiftTo: req.guard.shiftTo,
+        dutyDate: duty?.dutyDate,
         shiftActive: Boolean(open),
       });
+
+      const punchOutEligibility = open
+        ? await evaluatePunchOutEligibility({
+            guardId: req.guard.guardId,
+            shiftFrom: req.guard.shiftFrom,
+            shiftTo: req.guard.shiftTo,
+            dutyDate:
+              open.dutyDate?.trim() ||
+              duty?.dutyDate ||
+              toDutyDateKey(open.punchedAt),
+          })
+        : null;
 
       res.json({
         shiftActive: Boolean(open),
@@ -472,6 +519,7 @@ export function createAttendanceRoutes(): Router {
         shiftFrom: req.guard.shiftFrom,
         shiftTo: req.guard.shiftTo,
         shiftLabel: duty?.shiftLabel,
+        dutyDate: duty?.dutyDate ?? null,
         dutySource: duty?.source ?? "profile",
         earlierShiftCount: duty?.earlierShiftCount ?? 0,
         hasLaterReplacement: duty?.hasLaterReplacement ?? false,
@@ -479,6 +527,7 @@ export function createAttendanceRoutes(): Router {
         intervalCheckinMinutes: site?.intervalCheckinMinutes ?? null,
         intervalCheckin,
         punchInWindow,
+        punchOutEligibility,
         guard: {
           employeeCode: req.guard.employeeCode,
           fullName: req.guard.fullName,

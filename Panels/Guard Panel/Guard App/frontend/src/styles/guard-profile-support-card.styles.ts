@@ -81,6 +81,23 @@ export const guardProfileSupportCardStyles = StyleSheet.create({
     fontFamily: 'PublicSans_400Regular',
     color: appColors.secondary,
   },
+  langChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    maxWidth: 130,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: appRadii.full,
+    backgroundColor: appColors.primaryContainer,
+  },
+  langChipLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: 'PublicSans_700Bold',
+    color: appColors.onPrimary,
+    flexShrink: 1,
+  },
   langToggle: {
     flexDirection: 'row',
     backgroundColor: appColors.surfaceContainerHigh,

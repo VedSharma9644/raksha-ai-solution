@@ -2,10 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 
-import {
-  guardProfileDefaults,
-  type ProfileLanguage,
-} from '../../constants/guard-profile-defaults';
+import { guardProfileDefaults } from '../../constants/guard-profile-defaults';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { guardProfileModalsStyles as modalStyles } from '../../styles/guard-profile-modals.styles';
 import { guardProfileScreenStyles as styles } from '../../styles/guard-profile-screen.styles';
@@ -21,7 +18,6 @@ import { GuardProfileSupportCard } from './GuardProfileSupportCard';
 
 export function GuardProfileScreenContent() {
   const { signOut } = useGuardAppNavigation();
-  const [language, setLanguage] = useState<ProfileLanguage>('EN');
   const [qrVisible, setQrVisible] = useState(false);
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -63,9 +59,8 @@ export function GuardProfileScreenContent() {
       <GuardProfileDutyGearCard />
       <GuardProfileEmergencyCard />
       <GuardProfileSupportCard
-        language={language}
-        onLanguageChange={setLanguage}
         onLogoutPress={() => setLogoutVisible(true)}
+        onLanguageChanged={showToast}
       />
 
       {toast ? (

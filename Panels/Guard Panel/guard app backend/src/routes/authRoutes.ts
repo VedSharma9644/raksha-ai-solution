@@ -8,7 +8,7 @@ import {
 import { createSession } from "../sessionStore";
 
 function isDemoMode(): boolean {
-  return process.env.ATTENDANCE_DEMO_MODE !== "false";
+  return process.env.ATTENDANCE_DEMO_MODE === "true";
 }
 
 function sessionPayload(token: string, guard: {

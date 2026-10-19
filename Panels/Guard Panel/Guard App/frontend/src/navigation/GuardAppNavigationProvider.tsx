@@ -80,12 +80,16 @@ export function GuardAppNavigationProvider({ children }: GuardAppNavigationProvi
   const openAttendanceMarked = useCallback((result?: PunchInResult) => {
     if (result) {
       setLastPunchResult(result);
+      // Always clear unlock after a successful capture (punch-in/out/interval).
+      setCameraUnlockedState(false);
       if (result.mode === 'punch_out' || result.shiftStatus === 'ended') {
         setShiftActiveState(false);
-        setCameraUnlockedState(false);
-      } else if (result.mode === 'punch_in' || result.shiftStatus === 'started') {
+      } else if (
+        result.mode === 'punch_in' ||
+        result.mode === 'interval_checkin' ||
+        result.shiftStatus === 'started'
+      ) {
         setShiftActiveState(true);
-        setCameraUnlockedState(false);
       }
     }
     setStackRoute('attendanceMarked');

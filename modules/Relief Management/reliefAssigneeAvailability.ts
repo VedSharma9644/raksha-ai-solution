@@ -90,7 +90,37 @@ export async function assertReliefAssigneeAvailable(params: {
     );
   }
 
-  // 2) Attendance: already started a shift that day at another site
+  // 2) Approved leave covering this duty date
+  try {
+    const leaveSnap = await db
+      .collection("leaveRequests")
+      .where("guardId", "==", assignedGuardId)
+      .where("agencyId", "==", agencyId)
+      .where("status", "==", "approved")
+      .get();
+    for (const doc of leaveSnap.docs) {
+      const data = doc.data() as {
+        startDate?: string;
+        endDate?: string;
+      };
+      const start = String(data.startDate ?? "");
+      const end = String(data.endDate ?? start);
+      if (start && end && dutyDate >= start && dutyDate <= end) {
+        throw httpError(
+          `Cannot assign this guard — on approved leave covering ${dutyDate}.`,
+          409
+        );
+      }
+    }
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number };
+    if (err.statusCode === 409) {
+      throw error;
+    }
+    // Missing index / collection — skip leave gate rather than block approve.
+  }
+
+  // 3) Attendance: already started a shift that day at another site
   const attendanceSnap = await db
     .collection(ATTENDANCE_COLLECTION)
     .where("guardId", "==", assignedGuardId)

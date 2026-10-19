@@ -1,0 +1,107 @@
+/** Canonical English strings for the Guard app. */
+export const en = {
+  'tabs.home': 'Home',
+  'tabs.schedule': 'Schedule',
+  'tabs.attendance': 'Attendance',
+  'tabs.more': 'Salary',
+
+  'common.ok': 'OK',
+  'common.cancel': 'Cancel',
+  'common.retry': 'Retry',
+  'common.loading': 'Loading…',
+  'common.error': 'Something went wrong',
+  'common.success': 'Success',
+  'common.save': 'Save',
+  'common.close': 'Close',
+  'common.back': 'Back',
+  'common.continue': 'Continue',
+  'common.yes': 'Yes',
+  'common.no': 'No',
+  'common.done': 'Done',
+
+  'login.welcomeTitle': 'Welcome to Raksha',
+  'login.welcomeSubtitle': 'Sign in to start your duty',
+  'login.authorizedBadge': 'Authorized Personnel Only',
+  'login.modePhone': 'Mobile Number',
+  'login.modeId': 'Guard ID',
+  'login.phoneLabel': 'Mobile Number',
+  'login.phonePlaceholder': 'Enter 10-digit mobile',
+  'login.idLabel': 'Guard ID',
+  'login.idPlaceholder': 'e.g. RKS-8842',
+  'login.passwordLabel': 'Password',
+  'login.passwordPlaceholder': 'Enter password',
+  'login.otpLabel': 'Enter 6-Digit Code',
+  'login.sendOtp': 'Send OTP',
+  'login.resendOtp': 'Resend OTP',
+  'login.verify': 'Verify & Enter Duty',
+  'login.forgotPassword': 'Forgot password?',
+  'login.signIn': 'Sign In',
+
+  'home.markAttendance': 'MARK ATTENDANCE',
+  'home.endShift': 'END SHIFT',
+  'home.checkInClosed': 'CHECK-IN CLOSED',
+  'home.verifyUnlock': 'Verify Location & Unlock',
+  'home.openCamera': 'Tap to Open Camera',
+  'home.openCameraEnd': 'Open Camera to End Shift',
+  'home.verifyEnd': 'Verify Site & End Shift',
+  'home.punchUnavailable': 'Punch-in unavailable',
+  'home.checkingLocation': 'Checking location...',
+  'home.geoPill': 'GEO-FENCED SITE CAMERA',
+  'home.cameraReady': 'CAMERA UNLOCKED • READY',
+  'home.windowClosedPill': 'PUNCH-IN WINDOW CLOSED',
+  'home.onDutyPill': 'SHIFT ACTIVE • ON DUTY',
+  'home.hintVerify':
+    'Verify GPS at your site first — camera unlocks only after geofence pass. Punch-in opens 15 minutes before shift start; after start counts as late (up to 15 minutes).',
+  'home.hintUnlocked':
+    'Location verified. Take a live selfie to punch in and start your shift.',
+  'home.hintOnDuty':
+    'You are on duty. Verify site GPS and capture a selfie to end your shift.',
+  'home.sosTitle': 'Emergency Assistance',
+  'home.sosDescription':
+    'Confirms, then dials Site HR on this device. No in-app SOS alert is sent yet.',
+  'home.sosButton': 'SOS Emergency',
+
+  'profile.supportTitle': 'Support & Preferences',
+  'profile.languageTitle': 'App Language',
+  'profile.languageSelect': 'Choose language',
+  'profile.languageSearch': 'Search language',
+  'profile.logout': 'Log Out from Device',
+  'profile.callHr': 'Call {{name}}',
+  'profile.screenTitle': 'Guard Profile & Id',
+  'profile.logoutConfirmTitle': 'End Guard Shift Session?',
+  'profile.logoutConfirmMessage':
+    'Make sure your current gate patrol logs and visitor registers are synced before logging off.',
+  'profile.logoutConfirm': 'Log Out',
+  'profile.languageChanged': 'Language updated to {{language}}',
+
+  'schedule.title': 'Schedule',
+  'schedule.upcoming': 'Upcoming shifts',
+  'schedule.today': 'Today',
+  'schedule.restDay': 'Rest Day',
+
+  'attendance.title': 'Attendance',
+  'attendance.history': 'Attendance history',
+  'attendance.marked': 'Attendance marked',
+
+  'leave.title': 'Leave',
+  'leave.apply': 'Apply for leave',
+  'leave.timeOff': 'Time off',
+  'leave.withdraw': 'Withdraw',
+  'leave.submit': 'Submit request',
+
+  'relief.title': 'Relief',
+  'relief.request': 'Relieve a guard',
+  'relief.incoming': 'Incoming relief',
+  'relief.submit': 'Submit relief request',
+
+  'alert.session': 'Session',
+  'alert.sessionExpired': 'Please log in again.',
+  'alert.geofence': 'Geofence',
+  'alert.locationRequired': 'Location required',
+  'alert.punchNotOpen': 'Punch-in not open',
+  'alert.siteVerified': 'Site verified',
+  'alert.openCamera': 'Open Camera',
+} as const;
+
+export type TranslationKey = keyof typeof en;
+export type TranslationDict = Record<TranslationKey, string>;

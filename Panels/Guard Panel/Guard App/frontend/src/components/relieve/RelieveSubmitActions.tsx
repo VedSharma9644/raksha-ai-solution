@@ -1,6 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import { submitReliefRequest } from '../../api/guard-api';
 import {
@@ -13,21 +15,22 @@ import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { relieveSubmitActionsStyles as styles } from '../../styles/relieve-submit-actions.styles';
 import { appColors } from '../../theme';
+import { toIstDutyDateKey } from '../../utils/ist-date';
 
 type RelieveSubmitActionsProps = {
   method: ReliefMethodKey;
   reason: ReliefReasonKey;
+  /** Optional override; defaults to today's IST duty date. */
+  dutyDate?: string;
+  note?: string;
 };
 
-function todayDutyDate(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-export function RelieveSubmitActions({ method, reason }: RelieveSubmitActionsProps) {
+export function RelieveSubmitActions({
+  method,
+  reason,
+  dutyDate,
+  note,
+}: RelieveSubmitActionsProps) {
   const { authToken, openIncomingReliefRequests, guardUser } = useGuardAppNavigation();
   const duty = useGuardDutyAssignment();
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +52,7 @@ export function RelieveSubmitActions({ method, reason }: RelieveSubmitActionsPro
       return;
     }
     if (!authToken) {
-      Alert.alert('Session', 'Please log in again to submit a relief request.');
+      showAlert('Session', 'Please log in again to submit a relief request.');
       return;
     }
 
@@ -58,7 +61,8 @@ export function RelieveSubmitActions({ method, reason }: RelieveSubmitActionsPro
       const result = await submitReliefRequest(authToken, {
         method,
         reason,
-        dutyDate: todayDutyDate(),
+        note: note?.trim() || undefined,
+        dutyDate: dutyDate?.trim() || toIstDutyDateKey(),
         shiftFrom: duty.shiftFrom,
         shiftTo: duty.shiftTo,
         siteId: guardUser?.assignedSiteId,
@@ -73,7 +77,7 @@ export function RelieveSubmitActions({ method, reason }: RelieveSubmitActionsPro
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Failed to submit relief request.';
-      Alert.alert('Relief request', message);
+      showAlert('Relief request', message);
     } finally {
       setSubmitting(false);
     }

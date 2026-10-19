@@ -1,15 +1,20 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 
+import { showAlert } from '../../alerts/appAlert';
 import { checkGeofence, fetchTodayShift } from '../../api/guard-api';
+import { useLanguage } from '../../i18n';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { appColors } from '../../theme';
 import { homeMarkAttendanceHeroStyles as styles } from '../../styles/home-mark-attendance-hero.styles';
+import { resolvePunchInBlockedMessage } from '../../utils/punch-in-window';
+import { resolvePunchOutBlockedMessage } from '../../utils/punch-out-eligibility';
 import { PrimaryActionButton } from '../shared/PrimaryActionButton';
 
 export function MarkAttendanceHero() {
+  const { t } = useLanguage();
   const {
     authToken,
     cameraUnlocked,
@@ -27,13 +32,8 @@ export function MarkAttendanceHero() {
     null,
   );
 
-  const refreshShift = useCallback(async () => {
-    if (!authToken) {
-      setLoadingShift(false);
-      return;
-    }
-    try {
-      const today = await fetchTodayShift(authToken);
+  const applyTodayGate = useCallback(
+    (today: Awaited<ReturnType<typeof fetchTodayShift>>) => {
       setShiftActive(today.shiftActive);
       const nextPunchedLabel = today.punchedAt
         ? new Date(today.punchedAt).toLocaleTimeString('en-IN', {
@@ -46,38 +46,113 @@ export function MarkAttendanceHero() {
       setPunchedAtLabel((current) =>
         current === nextPunchedLabel ? current : nextPunchedLabel,
       );
-      const windowClosed =
-        !today.shiftActive && today.punchInWindow && !today.punchInWindow.open;
-      const nextClosedMessage = windowClosed
-        ? today.punchInWindow?.message ||
-          'Punch-in closed. Check-in is only allowed within 15 minutes of your shift start.'
-        : null;
+      const blocked = resolvePunchInBlockedMessage({
+        shiftFrom: today.shiftFrom,
+        shiftTo: today.shiftTo,
+        dutyDate: today.dutyDate,
+        shiftActive: today.shiftActive,
+        serverOpen: today.punchInWindow?.open,
+        serverMessage: today.punchInWindow?.message,
+      });
       setPunchInClosedMessage((current) =>
-        current === nextClosedMessage ? current : nextClosedMessage,
+        current === blocked ? current : blocked,
       );
+      return blocked;
+    },
+    [setShiftActive],
+  );
+
+  const refreshShift = useCallback(async () => {
+    if (!authToken) {
+      setLoadingShift(false);
+      return;
+    }
+    try {
+      const today = await fetchTodayShift(authToken);
+      applyTodayGate(today);
     } catch {
       // Keep last known shift state if /today fails
     } finally {
       setLoadingShift(false);
     }
-  }, [authToken, setShiftActive]);
+  }, [applyTodayGate, authToken]);
 
   useEffect(() => {
     void refreshShift();
   }, [refreshShift]);
 
+  const assertPunchInStillOpen = async (): Promise<boolean> => {
+    if (!authToken) {
+      showAlert('Session', 'Please log in again to mark attendance.');
+      return false;
+    }
+    try {
+      const today = await fetchTodayShift(authToken);
+      const blocked = applyTodayGate(today);
+      if (blocked) {
+        showAlert('Punch-in not open', blocked);
+        setCameraUnlocked(false);
+        return false;
+      }
+      return true;
+    } catch {
+      showAlert(
+        'Punch-in unavailable',
+        'Could not verify your shift window. Check your connection and try again.',
+      );
+      return false;
+    }
+  };
+
+  const assertPunchOutAllowed = async (): Promise<boolean> => {
+    if (!authToken) {
+      showAlert('Session', 'Please log in again to mark attendance.');
+      return false;
+    }
+    try {
+      const today = await fetchTodayShift(authToken);
+      applyTodayGate(today);
+      const blocked = resolvePunchOutBlockedMessage(today);
+      if (blocked) {
+        showAlert('Cannot end shift yet', blocked);
+        setCameraUnlocked(false);
+        return false;
+      }
+      return true;
+    } catch {
+      showAlert(
+        'End shift unavailable',
+        'Could not verify relief assignment. Check your connection and try again.',
+      );
+      return false;
+    }
+  };
+
   const verifySiteAndOpenCamera = async (mode: 'punch_in' | 'punch_out') => {
     if (!authToken) {
-      Alert.alert('Session', 'Please log in again to mark attendance.');
+      showAlert('Session', 'Please log in again to mark attendance.');
       return;
     }
 
     setChecking(true);
     setPatrolMode(mode);
     try {
+      if (mode === 'punch_in') {
+        const allowed = await assertPunchInStillOpen();
+        if (!allowed) {
+          return;
+        }
+      }
+      if (mode === 'punch_out') {
+        const allowed = await assertPunchOutAllowed();
+        if (!allowed) {
+          return;
+        }
+      }
+
       const permission = await Location.requestForegroundPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
+        showAlert(
           'Location required',
           mode === 'punch_out'
             ? 'Enable GPS to verify you are at the duty site before ending your shift.'
@@ -95,9 +170,15 @@ export function MarkAttendanceHero() {
 
       setLastKnownLocation({ lat, lng, accuracyMeters });
 
-      const result = await checkGeofence(authToken, lat, lng, accuracyMeters);
+      const result = await checkGeofence(
+        authToken,
+        lat,
+        lng,
+        accuracyMeters,
+        mode,
+      );
       if (!result.unlocked) {
-        Alert.alert(
+        showAlert(
           'Geofence',
           result.message ||
             (mode === 'punch_out'
@@ -108,17 +189,32 @@ export function MarkAttendanceHero() {
         return;
       }
 
+      // Re-check after geofence so a long GPS wait cannot bypass gates.
+      if (mode === 'punch_in') {
+        const stillAllowed = await assertPunchInStillOpen();
+        if (!stillAllowed) {
+          return;
+        }
+      }
+      if (mode === 'punch_out') {
+        const stillAllowed = await assertPunchOutAllowed();
+        if (!stillAllowed) {
+          return;
+        }
+      }
+
       setCameraUnlocked(true);
-      Alert.alert(
+      showAlert(
         'Site verified',
         mode === 'punch_out'
-          ? 'Camera unlocked. Capture your selfie to end the shift.'
+          ? 'Camera unlocked. Capture your end-shift selfie to finish duty. Photo is required.'
           : 'Camera unlocked. Capture your selfie to start the shift.',
         [{ text: 'Open Camera', onPress: () => openPatrolSession(mode) }],
       );
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unable to verify location.';
-      Alert.alert('Geofence check failed', message);
+      const message =
+        error instanceof Error ? error.message : 'Unable to verify location.';
+      showAlert('Geofence check failed', message);
     } finally {
       setChecking(false);
     }
@@ -126,21 +222,7 @@ export function MarkAttendanceHero() {
 
   const handlePress = async () => {
     if (shiftActive) {
-      if (cameraUnlocked) {
-        openPatrolSession('punch_out');
-        return;
-      }
       await verifySiteAndOpenCamera('punch_out');
-      return;
-    }
-
-    if (punchInClosedMessage) {
-      Alert.alert('Punch-in closed', punchInClosedMessage);
-      return;
-    }
-
-    if (cameraUnlocked) {
-      openPatrolSession('punch_in');
       return;
     }
 
@@ -151,7 +233,9 @@ export function MarkAttendanceHero() {
     return (
       <View style={styles.card}>
         <ActivityIndicator size="large" color={appColors.onPrimary} />
-        <Text style={[styles.subtitle, { marginTop: 12 }]}>Checking shift status…</Text>
+        <Text style={[styles.subtitle, { marginTop: 12 }]}>
+          Checking shift status…
+        </Text>
       </View>
     );
   }
@@ -178,12 +262,12 @@ export function MarkAttendanceHero() {
         />
         <Text style={styles.pillText}>
           {isEndShift
-            ? 'SHIFT ACTIVE • ON DUTY'
+            ? t('home.onDutyPill')
             : punchInBlocked
-              ? 'PUNCH-IN WINDOW CLOSED'
+              ? t('home.windowClosedPill')
               : cameraUnlocked
-                ? 'CAMERA UNLOCKED • READY'
-                : 'GEO-FENCED SITE CAMERA'}
+                ? t('home.cameraReady')
+                : t('home.geoPill')}
         </Text>
       </View>
 
@@ -193,7 +277,11 @@ export function MarkAttendanceHero() {
         ) : (
           <MaterialIcons
             name={
-              isEndShift ? 'logout' : punchInBlocked ? 'timer-off' : 'photo-camera'
+              isEndShift
+                ? 'logout'
+                : punchInBlocked
+                  ? 'timer-off'
+                  : 'photo-camera'
             }
             size={42}
             color={appColors.primary}
@@ -202,18 +290,22 @@ export function MarkAttendanceHero() {
       </View>
 
       <Text style={[styles.title, isEndShift && styles.titleOnDuty]}>
-        {isEndShift ? 'END SHIFT' : punchInBlocked ? 'CHECK-IN CLOSED' : 'MARK ATTENDANCE'}
+        {isEndShift
+          ? t('home.endShift')
+          : punchInBlocked
+            ? t('home.checkInClosed')
+            : t('home.markAttendance')}
       </Text>
       <Text style={[styles.subtitle, isEndShift && styles.subtitleOnDuty]}>
         {isEndShift
           ? punchedAtLabel
-            ? `On duty since ${punchedAtLabel}. Verify site GPS and capture a selfie to end your shift.`
-            : 'You are on duty. Verify site GPS and capture a selfie to end your shift.'
+            ? `On duty since ${punchedAtLabel}. ${t('home.hintOnDuty')}`
+            : t('home.hintOnDuty')
           : punchInBlocked
             ? punchInClosedMessage
             : cameraUnlocked
-              ? 'Location verified. Take a live selfie to punch in and start your shift.'
-              : 'Verify GPS at your site first — camera unlocks only after geofence pass. Late check-in allowed up to 15 minutes after shift start.'}
+              ? t('home.hintUnlocked')
+              : t('home.hintVerify')}
       </Text>
 
       <View style={styles.lockRow}>
@@ -236,16 +328,16 @@ export function MarkAttendanceHero() {
       <PrimaryActionButton
         label={
           checking
-            ? 'Checking location...'
+            ? t('home.checkingLocation')
             : isEndShift
               ? cameraUnlocked
-                ? 'Open Camera to End Shift'
-                : 'Verify Site & End Shift'
+                ? t('home.openCameraEnd')
+                : t('home.verifyEnd')
               : punchInBlocked
-                ? 'Punch-in unavailable'
+                ? t('home.punchUnavailable')
                 : cameraUnlocked
-                  ? 'Tap to Open Camera'
-                  : 'Verify Location & Unlock'
+                  ? t('home.openCamera')
+                  : t('home.verifyUnlock')
         }
         icon={
           isEndShift

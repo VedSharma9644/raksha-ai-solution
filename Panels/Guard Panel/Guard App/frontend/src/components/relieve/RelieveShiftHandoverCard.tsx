@@ -1,17 +1,31 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { relieveAGuardDefaults } from '../../constants/relieve-a-guard-defaults';
 import { useGuardDutyAssignment } from '../../hooks/useGuardDutyAssignment';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { relieveShiftHandoverCardStyles as styles } from '../../styles/relieve-shift-handover-card.styles';
 import { appColors } from '../../theme';
+import { toIstDutyDateKey } from '../../utils/ist-date';
 import { firstNameFromFullName } from '../../utils/shift-display';
 
-export function RelieveShiftHandoverCard() {
+type RelieveShiftHandoverCardProps = {
+  dutyDate: string;
+  onCycleDutyDate: () => void;
+};
+
+export function RelieveShiftHandoverCard({
+  dutyDate,
+  onCycleDutyDate,
+}: RelieveShiftHandoverCardProps) {
   const duty = useGuardDutyAssignment();
   const { guardUser } = useGuardAppNavigation();
   const firstName = firstNameFromFullName(guardUser?.fullName ?? 'Guard');
+  const today = toIstDutyDateKey();
+  const dateLabel =
+    dutyDate === today
+      ? duty.todayBadge || 'Today (IST)'
+      : `Duty ${dutyDate}`;
 
   return (
     <View style={styles.section}>
@@ -22,10 +36,15 @@ export function RelieveShiftHandoverCard() {
           </View>
           <Text style={styles.stepTitle}>{relieveAGuardDefaults.step1Title}</Text>
         </View>
-        <View style={styles.changeButton}>
-          <Text style={styles.changeLabel}>{duty.todayBadge || relieveAGuardDefaults.changeShiftLabel}</Text>
+        <Pressable
+          style={styles.changeButton}
+          onPress={onCycleDutyDate}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle relief duty date between today and tomorrow"
+        >
+          <Text style={styles.changeLabel}>{dateLabel}</Text>
           <MaterialIcons name="calendar-month" size={18} color={appColors.primary} />
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.card}>

@@ -1,7 +1,9 @@
 import { getFirestore } from "firebase-admin/firestore";
 
 import {
+  addDaysToDutyDate,
   shiftWindowIst,
+  startOfIstDay,
   toDutyDateKey,
   weekdayFromDutyDate,
   type DayOfWeek,
@@ -20,6 +22,8 @@ export type TodayDutyResolution = {
   postName: string;
   source: "roster" | "profile";
   assignmentId?: string;
+  /** Roster duty date (YYYY-MM-DD IST) for the chosen window — may be yesterday for overnight. */
+  dutyDate: string;
   /** Roster shifts earlier today whose window already ended (missed / completed). */
   earlierShiftCount: number;
   /** True when an earlier roster window ended and a later one is still actionable. */
@@ -36,6 +40,13 @@ type AssignmentRow = {
   recurringDays: DayOfWeek[];
   effectiveFrom: string;
   effectiveTo?: string | null;
+};
+
+type WindowCandidate = {
+  row: AssignmentRow;
+  start: Date;
+  end: Date;
+  dutyDate: string;
 };
 
 function covers(assignment: AssignmentRow, dutyDate: string): boolean {
@@ -89,8 +100,84 @@ async function loadAssignments(
 }
 
 /**
+ * Build actionable windows for today plus yesterday overnight spills that still
+ * contain (or have not ended past) "now".
+ */
+export function buildTodayDutyWindows(params: {
+  assignments: AssignmentRow[];
+  now?: Date;
+  todayKey?: string;
+}): WindowCandidate[] {
+  const now = params.now ?? new Date();
+  const todayKey = params.todayKey ?? toDutyDateKey(now);
+  const yesterdayKey = addDaysToDutyDate(todayKey, -1);
+  const todayStart = startOfIstDay(todayKey);
+  const candidates: WindowCandidate[] = [];
+
+  for (const row of params.assignments) {
+    if (covers(row, todayKey)) {
+      const { start, end } = shiftWindowIst(
+        todayKey,
+        row.shiftStartTime,
+        row.shiftEndTime
+      );
+      candidates.push({ row, start, end, dutyDate: todayKey });
+    }
+    if (covers(row, yesterdayKey)) {
+      const { start, end } = shiftWindowIst(
+        yesterdayKey,
+        row.shiftStartTime,
+        row.shiftEndTime
+      );
+      // Overnight (or long) window that spills past today's IST midnight.
+      if (end.getTime() > todayStart.getTime()) {
+        candidates.push({ row, start, end, dutyDate: yesterdayKey });
+      }
+    }
+  }
+
+  return candidates.sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
+/** Pure selection used by resolveTodayDuty and unit tests. */
+export function pickTodayDutyWindow(params: {
+  windows: WindowCandidate[];
+  nowMs: number;
+  hasOpenPunch?: boolean;
+}): WindowCandidate | null {
+  const sorted = [...params.windows].sort(
+    (a, b) => a.start.getTime() - b.start.getTime()
+  );
+  if (sorted.length === 0) {
+    return null;
+  }
+  const notEnded = sorted.filter((item) => item.end.getTime() > params.nowMs);
+  const ended = sorted.filter((item) => item.end.getTime() <= params.nowMs);
+
+  if (params.hasOpenPunch) {
+    const containing = sorted.find(
+      (item) =>
+        item.start.getTime() <= params.nowMs && item.end.getTime() > params.nowMs
+    );
+    return containing ?? notEnded[0] ?? sorted[sorted.length - 1] ?? null;
+  }
+
+  if (notEnded.length === 0) {
+    return sorted[sorted.length - 1] ?? null;
+  }
+
+  const inProgress = notEnded.filter(
+    (item) => item.start.getTime() <= params.nowMs
+  );
+  const upcoming = notEnded.filter((item) => item.start.getTime() > params.nowMs);
+  void ended;
+  return inProgress[0] ?? upcoming[0] ?? notEnded[0] ?? null;
+}
+
+/**
  * Resolve the duty the Guard homepage should show right now.
  * Prefers live roster over profile defaults so same-day HR reassignments appear.
+ * Includes yesterday's overnight windows that still contain "now".
  */
 export async function resolveTodayDuty(params: {
   guardId: string;
@@ -103,8 +190,8 @@ export async function resolveTodayDuty(params: {
   /** When true, prefer a window that contains "now" (active punch session). */
   hasOpenPunch?: boolean;
 }): Promise<TodayDutyResolution> {
-  const dutyDate = toDutyDateKey();
   const now = new Date();
+  const todayKey = toDutyDateKey(now);
   const profileFrom = params.profileShiftFrom || "08:00";
   const profileTo = params.profileShiftTo || "20:00";
 
@@ -116,46 +203,33 @@ export async function resolveTodayDuty(params: {
     siteName: params.profileSiteName || "Assigned Site",
     postName: params.profilePostName || "Assigned Post",
     source: "profile",
+    dutyDate: todayKey,
     earlierShiftCount: 0,
     hasLaterReplacement: false,
   };
 
   const assignments = await loadAssignments(params.guardId, params.agencyId);
-  const todayRows = assignments
-    .filter((row) => covers(row, dutyDate))
-    .map((row) => {
-      const { start, end } = shiftWindowIst(
-        dutyDate,
-        row.shiftStartTime,
-        row.shiftEndTime
-      );
-      return { row, start, end };
-    })
-    .sort((a, b) => a.start.getTime() - b.start.getTime());
+  const windows = buildTodayDutyWindows({
+    assignments,
+    now,
+    todayKey,
+  });
 
-  if (todayRows.length === 0) {
+  if (windows.length === 0) {
     return fallback;
   }
 
-  const notEnded = todayRows.filter((item) => item.end.getTime() > now.getTime());
-  const ended = todayRows.filter((item) => item.end.getTime() <= now.getTime());
+  const nowMs = now.getTime();
+  const notEnded = windows.filter((item) => item.end.getTime() > nowMs);
+  const ended = windows.filter((item) => item.end.getTime() <= nowMs);
+  const chosen = pickTodayDutyWindow({
+    windows,
+    nowMs,
+    hasOpenPunch: params.hasOpenPunch,
+  });
 
-  let chosen = notEnded[0] ?? todayRows[todayRows.length - 1];
-
-  if (params.hasOpenPunch) {
-    const containing = todayRows.find(
-      (item) =>
-        item.start.getTime() <= now.getTime() && item.end.getTime() > now.getTime()
-    );
-    chosen = containing ?? notEnded[0] ?? todayRows[todayRows.length - 1];
-  } else if (notEnded.length > 0) {
-    const inProgress = notEnded.filter(
-      (item) => item.start.getTime() <= now.getTime()
-    );
-    const upcoming = notEnded.filter((item) => item.start.getTime() > now.getTime());
-    // Normal: show current in-progress window (late check-in still possible).
-    // After that window ends, the next rostered shift becomes the homepage duty.
-    chosen = inProgress[0] ?? upcoming[0] ?? notEnded[0];
+  if (!chosen) {
+    return fallback;
   }
 
   let siteName = params.profileSiteName || "Assigned Site";
@@ -169,7 +243,7 @@ export async function resolveTodayDuty(params: {
 
   const hasLaterReplacement =
     ended.length > 0 &&
-    notEnded.some((item) => item.start.getTime() > now.getTime());
+    notEnded.some((item) => item.start.getTime() > nowMs);
 
   return {
     shiftFrom: chosen.row.shiftStartTime,
@@ -180,6 +254,7 @@ export async function resolveTodayDuty(params: {
     postName: chosen.row.shiftLabel || params.profilePostName || "Assigned Post",
     source: "roster",
     assignmentId: chosen.row.id,
+    dutyDate: chosen.dutyDate,
     earlierShiftCount: ended.length,
     hasLaterReplacement,
   };

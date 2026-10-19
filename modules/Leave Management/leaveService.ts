@@ -442,9 +442,8 @@ export async function submitLeaveRequest(
     });
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (start < today) {
+  const todayKey = toDateKey();
+  if (params.startDate < todayKey) {
     throw Object.assign(new Error("Leave cannot start in the past."), {
       statusCode: 400,
     });

@@ -9,6 +9,9 @@ import {
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppAlertProvider } from './src/alerts/AppAlertProvider';
+import { AppErrorBoundary } from './src/components/AppErrorBoundary';
+import { LanguageProvider } from './src/i18n';
 import { GuardAppNavigationProvider } from './src/navigation/GuardAppNavigationProvider';
 import { GuardAppRoot } from './src/navigation/GuardAppRoot';
 import { GuardNotificationsProvider } from './src/notifications/GuardNotificationsProvider';
@@ -34,11 +37,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <GuardAppNavigationProvider>
-        <GuardNotificationsProvider>
-          <GuardAppRoot />
-        </GuardNotificationsProvider>
-      </GuardAppNavigationProvider>
+      <AppErrorBoundary>
+        <LanguageProvider>
+          <AppAlertProvider>
+            <GuardAppNavigationProvider>
+              <GuardNotificationsProvider>
+                <GuardAppRoot />
+              </GuardNotificationsProvider>
+            </GuardAppNavigationProvider>
+          </AppAlertProvider>
+        </LanguageProvider>
+      </AppErrorBoundary>
     </SafeAreaProvider>
   );
 }

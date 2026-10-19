@@ -1,14 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions, type CameraType } from 'expo-camera';
+import * as Location from 'expo-location';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   Text,
   View,
 } from 'react-native';
 
+import { showAlert } from '../../alerts/appAlert';
 import {
   intervalCheckinAttendance,
   punchInAttendance,
@@ -28,7 +29,8 @@ export function PatrolCameraViewport() {
     openAttendanceMarked,
     authToken,
     cameraUnlocked,
-    lastKnownLocation,
+    setLastKnownLocation,
+    setCameraUnlocked,
     patrolMode,
   } = useGuardAppNavigation();
   const isPunchOut = patrolMode === 'punch_out';
@@ -42,7 +44,7 @@ export function PatrolCameraViewport() {
 
   useEffect(() => {
     if (!cameraUnlocked) {
-      Alert.alert('Camera locked', 'Complete the site geofence check on Home first.', [
+      showAlert('Camera locked', 'Complete the site geofence check on Home first.', [
         { text: 'OK', onPress: goBack },
       ]);
     }
@@ -59,19 +61,10 @@ export function PatrolCameraViewport() {
       return;
     }
 
-    if (!lastKnownLocation) {
-      Alert.alert(
-        'Location required',
-        'Verify your site location on Home before capturing a selfie.',
-        [{ text: 'OK', onPress: goBack }],
-      );
-      return;
-    }
-
     if (!permission?.granted) {
       const result = await requestPermission();
       if (!result.granted) {
-        Alert.alert(
+        showAlert(
           'Camera permission',
           'Allow camera access to capture your attendance selfie.',
         );
@@ -80,13 +73,33 @@ export function PatrolCameraViewport() {
     }
 
     if (!cameraRef.current || !cameraReady) {
-      Alert.alert('Camera', 'Camera is still starting. Try again in a moment.');
+      showAlert('Camera', 'Camera is still starting. Try again in a moment.');
       return;
     }
 
     setSubmitting(true);
 
     try {
+      const locationPermission =
+        await Location.requestForegroundPermissionsAsync();
+      if (!locationPermission.granted) {
+        showAlert(
+          'Location required',
+          'Enable GPS to capture attendance with a fresh site location.',
+          [{ text: 'OK', onPress: goBack }],
+        );
+        setCameraUnlocked(false);
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracyMeters = position.coords.accuracy ?? 5;
+      setLastKnownLocation({ lat, lng, accuracyMeters });
+
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         base64: false,
@@ -99,7 +112,6 @@ export function PatrolCameraViewport() {
       }
 
       const compressed = await compressAttendanceSelfie(photo.uri);
-      const { lat, lng, accuracyMeters } = lastKnownLocation;
       const payload = {
         lat,
         lng,
@@ -123,7 +135,7 @@ export function PatrolCameraViewport() {
             : isIntervalCheckin
               ? 'Interval check-in failed.'
               : 'Punch-in failed.';
-      Alert.alert('Attendance', message);
+      showAlert('Attendance', message);
     } finally {
       setSubmitting(false);
     }
@@ -134,10 +146,11 @@ export function PatrolCameraViewport() {
     goBack,
     isIntervalCheckin,
     isPunchOut,
-    lastKnownLocation,
     openAttendanceMarked,
     permission?.granted,
     requestPermission,
+    setCameraUnlocked,
+    setLastKnownLocation,
     submitting,
   ]);
 

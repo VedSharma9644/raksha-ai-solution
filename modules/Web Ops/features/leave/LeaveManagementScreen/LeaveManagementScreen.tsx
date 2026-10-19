@@ -16,7 +16,11 @@ const STATUS_LABELS = {
 export interface LeaveManagementScreenProps {
   leaveRequests: LeaveRequest[];
   onBack: () => void;
-  onUpdateStatus: (leaveId: string, status: LeaveRequestStatus) => void;
+  onUpdateStatus: (
+    leaveId: string,
+    status: LeaveRequestStatus,
+    remark?: string
+  ) => void;
   isLoading?: boolean;
   error?: string | null;
   updatingId?: string | null;
@@ -139,7 +143,23 @@ export function LeaveManagementScreen({
                         variant="secondary"
                         size="medium"
                         disabled={busy}
-                        onClick={() => onUpdateStatus(request.id, "rejected")}
+                        onClick={() => {
+                          const remark = window.prompt(
+                            "Rejection remark (required):",
+                            ""
+                          );
+                          if (remark === null) {
+                            return;
+                          }
+                          const trimmed = remark.trim();
+                          if (!trimmed) {
+                            window.alert(
+                              "A rejection remark is required to reject leave."
+                            );
+                            return;
+                          }
+                          onUpdateStatus(request.id, "rejected", trimmed);
+                        }}
                       >
                         {busy ? "Saving…" : "Reject"}
                       </Button>

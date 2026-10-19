@@ -2,7 +2,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   Text,
   TextInput,
@@ -10,22 +9,21 @@ import {
   type TextInput as TextInputType,
 } from 'react-native';
 
+import { showAlert } from '../../alerts/appAlert';
 import { loginGuard, requestLoginOtp, verifyLoginOtp } from '../../api/guard-api';
 import {
   loginScreenDefaults,
   type LoginMode,
   type LoginStep,
 } from '../../constants/login-screen-defaults';
+import { useLanguage } from '../../i18n';
 import { useGuardAppNavigation } from '../../navigation/useGuardAppNavigation';
 import { loginAuthCardStyles as styles } from '../../styles/login-auth-card.styles';
 import { appColors } from '../../theme';
 
-type LoginAuthCardProps = {
-  isHindi: boolean;
-};
-
-export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
+export function LoginAuthCard() {
   const { signIn } = useGuardAppNavigation();
+  const { t } = useLanguage();
   const [mode, setMode] = useState<LoginMode>('id');
   const [step, setStep] = useState<LoginStep>('credentials');
   const [credential, setCredential] = useState<string>('');
@@ -57,19 +55,13 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
   };
 
   const credentialLabel =
-    mode === 'phone'
-      ? isHindi
-        ? loginScreenDefaults.phoneLabelHindi
-        : loginScreenDefaults.phoneLabel
-      : isHindi
-        ? loginScreenDefaults.idLabelHindi
-        : loginScreenDefaults.idLabel;
+    mode === 'phone' ? t('login.phoneLabel') : t('login.idLabel');
 
   const otpValue = otpDigits.join('');
 
   const loginWithPassword = async () => {
     if (!credential.trim() || !password) {
-      Alert.alert(
+      showAlert(
         'Login',
         mode === 'phone'
           ? 'Mobile number and password are required.'
@@ -84,7 +76,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
       signIn(result.token, result.guard);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Login failed.';
-      Alert.alert('Login failed', message);
+      showAlert('Login failed', message);
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +85,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
   const sendResetOtp = async (phoneOverride?: string) => {
     const phone = (phoneOverride ?? resetPhone).replace(/\D/g, '');
     if (phone.length !== 10) {
-      Alert.alert('OTP', 'Enter a valid 10-digit mobile number.');
+      showAlert('OTP', 'Enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -106,13 +98,13 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
       setStep('otp');
       setResendSeconds(loginScreenDefaults.resendSeconds);
       if (result.debugOtp) {
-        Alert.alert('OTP sent', `Debug OTP: ${result.debugOtp}\nSent to ${result.maskedPhone}`);
+        showAlert('OTP sent', `Debug OTP: ${result.debugOtp}\nSent to ${result.maskedPhone}`);
       } else {
-        Alert.alert('OTP sent', `Code sent to ${result.maskedPhone}`);
+        showAlert('OTP sent', `Code sent to ${result.maskedPhone}`);
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to send OTP.';
-      Alert.alert('OTP', message);
+      showAlert('OTP', message);
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +112,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
 
   const verifyOtp = async () => {
     if (otpValue.length !== 6) {
-      Alert.alert('OTP', 'Enter the 6-digit OTP.');
+      showAlert('OTP', 'Enter the 6-digit OTP.');
       return;
     }
 
@@ -130,7 +122,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
       signIn(result.token, result.guard);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'OTP verification failed.';
-      Alert.alert('OTP', message);
+      showAlert('OTP', message);
     } finally {
       setSubmitting(false);
     }
@@ -168,12 +160,10 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
 
   const primaryLabel =
     step === 'forgotPhone'
-      ? loginScreenDefaults.sendOtpLabel
+      ? t('login.sendOtp')
       : step === 'otp'
         ? loginScreenDefaults.verifyOtpLabel
-        : isHindi
-          ? loginScreenDefaults.verifyLabelHindi
-          : loginScreenDefaults.verifyLabel;
+        : t('login.verify');
 
   return (
     <View style={styles.card}>
@@ -194,7 +184,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 adjustsFontSizeToFit
                 style={[styles.modeLabel, mode === 'phone' && styles.modeLabelActive]}
               >
-                {loginScreenDefaults.modePhoneLabel}
+                {t('login.modePhone')}
               </Text>
             </Pressable>
             <Pressable
@@ -211,7 +201,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 adjustsFontSizeToFit
                 style={[styles.modeLabel, mode === 'id' && styles.modeLabelActive]}
               >
-                {loginScreenDefaults.modeIdLabel}
+                {t('login.modeId')}
               </Text>
             </Pressable>
           </View>
@@ -240,8 +230,8 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 maxLength={mode === 'phone' ? 10 : 20}
                 placeholder={
                   mode === 'phone'
-                    ? loginScreenDefaults.phonePlaceholder
-                    : loginScreenDefaults.idPlaceholder
+                    ? t('login.phonePlaceholder')
+                    : t('login.idPlaceholder')
                 }
                 placeholderTextColor="rgba(112, 121, 121, 0.6)"
                 autoCapitalize={mode === 'phone' ? 'none' : 'characters'}
@@ -256,7 +246,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
 
           <View style={styles.fieldGroup}>
             <View style={styles.fieldHeader}>
-              <Text style={styles.fieldLabel}>{loginScreenDefaults.passwordLabel}</Text>
+              <Text style={styles.fieldLabel}>{t('login.passwordLabel')}</Text>
               <Text style={styles.fieldHint}>{loginScreenDefaults.passwordHint}</Text>
             </View>
             <View style={[styles.inputRow, passwordFocused && styles.inputRowFocused]}>
@@ -268,7 +258,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 secureTextEntry
-                placeholder={loginScreenDefaults.passwordPlaceholder}
+                placeholder={t('login.passwordPlaceholder')}
                 placeholderTextColor="rgba(112, 121, 121, 0.6)"
                 autoCapitalize="none"
               />
@@ -296,7 +286,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
               onBlur={() => setPhoneFocused(false)}
               keyboardType="phone-pad"
               maxLength={10}
-              placeholder={loginScreenDefaults.phonePlaceholder}
+              placeholder={t('login.phonePlaceholder')}
               placeholderTextColor="rgba(112, 121, 121, 0.6)"
             />
           </View>
@@ -308,7 +298,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
           <View style={styles.otpHeader}>
             <View style={styles.otpLabelRow}>
               <MaterialIcons name="sms" size={16} color={appColors.primary} />
-              <Text style={styles.otpLabel}>{loginScreenDefaults.otpLabel}</Text>
+              <Text style={styles.otpLabel}>{t('login.otpLabel')}</Text>
             </View>
             <View style={styles.autoDetectBadge}>
               <Text style={styles.autoDetectText}>
@@ -348,7 +338,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
               ) : (
                 <Pressable onPress={() => void sendResetOtp(resetPhone)}>
                   <Text style={[styles.resendText, styles.resendCountdown]}>
-                    {loginScreenDefaults.resendReady}
+                    {t('login.resendOtp')}
                   </Text>
                 </Pressable>
               )}
@@ -384,7 +374,7 @@ export function LoginAuthCard({ isHindi }: LoginAuthCardProps) {
             }}
           >
             <MaterialIcons name="lock-reset" size={16} color={appColors.tertiary} />
-            <Text style={styles.forgotLabel}>{loginScreenDefaults.forgotPinLabel}</Text>
+            <Text style={styles.forgotLabel}>{t('login.forgotPassword')}</Text>
           </Pressable>
         ) : (
           <Pressable

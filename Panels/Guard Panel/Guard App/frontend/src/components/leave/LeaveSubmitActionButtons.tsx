@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import { applyForLeaveDefaults } from '../../constants/apply-for-leave-defaults';
 import {

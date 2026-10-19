@@ -2,8 +2,6 @@ import type { MaterialIcons } from '@expo/vector-icons';
 
 import { brandAssets } from './brand-assets';
 
-export type ProfileLanguage = 'EN' | 'HI';
-
 export const guardProfileDefaults = {
   screenTitle: 'Guard Profile & Id',
   photoUri: brandAssets.scheduleHeaderAvatarUri,

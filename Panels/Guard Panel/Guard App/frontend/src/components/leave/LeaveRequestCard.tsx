@@ -1,6 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import {
   type LeaveRequestCard as LeaveRequestCardData,
@@ -55,7 +57,7 @@ export function LeaveRequestCard({ item, onWithdraw, withdrawing }: LeaveRequest
   const hasRichApproval = Boolean(item.approvalNote && item.approvalDetail);
 
   const confirmWithdraw = () => {
-    Alert.alert(
+    showAlert(
       'Withdraw request',
       'Cancel this pending leave request? Your supervisor will no longer see it.',
       [

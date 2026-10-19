@@ -6,6 +6,7 @@ import {
   bottomTabMenuItems,
   type BottomTabKey,
 } from '../../constants/bottom-tab-menu-items';
+import { useLanguage } from '../../i18n';
 import { appColors, isCompact } from '../../theme';
 import { layoutBottomTabMenuStyles as styles } from '../../styles/layout-bottom-tab-menu.styles';
 
@@ -14,8 +15,16 @@ type BottomTabMenuProps = {
   onTabPress?: (tab: BottomTabKey) => void;
 };
 
+const TAB_LABEL_KEYS = {
+  home: 'tabs.home',
+  schedule: 'tabs.schedule',
+  attendance: 'tabs.attendance',
+  more: 'tabs.more',
+} as const;
+
 export function BottomTabMenu({ activeTab = 'home', onTabPress }: BottomTabMenuProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const iconSize = isCompact ? 22 : 24;
 
   return (
@@ -40,7 +49,7 @@ export function BottomTabMenu({ activeTab = 'home', onTabPress }: BottomTabMenuP
                 minimumFontScale={0.8}
                 style={[styles.label, { color }, active && styles.labelActive]}
               >
-                {tab.label}
+                {t(TAB_LABEL_KEYS[tab.key])}
               </Text>
             </Pressable>
           );

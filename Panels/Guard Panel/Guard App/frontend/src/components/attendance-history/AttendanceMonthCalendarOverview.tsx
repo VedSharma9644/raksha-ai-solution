@@ -34,6 +34,8 @@ function dayCircleStyle(status: string) {
       return styles.dayOff;
     case 'leave':
       return styles.dayLeave;
+    case 'relief':
+      return styles.dayLeave;
     case 'empty':
       return styles.dayOff;
     case 'full':

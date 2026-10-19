@@ -10,6 +10,8 @@ import {
   type DayOfWeek,
 } from "./dutyDate";
 import { hydrateAssignmentsFromLiveSites } from "./rosterLive";
+import { resolveTodayDuty } from "./todayDuty";
+import { getTodayOpenPunchIn } from "./attendanceService";
 
 const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
 
@@ -241,10 +243,30 @@ export async function listGuardUpcomingSchedule(params: {
 }): Promise<GuardScheduleResponse> {
   const days = Math.min(31, Math.max(1, params.days ?? 14));
   const from = params.from || toDutyDateKey();
-  const [assignments, todayPunch] = await Promise.all([
+  const openPunch = await getTodayOpenPunchIn(params.guardId).catch(() => null);
+  const [assignments, todayPunch, liveTodayDuty] = await Promise.all([
     loadAssignments(params.guardId, params.agencyId),
     loadTodayPunchState(params.guardId, from),
+    resolveTodayDuty({
+      guardId: params.guardId,
+      agencyId: params.agencyId,
+      profileShiftFrom: params.shiftFrom,
+      profileShiftTo: params.shiftTo,
+      profileSiteId: undefined,
+      profileSiteName: params.siteName,
+      profilePostName: params.postName,
+      hasOpenPunch: Boolean(openPunch),
+    }).catch(() => null),
   ]);
+
+  // Overnight open punches may be keyed to yesterday — merge punch state.
+  const livePunch: TodayPunchState = openPunch
+    ? {
+        hasOpenPunch: true,
+        hasEndedPunch: todayPunch.hasEndedPunch,
+        punchInStatus: openPunch.punchInStatus ?? todayPunch.punchInStatus,
+      }
+    : todayPunch;
 
   const shifts: GuardScheduleShiftDto[] = [];
   const restDays: GuardScheduleShiftDto[] = [];
@@ -259,59 +281,81 @@ export async function listGuardUpcomingSchedule(params: {
     let postName = params.postName || "Assigned Post";
     let siteName = defaultSiteName;
     let matched = false;
+    let statusDutyDate = dutyDate;
 
-    if (assignments.length > 0) {
-      for (const assignment of assignments) {
-        if (!covers(assignment, dutyDate)) {
-          continue;
-        }
-        shiftFrom = assignment.shiftStartTime;
-        shiftTo = assignment.shiftEndTime;
-        postName = assignment.shiftLabel || postName;
-        if (assignment.siteName) {
-          siteName = assignment.siteName;
+    // Align today's card with homepage resolveTodayDuty (incl. overnight).
+    if (isToday && liveTodayDuty?.source === "roster") {
+      shiftFrom = liveTodayDuty.shiftFrom;
+      shiftTo = liveTodayDuty.shiftTo;
+      postName = liveTodayDuty.postName || postName;
+      siteName = liveTodayDuty.siteName || siteName;
+      statusDutyDate = liveTodayDuty.dutyDate || dutyDate;
+      matched = true;
+    } else if (assignments.length > 0) {
+      const covering = assignments
+        .filter((assignment) => covers(assignment, dutyDate))
+        .map((assignment) => {
+          const { start, end } = shiftWindowIst(
+            dutyDate,
+            assignment.shiftStartTime,
+            assignment.shiftEndTime
+          );
+          return { assignment, start, end };
+        })
+        .sort((a, b) => a.start.getTime() - b.start.getTime());
+      const nowMs = Date.now();
+      const notEnded = covering.filter((item) => item.end.getTime() > nowMs);
+      const inProgress = notEnded.filter((item) => item.start.getTime() <= nowMs);
+      const upcoming = notEnded.filter((item) => item.start.getTime() > nowMs);
+      const chosen =
+        inProgress[0] ?? upcoming[0] ?? notEnded[0] ?? covering[0] ?? null;
+      if (chosen) {
+        shiftFrom = chosen.assignment.shiftStartTime;
+        shiftTo = chosen.assignment.shiftEndTime;
+        postName = chosen.assignment.shiftLabel || postName;
+        if (chosen.assignment.siteName) {
+          siteName = chosen.assignment.siteName;
         }
         matched = true;
-        break;
       }
-      if (!matched) {
-        restDays.push({
-          id: `rest-${dutyDate}`,
-          dutyDate,
-          dayLabel: formatIstDutyDayLabel(dutyDate),
-          siteName: defaultSiteName,
-          postName: "Roster rest day",
-          shiftFrom: "",
-          shiftTo: "",
-          timeLabel: "Weekly off",
-          kind: "rest",
-          statusLabel: "Rest Day",
-          dutyStatus: "rest",
-          isToday,
-          isTomorrow: dutyDate === tomorrow,
-        });
-        continue;
-      }
-    } else {
-      // Soft profile schedule: skip Sundays as rest
-      if (weekdayFromDutyDate(dutyDate) === "sun") {
-        restDays.push({
-          id: `rest-${dutyDate}`,
-          dutyDate,
-          dayLabel: formatIstDutyDayLabel(dutyDate),
-          siteName: defaultSiteName,
-          postName: "Roster rest day",
-          shiftFrom: "",
-          shiftTo: "",
-          timeLabel: "Weekly off",
-          kind: "rest",
-          statusLabel: "Rest Day",
-          dutyStatus: "rest",
-          isToday,
-          isTomorrow: dutyDate === tomorrow,
-        });
-        continue;
-      }
+    }
+
+    if (assignments.length > 0 && !matched) {
+      restDays.push({
+        id: `rest-${dutyDate}`,
+        dutyDate,
+        dayLabel: formatIstDutyDayLabel(dutyDate),
+        siteName: defaultSiteName,
+        postName: "Roster rest day",
+        shiftFrom: "",
+        shiftTo: "",
+        timeLabel: "Weekly off",
+        kind: "rest",
+        statusLabel: "Rest Day",
+        dutyStatus: "rest",
+        isToday,
+        isTomorrow: dutyDate === tomorrow,
+      });
+      continue;
+    }
+
+    if (assignments.length === 0 && weekdayFromDutyDate(dutyDate) === "sun") {
+      restDays.push({
+        id: `rest-${dutyDate}`,
+        dutyDate,
+        dayLabel: formatIstDutyDayLabel(dutyDate),
+        siteName: defaultSiteName,
+        postName: "Roster rest day",
+        shiftFrom: "",
+        shiftTo: "",
+        timeLabel: "Weekly off",
+        kind: "rest",
+        statusLabel: "Rest Day",
+        dutyStatus: "rest",
+        isToday,
+        isTomorrow: dutyDate === tomorrow,
+      });
+      continue;
     }
 
     const night = isNightDuty(shiftFrom, shiftTo);
@@ -323,8 +367,8 @@ export async function listGuardUpcomingSchedule(params: {
       const live = resolveTodayDutyStatus({
         shiftFrom,
         shiftTo,
-        dutyDate,
-        punch: todayPunch,
+        dutyDate: statusDutyDate,
+        punch: livePunch,
       });
       dutyStatus = live.dutyStatus;
       statusLabel = live.statusLabel;

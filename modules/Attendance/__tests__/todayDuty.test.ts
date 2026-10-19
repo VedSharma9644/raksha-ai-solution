@@ -1,65 +1,88 @@
 import { describe, expect, it } from "vitest";
 
-/**
- * Pure helpers mirrored from todayDuty selection rules for regression coverage.
- * (Firestore-backed resolveTodayDuty is covered via route smoke / integration.)
- */
-function pickRelevant(params: {
-  nowMs: number;
-  windows: Array<{ startMs: number; endMs: number; id: string }>;
-  hasOpenPunch?: boolean;
-}): string | null {
-  const sorted = [...params.windows].sort((a, b) => a.startMs - b.startMs);
-  if (sorted.length === 0) {
-    return null;
-  }
-  const notEnded = sorted.filter((w) => w.endMs > params.nowMs);
-  if (params.hasOpenPunch) {
-    const containing = sorted.find(
-      (w) => w.startMs <= params.nowMs && w.endMs > params.nowMs
-    );
-    return (containing ?? notEnded[0] ?? sorted[sorted.length - 1]).id;
-  }
-  if (notEnded.length === 0) {
-    return sorted[sorted.length - 1].id;
-  }
-  const inProgress = notEnded.filter((w) => w.startMs <= params.nowMs);
-  const upcoming = notEnded.filter((w) => w.startMs > params.nowMs);
-  return (inProgress[0] ?? upcoming[0] ?? notEnded[0]).id;
+import { shiftWindowIst } from "../dutyDate";
+import { pickTodayDutyWindow } from "../todayDuty";
+
+type FakeRow = {
+  id: string;
+  siteId: string;
+  shiftLabel: string;
+  shiftStartTime: string;
+  shiftEndTime: string;
+  recurringDays: never[];
+  effectiveFrom: string;
+};
+
+function windowFor(
+  dutyDate: string,
+  shiftFrom: string,
+  shiftTo: string,
+  id: string
+) {
+  const { start, end } = shiftWindowIst(dutyDate, shiftFrom, shiftTo);
+  const row: FakeRow = {
+    id,
+    siteId: "site-1",
+    shiftLabel: id,
+    shiftStartTime: shiftFrom,
+    shiftEndTime: shiftTo,
+    recurringDays: [],
+    effectiveFrom: "1970-01-01",
+  };
+  return { row, start, end, dutyDate };
 }
 
 describe("today duty selection", () => {
   it("prefers later shift after earlier window ends (same-day reassignment)", () => {
-    const chosen = pickRelevant({
-      nowMs: 17 * 60 * 60 * 1000,
+    const dutyDate = "2026-10-15";
+    const chosen = pickTodayDutyWindow({
+      nowMs: shiftWindowIst(dutyDate, "17:00", "17:01").start.getTime(),
       windows: [
-        { id: "morning", startMs: 8 * 3600_000, endMs: 16 * 3600_000 },
-        { id: "evening", startMs: 18 * 3600_000, endMs: 22 * 3600_000 },
+        windowFor(dutyDate, "08:00", "16:00", "morning"),
+        windowFor(dutyDate, "18:00", "22:00", "evening"),
       ],
     });
-    expect(chosen).toBe("evening");
+    expect(chosen?.row.id).toBe("evening");
   });
 
   it("keeps morning while its window is still open (late check-in)", () => {
-    const chosen = pickRelevant({
-      nowMs: 10 * 60 * 60 * 1000,
+    const dutyDate = "2026-10-15";
+    const chosen = pickTodayDutyWindow({
+      nowMs: shiftWindowIst(dutyDate, "10:00", "10:01").start.getTime(),
       windows: [
-        { id: "morning", startMs: 8 * 3600_000, endMs: 16 * 3600_000 },
-        { id: "evening", startMs: 18 * 3600_000, endMs: 22 * 3600_000 },
+        windowFor(dutyDate, "08:00", "16:00", "morning"),
+        windowFor(dutyDate, "18:00", "22:00", "evening"),
       ],
     });
-    expect(chosen).toBe("morning");
+    expect(chosen?.row.id).toBe("morning");
   });
 
   it("uses in-progress window when punch is open", () => {
-    const chosen = pickRelevant({
-      nowMs: 19 * 60 * 60 * 1000,
+    const dutyDate = "2026-10-15";
+    const chosen = pickTodayDutyWindow({
+      nowMs: shiftWindowIst(dutyDate, "19:00", "19:01").start.getTime(),
       hasOpenPunch: true,
       windows: [
-        { id: "morning", startMs: 8 * 3600_000, endMs: 16 * 3600_000 },
-        { id: "evening", startMs: 18 * 3600_000, endMs: 22 * 3600_000 },
+        windowFor(dutyDate, "08:00", "16:00", "morning"),
+        windowFor(dutyDate, "18:00", "22:00", "evening"),
       ],
     });
-    expect(chosen).toBe("evening");
+    expect(chosen?.row.id).toBe("evening");
+  });
+
+  it("keeps yesterday overnight window after IST midnight", () => {
+    const yesterday = "2026-10-14";
+    const today = "2026-10-15";
+    const overnight = windowFor(yesterday, "20:00", "08:00", "night");
+    const morning = windowFor(today, "08:00", "20:00", "day");
+    // 02:00 IST on Oct 15 = still inside overnight from Oct 14
+    const nowMs = shiftWindowIst(today, "02:00", "02:01").start.getTime();
+    const chosen = pickTodayDutyWindow({
+      nowMs,
+      hasOpenPunch: true,
+      windows: [overnight, morning],
+    });
+    expect(chosen?.row.id).toBe("night");
+    expect(chosen?.dutyDate).toBe(yesterday);
   });
 });

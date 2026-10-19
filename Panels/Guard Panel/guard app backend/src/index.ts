@@ -12,6 +12,7 @@ import { createAttendanceRoutes } from "./routes/attendanceRoutes";
 import { createAuthRoutes } from "./routes/authRoutes";
 import { createLeaveRoutes } from "./routes/leaveRoutes";
 import { createNotificationRoutes } from "./routes/notificationRoutes";
+import { createPayrollRoutes } from "./routes/payrollRoutes";
 import { createProfileRoutes } from "./routes/profileRoutes";
 import { createReliefRoutes } from "./routes/reliefRoutes";
 import { createScheduleRoutes } from "./routes/scheduleRoutes";
@@ -102,7 +103,7 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "raskha-guard-app-api",
-    demoMode: process.env.ATTENDANCE_DEMO_MODE !== "false",
+    demoMode: process.env.ATTENDANCE_DEMO_MODE === "true",
     firebase: typeof firebase.app === "object",
     admin: getApps().length > 0,
   });
@@ -115,6 +116,7 @@ app.use("/api/leave", createLeaveRoutes());
 app.use("/api/relief", createReliefRoutes());
 app.use("/api/schedule", createScheduleRoutes());
 app.use("/api/notifications", createNotificationRoutes());
+app.use("/api/payroll", createPayrollRoutes());
 
 const PORT = Number(process.env.GUARD_APP_API_PORT ?? process.env.PORT ?? 3005);
 const HOST = process.env.GUARD_APP_API_HOST ?? "0.0.0.0";

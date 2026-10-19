@@ -1,4 +1,12 @@
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import {
+  FieldValue,
+  getFirestore,
+  Timestamp,
+} from "firebase-admin/firestore";
+import {
+  getTodayOpenPunchIn,
+  weekdayFromDutyDate,
+} from "@raskha/attendance";
 
 import {
   RELIEF_METHOD_LABELS,
@@ -11,6 +19,9 @@ import {
 } from "./relief";
 import { assertReliefAssigneeAvailable } from "./reliefAssigneeAvailability";
 import { asData, isReliefMethod, isReliefReason, mapRecord } from "./reliefService";
+
+const SHIFT_ASSIGNMENTS_COLLECTION = "shiftAssignments";
+const ATTENDANCE_COLLECTION = "attendanceRecords";
 
 /**
  * Agency-scoped relief requests (Admin / HR).
@@ -167,6 +178,13 @@ export type DecideReliefResult = {
   guardName: string;
   assignedGuardId?: string;
   assignedGuardName?: string;
+  /** Present after approve — used for roster push notifications. */
+  siteName?: string;
+  shiftFrom?: string;
+  shiftTo?: string;
+  shiftLabel?: string;
+  assignmentId?: string;
+  requesterPunchEnded?: boolean;
 };
 
 export async function decideReliefRequest(
@@ -270,13 +288,68 @@ export async function decideReliefRequest(
   const assignedGuardName = String(assignee.fullName ?? "").trim() || "Guard";
   const assignedEmployeeCode = String(assignee.employeeCode ?? "").trim();
 
+  const siteId = String(data.siteId ?? "");
+  const siteName = String(data.siteName ?? "Assigned Site");
+  const shiftFrom = String(data.shiftFrom ?? "08:00") || "08:00";
+  const shiftTo = String(data.shiftTo ?? "20:00") || "20:00";
+  const shiftLabel =
+    String(data.postName ?? "").trim() ||
+    `Relief cover (${RELIEF_METHOD_LABELS[method]})`;
+
   await assertReliefAssigneeAvailable({
     agencyId,
     assignedGuardId,
     dutyDate,
-    reliefSiteId: String(data.siteId ?? ""),
-    reliefSiteName: String(data.siteName ?? ""),
+    reliefSiteId: siteId,
+    reliefSiteName: siteName,
   });
+
+  const db = getFirestore();
+  let assignmentId: string | undefined;
+  let requesterPunchEnded = false;
+
+  if (dutyDate) {
+    const dow = weekdayFromDutyDate(dutyDate);
+    const assignmentRef = await db.collection(SHIFT_ASSIGNMENTS_COLLECTION).add({
+      agencyId,
+      siteId,
+      guardId: assignedGuardId,
+      guardName: assignedGuardName,
+      guardGender:
+        typeof assignee.gender === "string" ? assignee.gender : null,
+      shiftId: `relief-${requestId}`,
+      shiftLabel,
+      shiftStartTime: shiftFrom,
+      shiftEndTime: shiftTo,
+      recurringDays: [dow],
+      effectiveFrom: dutyDate,
+      effectiveTo: dutyDate,
+      reliefRequestId: requestId,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    assignmentId = assignmentRef.id;
+  }
+
+  // Remaining handover: end the requester's open punch so /today flips to inactive.
+  if (method === "remaining" && guardId) {
+    let open: Awaited<ReturnType<typeof getTodayOpenPunchIn>> = null;
+    try {
+      open = await getTodayOpenPunchIn(guardId);
+    } catch {
+      open = null;
+    }
+    if (open) {
+      await db.collection(ATTENDANCE_COLLECTION).doc(open.id).update({
+        shiftStatus: "ended",
+        punchedOutAt: now,
+        punchOutGeofenceStatus: "demo_passed",
+        reliefHandoverRequestId: requestId,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      requesterPunchEnded = true;
+    }
+  }
 
   await ref.update({
     status: "approved",
@@ -285,6 +358,7 @@ export async function decideReliefRequest(
     assignedEmployeeCode,
     approvalNote: remark || `Approved by ${decidedByName}`,
     decidedByName,
+    assignmentId: assignmentId ?? null,
     updatedAt: now,
     decidedAt: now,
   });
@@ -301,5 +375,11 @@ export async function decideReliefRequest(
     guardName,
     assignedGuardId,
     assignedGuardName,
+    siteName,
+    shiftFrom,
+    shiftTo,
+    shiftLabel,
+    assignmentId,
+    requesterPunchEnded,
   };
 }

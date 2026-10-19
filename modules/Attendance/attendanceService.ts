@@ -8,9 +8,10 @@ import {
 } from "./attendance";
 import { checkGeofence, type SiteGeofenceInput } from "./geofence";
 import {
+  addDaysToDutyDate,
   formatIstPunchDate,
   formatIstPunchTime,
-  istWallClockToDate,
+  shiftWindowIst,
   startOfIstDay,
   toDutyDateKey,
 } from "./dutyDate";
@@ -40,6 +41,8 @@ export type MarkPunchInParams = {
   demoMode?: boolean;
   /** Demo load-test only: unique Storage path + skip duplicate punch check. */
   loadTestId?: string;
+  /** Roster duty date (YYYY-MM-DD IST); required for overnight after midnight. */
+  dutyDate?: string;
 };
 
 const formatPunchTime = formatIstPunchTime;
@@ -170,6 +173,8 @@ export type OpenPunchInRecord = {
   punchedAt: Date;
   siteName: string;
   postName: string;
+  /** Roster duty date when recorded (may be yesterday for overnight). */
+  dutyDate?: string;
   selfieUrl?: string;
   punchInStatus?: string;
   minutesLate?: number;
@@ -188,24 +193,45 @@ function parseShiftHhMm(value: string): { hours: number; minutes: number } | nul
   return { hours, minutes };
 }
 
-/** How long after shift start a guard may still punch in (late). */
+/** Earliest punch-in: this many minutes before shift start (e.g. 22:00 → from 21:45). */
+export const PUNCH_IN_EARLY_MINUTES = 15;
+
+/** How long after shift start a guard may still punch in (marked Late). */
 export const PUNCH_IN_LATE_GRACE_MINUTES = 15;
+
+function resolvePunchInShiftStart(params: {
+  punchedAt: Date;
+  shiftFrom: string;
+  shiftTo?: string;
+  dutyDate?: string;
+}): Date | null {
+  if (!parseShiftHhMm(params.shiftFrom || "08:00")) {
+    return null;
+  }
+  const dutyDate = params.dutyDate ?? toDutyDateKey(params.punchedAt);
+  const { start } = shiftWindowIst(
+    dutyDate,
+    params.shiftFrom || "08:00",
+    params.shiftTo || params.shiftFrom || "20:00"
+  );
+  return start;
+}
 
 /**
  * Compare punch time against scheduled shift start in Asia/Kolkata.
- * Returns Late when punch is after shift start.
+ * On or before start → On Time; any minute after start → Late.
  */
 export function evaluatePunchInPunctuality(params: {
   punchedAt: Date;
   shiftFrom: string;
+  shiftTo?: string;
+  /** Roster duty date (YYYY-MM-DD IST). Defaults to IST calendar day of punchedAt. */
+  dutyDate?: string;
 }): { punchInStatus: "On Time" | "Late"; minutesLate: number } {
-  const parsed = parseShiftHhMm(params.shiftFrom || "08:00");
-  if (!parsed) {
+  const start = resolvePunchInShiftStart(params);
+  if (!start) {
     return { punchInStatus: "On Time", minutesLate: 0 };
   }
-
-  const dutyDate = toDutyDateKey(params.punchedAt);
-  const start = istWallClockToDate(dutyDate, parsed.hours, parsed.minutes);
 
   const minutesLate = Math.max(
     0,
@@ -219,24 +245,48 @@ export function evaluatePunchInPunctuality(params: {
 }
 
 /**
- * Hard cutoff: punch-in is rejected more than
- * {@link PUNCH_IN_LATE_GRACE_MINUTES} after shift start (IST).
+ * Punch-in allowed from {@link PUNCH_IN_EARLY_MINUTES} before start through
+ * {@link PUNCH_IN_LATE_GRACE_MINUTES} after start (IST). Earlier / later → 403.
  */
 export function assertPunchInWithinLateWindow(params: {
   punchedAt: Date;
   shiftFrom: string;
+  shiftTo?: string;
+  dutyDate?: string;
 }): void {
-  const punctuality = evaluatePunchInPunctuality(params);
-  if (punctuality.minutesLate <= PUNCH_IN_LATE_GRACE_MINUTES) {
-    return;
+  const start = resolvePunchInShiftStart(params);
+  if (!start) {
+    throw Object.assign(
+      new Error(
+        "Punch-in unavailable — shift start time is missing. Contact your supervisor."
+      ),
+      { statusCode: 403 }
+    );
   }
   const parsed = parseShiftHhMm(params.shiftFrom || "");
   const startLabel = parsed
     ? `${String(parsed.hours).padStart(2, "0")}:${String(parsed.minutes).padStart(2, "0")}`
     : params.shiftFrom || "shift start";
+
+  const opensAt = new Date(
+    start.getTime() - PUNCH_IN_EARLY_MINUTES * 60_000
+  );
+  if (params.punchedAt.getTime() < opensAt.getTime()) {
+    throw Object.assign(
+      new Error(
+        `Punch-in not open yet. You can check in from ${PUNCH_IN_EARLY_MINUTES} minutes before shift start (${startLabel}).`
+      ),
+      { statusCode: 403 }
+    );
+  }
+
+  const punctuality = evaluatePunchInPunctuality(params);
+  if (punctuality.minutesLate <= PUNCH_IN_LATE_GRACE_MINUTES) {
+    return;
+  }
   throw Object.assign(
     new Error(
-      `Punch-in closed. You can only check in within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes of shift start (${startLabel}). Contact your supervisor if you still need to start duty.`
+      `Punch-in closed. Late check-in is only allowed within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes after shift start (${startLabel}). Contact your supervisor if you still need to start duty.`
     ),
     { statusCode: 403 }
   );
@@ -245,11 +295,17 @@ export function assertPunchInWithinLateWindow(params: {
 export function getPunchInWindowStatus(params: {
   now?: Date;
   shiftFrom: string;
+  shiftTo?: string;
+  /** Roster duty date for the shift window (may be yesterday overnight). */
+  dutyDate?: string;
   shiftActive: boolean;
 }): {
   open: boolean;
   graceMinutes: number;
+  earlyMinutes: number;
   minutesPastStart: number | null;
+  minutesUntilOpen: number | null;
+  opensAt: string | null;
   closesAt: string | null;
   message: string | null;
 } {
@@ -257,34 +313,76 @@ export function getPunchInWindowStatus(params: {
     return {
       open: false,
       graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+      earlyMinutes: PUNCH_IN_EARLY_MINUTES,
       minutesPastStart: null,
+      minutesUntilOpen: null,
+      opensAt: null,
       closesAt: null,
       message: null,
     };
   }
   const now = params.now ?? new Date();
+  const dutyDate = params.dutyDate ?? toDutyDateKey(now);
+  const start = resolvePunchInShiftStart({
+    punchedAt: now,
+    shiftFrom: params.shiftFrom,
+    shiftTo: params.shiftTo,
+    dutyDate,
+  });
+  if (!start) {
+    // Fail closed — never unlock punch-in when shift start cannot be resolved.
+    return {
+      open: false,
+      graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+      earlyMinutes: PUNCH_IN_EARLY_MINUTES,
+      minutesPastStart: null,
+      minutesUntilOpen: null,
+      opensAt: null,
+      closesAt: null,
+      message:
+        "Punch-in unavailable — shift start time is missing. Contact your supervisor.",
+    };
+  }
+
+  const opensAt = new Date(start.getTime() - PUNCH_IN_EARLY_MINUTES * 60_000);
+  const closesAt = new Date(
+    start.getTime() + PUNCH_IN_LATE_GRACE_MINUTES * 60_000
+  );
   const punctuality = evaluatePunchInPunctuality({
     punchedAt: now,
     shiftFrom: params.shiftFrom,
+    shiftTo: params.shiftTo,
+    dutyDate,
   });
-  const parsed = parseShiftHhMm(params.shiftFrom || "");
-  let closesAt: string | null = null;
-  if (parsed) {
-    const dutyDate = toDutyDateKey(now);
-    const start = istWallClockToDate(dutyDate, parsed.hours, parsed.minutes);
-    closesAt = new Date(
-      start.getTime() + PUNCH_IN_LATE_GRACE_MINUTES * 60_000
-    ).toISOString();
+
+  if (now.getTime() < opensAt.getTime()) {
+    const minutesUntilOpen = Math.ceil(
+      (opensAt.getTime() - now.getTime()) / 60_000
+    );
+    return {
+      open: false,
+      graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+      earlyMinutes: PUNCH_IN_EARLY_MINUTES,
+      minutesPastStart: null,
+      minutesUntilOpen,
+      opensAt: opensAt.toISOString(),
+      closesAt: closesAt.toISOString(),
+      message: `Punch-in opens ${PUNCH_IN_EARLY_MINUTES} minutes before your shift start. Come back in about ${minutesUntilOpen} min.`,
+    };
   }
+
   const open = punctuality.minutesLate <= PUNCH_IN_LATE_GRACE_MINUTES;
   return {
     open,
     graceMinutes: PUNCH_IN_LATE_GRACE_MINUTES,
+    earlyMinutes: PUNCH_IN_EARLY_MINUTES,
     minutesPastStart: punctuality.minutesLate,
-    closesAt,
+    minutesUntilOpen: null,
+    opensAt: opensAt.toISOString(),
+    closesAt: closesAt.toISOString(),
     message: open
       ? null
-      : `Punch-in closed. Check-in is only allowed within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes of your shift start.`,
+      : `Punch-in closed. Late check-in is only allowed within ${PUNCH_IN_LATE_GRACE_MINUTES} minutes after your shift start.`,
   };
 }
 
@@ -305,9 +403,14 @@ function mapOpenPunchIn(docSnap: {
   }
   const punchedAt = punchedAtRaw.toDate();
   const minutesLateRaw = Number(data.minutesLate);
+  const dutyDateRaw =
+    typeof data.dutyDate === "string" && data.dutyDate.trim()
+      ? data.dutyDate.trim()
+      : undefined;
   return {
     id: docSnap.id,
     punchedAt,
+    dutyDate: dutyDateRaw,
     siteName:
       (typeof data.siteName === "string" && data.siteName) || "Assigned Site",
     postName:
@@ -319,15 +422,11 @@ function mapOpenPunchIn(docSnap: {
   };
 }
 
-export async function getTodayOpenPunchIn(
-  guardId: string
+async function findOpenPunchForDutyDate(
+  guardId: string,
+  dutyDate: string
 ): Promise<OpenPunchInRecord | null> {
   const db = getFirestore();
-  const dutyDate = toDutyDateKey();
-  // Legacy open-punch scan: compare against IST midnight, not host/UTC midnight.
-  const dayStartMs = startOfIstDay(dutyDate).getTime();
-
-  // Prefer indexed query: guardId + dutyDate (composite index in firestore.indexes.json)
   try {
     const indexed = await db
       .collection(ATTENDANCE_COLLECTION)
@@ -345,31 +444,55 @@ export async function getTodayOpenPunchIn(
         best = mapped;
       }
     }
-    if (best) {
-      return best;
-    }
-    // Today already has dutyDate-indexed rows (none open) — skip legacy full scan.
-    if (indexed.docs.length > 0) {
-      return null;
-    }
-    // Empty indexed day: may still have pre-migration open punches without dutyDate.
+    return best;
   } catch {
-    // Missing composite index or older projects — fall through to legacy scan
+    return null;
+  }
+}
+
+/**
+ * Active punch-in for the live shift — includes yesterday's overnight open punches
+ * that spill past IST midnight.
+ */
+export async function getTodayOpenPunchIn(
+  guardId: string
+): Promise<OpenPunchInRecord | null> {
+  const db = getFirestore();
+  const todayKey = toDutyDateKey();
+  const yesterdayKey = addDaysToDutyDate(todayKey, -1);
+  // Legacy open-punch scan: look back from yesterday IST midnight (overnight).
+  const lookbackMs = startOfIstDay(yesterdayKey).getTime();
+
+  const [todayOpen, yesterdayOpen] = await Promise.all([
+    findOpenPunchForDutyDate(guardId, todayKey),
+    findOpenPunchForDutyDate(guardId, yesterdayKey),
+  ]);
+
+  let best: OpenPunchInRecord | null = null;
+  for (const candidate of [todayOpen, yesterdayOpen]) {
+    if (!candidate) {
+      continue;
+    }
+    if (!best || candidate.punchedAt.getTime() > best.punchedAt.getTime()) {
+      best = candidate;
+    }
+  }
+  if (best) {
+    return best;
   }
 
-  // Legacy: records without dutyDate (pre-migration)
+  // Legacy: records without dutyDate (pre-migration), or index miss.
   const snap = await db
     .collection(ATTENDANCE_COLLECTION)
     .where("guardId", "==", guardId)
     .get();
 
-  let best: OpenPunchInRecord | null = null;
   for (const docSnap of snap.docs) {
     const mapped = mapOpenPunchIn(docSnap);
     if (!mapped) {
       continue;
     }
-    if (mapped.punchedAt.getTime() < dayStartMs) {
+    if (mapped.punchedAt.getTime() < lookbackMs) {
       continue;
     }
     if (!best || mapped.punchedAt.getTime() > best.punchedAt.getTime()) {
@@ -465,9 +588,12 @@ export async function markPunchIn(
   }
 
   const now = new Date();
+  const dutyDate = params.dutyDate?.trim() || toDutyDateKey(now);
   assertPunchInWithinLateWindow({
     punchedAt: now,
     shiftFrom: params.guard.shiftFrom,
+    shiftTo: params.guard.shiftTo,
+    dutyDate,
   });
 
   const { selfieUrl, storagePath } = await resolveSelfieAssets({
@@ -479,10 +605,11 @@ export async function markPunchIn(
     loadTestId: loadTestId || undefined,
   });
 
-  const dutyDate = toDutyDateKey(now);
   const punctuality = evaluatePunchInPunctuality({
     punchedAt: now,
     shiftFrom: params.guard.shiftFrom,
+    shiftTo: params.guard.shiftTo,
+    dutyDate,
   });
 
   const docRef = await db.collection(ATTENDANCE_COLLECTION).add({
@@ -546,8 +673,132 @@ export type MarkPunchOutParams = {
   loadTestId?: string;
 };
 
+const RELIEF_REQUESTS_COLLECTION = "reliefRequests";
+
+export type PunchOutEligibility = {
+  /** True when now is still before the scheduled shift end. */
+  early: boolean;
+  /** True when punch-out is allowed (at/after end, or relief assignee exists). */
+  allowed: boolean;
+  reliefAssigned: boolean;
+  reliefRequestId?: string;
+  reliefAssigneeName?: string;
+  shiftEndsAt: string | null;
+  message: string | null;
+};
+
+type ApprovedReliefAssignee = {
+  requestId: string;
+  assignedGuardId: string;
+  assignedGuardName: string;
+};
+
+/**
+ * Find an approved relief request for this guard's duty date with a replacement assigned.
+ */
+export async function findApprovedReliefAssigneeForDuty(params: {
+  guardId: string;
+  dutyDate: string;
+}): Promise<ApprovedReliefAssignee | null> {
+  const guardId = params.guardId.trim();
+  const dutyDate = params.dutyDate.trim();
+  if (!guardId || !dutyDate) {
+    return null;
+  }
+
+  const snap = await getFirestore()
+    .collection(RELIEF_REQUESTS_COLLECTION)
+    .where("guardId", "==", guardId)
+    .get();
+
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() as {
+      status?: string;
+      dutyDate?: string;
+      assignedGuardId?: string;
+      assignedGuardName?: string;
+    };
+    if (data.status !== "approved") {
+      continue;
+    }
+    if ((data.dutyDate ?? "").trim() !== dutyDate) {
+      continue;
+    }
+    const assignedGuardId = (data.assignedGuardId ?? "").trim();
+    if (!assignedGuardId) {
+      continue;
+    }
+    return {
+      requestId: docSnap.id,
+      assignedGuardId,
+      assignedGuardName:
+        (data.assignedGuardName ?? "").trim() || "Relief guard",
+    };
+  }
+  return null;
+}
+
+/**
+ * Mid-shift punch-out is allowed only when a relief guard has been assigned.
+ * At or after scheduled shift end, punch-out is allowed without relief.
+ */
+export async function evaluatePunchOutEligibility(params: {
+  guardId: string;
+  shiftFrom: string;
+  shiftTo: string;
+  dutyDate: string;
+  now?: Date;
+}): Promise<PunchOutEligibility> {
+  const now = params.now ?? new Date();
+  const dutyDate = params.dutyDate.trim() || toDutyDateKey(now);
+  const { end } = shiftWindowIst(
+    dutyDate,
+    params.shiftFrom || "08:00",
+    params.shiftTo || "20:00"
+  );
+  const early = now.getTime() < end.getTime();
+  const shiftEndsAt = end.toISOString();
+
+  if (!early) {
+    return {
+      early: false,
+      allowed: true,
+      reliefAssigned: false,
+      shiftEndsAt,
+      message: null,
+    };
+  }
+
+  const relief = await findApprovedReliefAssigneeForDuty({
+    guardId: params.guardId,
+    dutyDate,
+  });
+
+  if (relief) {
+    return {
+      early: true,
+      allowed: true,
+      reliefAssigned: true,
+      reliefRequestId: relief.requestId,
+      reliefAssigneeName: relief.assignedGuardName,
+      shiftEndsAt,
+      message: null,
+    };
+  }
+
+  return {
+    early: true,
+    allowed: false,
+    reliefAssigned: false,
+    shiftEndsAt,
+    message:
+      "You cannot end your shift before scheduled end time unless a relief guard has been assigned. Request relief and wait for approval first.",
+  };
+}
+
 /**
  * End an active shift: require site geofence + punch-out selfie.
+ * Mid-shift end also requires an approved relief assignee.
  * Updates today's open punch-in record (shiftStatus → ended).
  */
 export async function markPunchOut(
@@ -556,6 +807,13 @@ export async function markPunchOut(
   const demoMode = params.demoMode !== false;
   const accuracyMeters = params.accuracyMeters ?? 5;
   const db = getFirestore();
+
+  if (!params.selfieBase64?.trim() && !params.selfieStoragePath?.trim()) {
+    throw Object.assign(
+      new Error("End-shift selfie is required to end your shift."),
+      { statusCode: 400 }
+    );
+  }
 
   const geofence = checkGeofence({
     lat: params.lat,
@@ -566,14 +824,40 @@ export async function markPunchOut(
   });
 
   if (!geofence.unlocked) {
-    throw new Error(
-      geofence.message || "You must be at the duty site to end your shift."
+    throw Object.assign(
+      new Error(
+        geofence.message || "You must be at the duty site to end your shift."
+      ),
+      { statusCode: 403 }
     );
   }
 
   const open = await getTodayOpenPunchIn(params.guard.guardId);
   if (!open) {
-    throw new Error("No active shift found. Punch in first.");
+    throw Object.assign(new Error("No active shift found. Punch in first."), {
+      statusCode: 400,
+    });
+  }
+
+  const now = new Date();
+  const dutyDate =
+    open.dutyDate?.trim() || toDutyDateKey(open.punchedAt);
+
+  const eligibility = await evaluatePunchOutEligibility({
+    guardId: params.guard.guardId,
+    shiftFrom: params.guard.shiftFrom,
+    shiftTo: params.guard.shiftTo,
+    dutyDate,
+    now,
+  });
+  if (!eligibility.allowed) {
+    throw Object.assign(
+      new Error(
+        eligibility.message ||
+          "Early punch-out is not allowed without a relief guard."
+      ),
+      { statusCode: 403 }
+    );
   }
 
   const { selfieUrl, storagePath } = await resolveSelfieAssets({
@@ -585,8 +869,6 @@ export async function markPunchOut(
     loadTestId: params.loadTestId?.trim() || undefined,
   });
 
-  const now = new Date();
-  const dutyDate = toDutyDateKey(now);
   const durationLabel = formatDuration(open.punchedAt, now);
 
   await db.collection(ATTENDANCE_COLLECTION).doc(open.id).update({
@@ -598,6 +880,12 @@ export async function markPunchOut(
     punchOutSelfieUrl: selfieUrl,
     punchOutSelfieStoragePath: storagePath,
     punchOutGeofenceStatus: geofence.status,
+    ...(eligibility.early && eligibility.reliefRequestId
+      ? {
+          earlyPunchOut: true,
+          reliefHandoverRequestId: eligibility.reliefRequestId,
+        }
+      : {}),
     updatedAt: FieldValue.serverTimestamp(),
   });
 
@@ -621,6 +909,12 @@ export async function markPunchOut(
     guardEmployeeCode: params.guard.employeeCode,
     siteName: params.guard.siteName || open.siteName,
     postName: params.guard.postName || open.postName,
+    ...(eligibility.early && eligibility.reliefRequestId
+      ? {
+          earlyPunchOut: true,
+          reliefHandoverRequestId: eligibility.reliefRequestId,
+        }
+      : {}),
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   });
@@ -806,7 +1100,7 @@ export async function markIntervalCheckin(
     purpose: "interval_checkin_selfie",
   });
 
-  const dutyDate = toDutyDateKey(now);
+  const dutyDate = open.dutyDate?.trim() || toDutyDateKey(open.punchedAt);
   const sequenceNumber = prior.length + 1;
 
   const docRef = await db.collection(ATTENDANCE_COLLECTION).add({

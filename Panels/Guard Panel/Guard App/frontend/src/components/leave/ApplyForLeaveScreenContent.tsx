@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 
+import { showAlert } from '../../alerts/appAlert';
 import {
   fetchLeaveBalances,
   submitLeaveRequest,
@@ -44,7 +44,7 @@ export function ApplyForLeaveScreenContent() {
       setBalance(data);
     } catch (error: unknown) {
       const err = error as { message?: string };
-      Alert.alert('Leave balance', err.message ?? 'Could not load leave balances.');
+      showAlert('Leave balance', err.message ?? 'Could not load leave balances.');
     } finally {
       setLoadingBalance(false);
     }
@@ -86,7 +86,7 @@ export function ApplyForLeaveScreenContent() {
     });
 
     await loadBalances();
-    Alert.alert('Request submitted', result.message, [
+    showAlert('Request submitted', result.message, [
       { text: 'View status', onPress: openLeaveTimeOff },
       { text: 'OK' },
     ]);

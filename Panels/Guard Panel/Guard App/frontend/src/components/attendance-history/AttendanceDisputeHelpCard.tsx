@@ -1,6 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import { attendanceHistoryDefaults } from '../../constants/attendance-history-defaults';
 import { appColors } from '../../theme';
@@ -22,7 +24,7 @@ export function AttendanceDisputeHelpCard() {
       <Pressable
         style={({ pressed }) => [styles.secondaryButton, pressed && styles.secondaryButtonPressed]}
         onPress={() =>
-          Alert.alert(
+          showAlert(
             'Attendance Correction',
             'Attendance correction request will open here soon.',
           )

@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 import {
   reliefReasonChips,
@@ -9,16 +9,17 @@ import {
 import { relieveReasonSectionStyles as styles } from '../../styles/relieve-reason-section.styles';
 import { appColors } from '../../theme';
 
-type VoiceNoteState = 'idle' | 'recording' | 'attached';
-
 type RelieveReasonSectionProps = {
   selectedReason: ReliefReasonKey;
   onSelectReason: (reason: ReliefReasonKey) => void;
-  voiceState: VoiceNoteState;
-  onToggleVoice: () => void;
+  note: string;
+  onChangeNote: (note: string) => void;
 };
 
-function iconColor(tone: (typeof reliefReasonChips)[number]['iconTone'], selected: boolean) {
+function iconColor(
+  tone: (typeof reliefReasonChips)[number]['iconTone'],
+  selected: boolean,
+) {
   if (selected) {
     return appColors.onPrimary;
   }
@@ -37,16 +38,9 @@ function iconColor(tone: (typeof reliefReasonChips)[number]['iconTone'], selecte
 export function RelieveReasonSection({
   selectedReason,
   onSelectReason,
-  voiceState,
-  onToggleVoice,
+  note,
+  onChangeNote,
 }: RelieveReasonSectionProps) {
-  const voiceTitle =
-    voiceState === 'recording'
-      ? relieveAGuardDefaults.voiceTitleRecording
-      : voiceState === 'attached'
-        ? relieveAGuardDefaults.voiceTitleAttached
-        : relieveAGuardDefaults.voiceTitleIdle;
-
   return (
     <View style={styles.section}>
       <View style={styles.headerRow}>
@@ -84,27 +78,35 @@ export function RelieveReasonSection({
         })}
       </View>
 
-      <Pressable
-        style={({ pressed }) => [styles.voiceButton, pressed && styles.voiceButtonPressed]}
-        onPress={onToggleVoice}
-      >
+      <View style={styles.voiceButton}>
         <View style={styles.voiceLeft}>
-          <View
-            style={[styles.micCircle, voiceState === 'recording' && styles.micCircleRecording]}
-          >
-            <MaterialIcons
-              name="mic"
-              size={20}
-              color={voiceState === 'recording' ? appColors.onTertiary : appColors.onPrimary}
-            />
+          <View style={styles.micCircle}>
+            <MaterialIcons name="notes" size={20} color={appColors.onPrimary} />
           </View>
           <View style={styles.voiceCopy}>
-            <Text style={styles.voiceTitle}>{voiceTitle}</Text>
-            <Text style={styles.voiceSubtitle}>{relieveAGuardDefaults.voiceSubtitle}</Text>
+            <Text style={styles.voiceTitle}>Optional note</Text>
+            <Text style={styles.voiceSubtitle}>
+              Add context for Admin/HR (voice notes are not supported yet)
+            </Text>
           </View>
         </View>
-        <MaterialIcons name="chevron-right" size={24} color={appColors.onSurfaceVariant} />
-      </Pressable>
+      </View>
+      <TextInput
+        value={note}
+        onChangeText={onChangeNote}
+        placeholder="Short note for the relief request…"
+        placeholderTextColor={appColors.onSurfaceVariant}
+        multiline
+        style={{
+          marginTop: 8,
+          minHeight: 72,
+          borderRadius: 12,
+          padding: 12,
+          backgroundColor: appColors.surfaceContainerHigh,
+          color: appColors.onSurface,
+          textAlignVertical: 'top',
+        }}
+      />
     </View>
   );
 }

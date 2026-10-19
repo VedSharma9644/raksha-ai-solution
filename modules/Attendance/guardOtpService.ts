@@ -36,7 +36,7 @@ function maskPhone(phone: string): string {
 function isOtpDebug(): boolean {
   return (
     process.env.GUARD_OTP_DEBUG === "true" ||
-    process.env.ATTENDANCE_DEMO_MODE !== "false"
+    process.env.ATTENDANCE_DEMO_MODE === "true"
   );
 }
 

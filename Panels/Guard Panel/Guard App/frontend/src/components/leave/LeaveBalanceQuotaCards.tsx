@@ -1,5 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+
+import { showAlert } from '../../alerts/appAlert';
 
 import type { LeaveBalanceTypeDto } from '../../api/guard-api';
 import { applyForLeaveDefaults, leaveBalanceCards } from '../../constants/apply-for-leave-defaults';
@@ -44,7 +46,7 @@ export function LeaveBalanceQuotaCards({ types, loading }: LeaveBalanceQuotaCard
         </View>
         <Pressable
           onPress={() =>
-            Alert.alert(
+            showAlert(
               'Quota Rules',
               'Casual Leave (CL): 6 paid days per calendar year.\nSick Leave (SL): 7 days per year (medical slip may be required).\nEmergency Leave (EL): available anytime with supervisor approval.',
             )
