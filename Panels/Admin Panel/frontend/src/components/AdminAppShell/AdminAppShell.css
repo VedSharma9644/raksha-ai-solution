@@ -1,0 +1,238 @@
+.admin-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: var(--color-background);
+  color: var(--color-on-surface);
+}
+
+.admin-shell__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0.7rem var(--space-lg);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-deep) 35%, transparent);
+}
+
+.admin-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.admin-shell__brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.admin-shell__brand-name {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.03em;
+  color: var(--color-on-primary);
+}
+
+.admin-shell__brand-panel {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-on-primary) 78%, transparent);
+}
+
+.admin-shell__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Soften toolbar controls on the primary header */
+.admin-shell__topbar .branch-selector,
+.admin-shell__topbar .branch-selector__select,
+.admin-shell__topbar .notification-button,
+.admin-shell__topbar .profile-menu__trigger {
+  background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-on-primary) 35%, transparent);
+  color: var(--color-on-primary);
+  box-shadow: none;
+}
+
+.admin-shell__topbar .branch-selector:hover,
+.admin-shell__topbar .notification-button:hover,
+.admin-shell__topbar .profile-menu__trigger:hover {
+  background: color-mix(in srgb, var(--color-on-primary) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-on-primary) 55%, transparent);
+}
+
+.admin-shell__topbar .profile-menu__avatar,
+.admin-shell__topbar .notification-button__icon {
+  color: var(--color-on-primary);
+}
+
+.admin-shell__menu-btn {
+  display: none;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.admin-shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-shell__sidebar {
+  position: sticky;
+  top: 3.75rem;
+  align-self: flex-start;
+  width: 16.5rem;
+  height: calc(100svh - 3.75rem);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-sm) var(--space-lg);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-strong);
+  overflow-y: auto;
+  z-index: 30;
+}
+
+.admin-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.admin-shell__link,
+.admin-shell__group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-on-surface);
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-shell__link:hover,
+.admin-shell__group-toggle:hover {
+  background: var(--color-hover-tint);
+}
+
+.admin-shell__link--active,
+.admin-shell__group-toggle--open {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary-deep);
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-shell__chevron {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.admin-shell__children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.15rem 0 0.35rem 0.55rem;
+  margin-left: 0.45rem;
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.admin-shell__child {
+  display: block;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-on-surface-variant);
+  font-size: var(--font-size-small);
+  text-decoration: none;
+}
+
+.admin-shell__child:hover {
+  background: var(--color-hover-tint);
+  color: var(--color-on-surface);
+}
+
+.admin-shell__child--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary-deep);
+  font-weight: var(--font-weight-semibold);
+}
+
+.admin-shell__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-shell__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-shell__backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .admin-shell__menu-btn {
+    display: inline-flex;
+  }
+
+  .admin-shell__sidebar {
+    position: fixed;
+    left: 0;
+    top: 3.75rem;
+    height: calc(100svh - 3.75rem);
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+    box-shadow: var(--shadow-raised);
+  }
+
+  .admin-shell--nav-open .admin-shell__sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-shell__backdrop {
+    display: block;
+    position: fixed;
+    inset: 3.75rem 0 0;
+    z-index: 28;
+    border: 0;
+    background: rgba(11, 28, 48, 0.35);
+    cursor: pointer;
+  }
+}

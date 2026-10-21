@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AdminAppShell } from "../components/AdminAppShell";
 import { ModuleProtectedRoute } from "../components/ModuleProtectedRoute";
 import { useAuthContext } from "../features/authentication";
 import { AddGuardPage } from "../pages/AddGuardPage";
@@ -73,12 +74,8 @@ function GuestRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-function ModuleRoute({ children }: { children: ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <ModuleProtectedRoute>{children}</ModuleProtectedRoute>
-    </ProtectedRoute>
-  );
+function ModuleOnly({ children }: { children: ReactNode }) {
+  return <ModuleProtectedRoute>{children}</ModuleProtectedRoute>;
 }
 
 export function AppRouter() {
@@ -94,327 +91,305 @@ export function AppRouter() {
       />
 
       <Route
-        path={APP_ROUTES.dashboard}
         element={
           <ProtectedRoute>
-            <AgencyDashboardPage />
+            <AdminAppShell />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path={APP_ROUTES.formBuilder}
-        element={
-          <ModuleRoute>
-            <FormBuilderPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.generalSettings}
-        element={
-          <ModuleRoute>
-            <GeneralSettingsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.paymentManagement}
-        element={
-          <ModuleRoute>
-            <PaymentManagementPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.manageSchedule}
-        element={
-          <ModuleRoute>
-            <ManageSchedulePage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.payroll}
-        element={
-          <ModuleRoute>
-            <PayrollPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.payrollRunDetail}
-        element={
-          <ModuleRoute>
-            <PayrollRunDetailPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.earnings}
-        element={
-          <ModuleRoute>
-            <EarningsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.earningsSiteDetail}
-        element={
-          <ModuleRoute>
-            <EarningsSiteDetailPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.invoiceSettings}
-        element={
-          <ModuleRoute>
-            <InvoiceSettingsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.invoices}
-        element={
-          <ModuleRoute>
-            <InvoicesPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.invoiceDetail}
-        element={
-          <ModuleRoute>
-            <InvoiceDetailPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.moneyOut}
-        element={
-          <ModuleRoute>
-            <MoneyOutPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.addGuard}
-        element={
-          <ModuleRoute>
-            <AddGuardPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.viewGuard}
-        element={
-          <ModuleRoute>
-            <ViewGuardPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.editGuard}
-        element={
-          <ModuleRoute>
-            <EditGuardPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.addSite}
-        element={
-          <ModuleRoute>
-            <AddSitePage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.siteList}
-        element={
-          <ModuleRoute>
-            <SiteListPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.editSite}
-        element={
-          <ModuleRoute>
-            <EditSitePage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.assignGuards}
-        element={
-          <ModuleRoute>
-            <AssignGuardsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.employeeList}
-        element={
-          <ModuleRoute>
-            <EmployeeListPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.addHrStaff}
-        element={
-          <ModuleRoute>
-            <AddHrStaffPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.editHrStaff}
-        element={
-          <ModuleRoute>
-            <EditHrStaffPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.hrList}
-        element={
-          <ModuleRoute>
-            <HrStaffListPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.inventoryList}
-        element={
-          <ModuleRoute>
-            <InventoryListPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.addInventoryItem}
-        element={
-          <ModuleRoute>
-            <AddInventoryItemPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.editInventoryItem}
-        element={
-          <ModuleRoute>
-            <EditInventoryItemPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.inventoryBranchStock}
-        element={
-          <ModuleRoute>
-            <InventoryBranchStockPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.attendance}
-        element={
-          <ModuleRoute>
-            <AttendancePage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.manageLeave}
-        element={
-          <ModuleRoute>
-            <LeaveManagementPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.manageRelief}
-        element={
-          <ModuleRoute>
-            <ReliefManagementPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.scheduling}
-        element={
-          <ModuleRoute>
-            <SchedulingPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.prospectLeads}
-        element={
-          <ModuleRoute>
-            <ProspectLeadsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.prospects}
-        element={
-          <ModuleRoute>
-            <ProspectsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.prospectDetail}
-        element={
-          <ModuleRoute>
-            <ProspectDetailPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.prospectGuards}
-        element={
-          <ModuleRoute>
-            <ProspectGuardsPage />
-          </ModuleRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.prospectGuardDetail}
-        element={
-          <ModuleRoute>
-            <ProspectGuardDetailPage />
-          </ModuleRoute>
-        }
-      />
-
-      {/* Branch Management — Admin only, no module gate */}
-      <Route
-        path={APP_ROUTES.branchList}
-        element={
-          <ProtectedRoute>
-            <BranchListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.addBranch}
-        element={
-          <ProtectedRoute>
-            <AddBranchPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={APP_ROUTES.editBranch}
-        element={
-          <ProtectedRoute>
-            <EditBranchPage />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route path={APP_ROUTES.dashboard} element={<AgencyDashboardPage />} />
+        <Route
+          path={APP_ROUTES.formBuilder}
+          element={
+            <ModuleOnly>
+              <FormBuilderPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.generalSettings}
+          element={
+            <ModuleOnly>
+              <GeneralSettingsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.paymentManagement}
+          element={
+            <ModuleOnly>
+              <PaymentManagementPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.manageSchedule}
+          element={
+            <ModuleOnly>
+              <ManageSchedulePage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.payroll}
+          element={
+            <ModuleOnly>
+              <PayrollPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.payrollRunDetail}
+          element={
+            <ModuleOnly>
+              <PayrollRunDetailPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.earnings}
+          element={
+            <ModuleOnly>
+              <EarningsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.earningsSiteDetail}
+          element={
+            <ModuleOnly>
+              <EarningsSiteDetailPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.invoiceSettings}
+          element={
+            <ModuleOnly>
+              <InvoiceSettingsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.invoices}
+          element={
+            <ModuleOnly>
+              <InvoicesPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.invoiceDetail}
+          element={
+            <ModuleOnly>
+              <InvoiceDetailPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.moneyOut}
+          element={
+            <ModuleOnly>
+              <MoneyOutPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.addGuard}
+          element={
+            <ModuleOnly>
+              <AddGuardPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.viewGuard}
+          element={
+            <ModuleOnly>
+              <ViewGuardPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.editGuard}
+          element={
+            <ModuleOnly>
+              <EditGuardPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.addSite}
+          element={
+            <ModuleOnly>
+              <AddSitePage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.siteList}
+          element={
+            <ModuleOnly>
+              <SiteListPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.editSite}
+          element={
+            <ModuleOnly>
+              <EditSitePage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.assignGuards}
+          element={
+            <ModuleOnly>
+              <AssignGuardsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.employeeList}
+          element={
+            <ModuleOnly>
+              <EmployeeListPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.addHrStaff}
+          element={
+            <ModuleOnly>
+              <AddHrStaffPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.editHrStaff}
+          element={
+            <ModuleOnly>
+              <EditHrStaffPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.hrList}
+          element={
+            <ModuleOnly>
+              <HrStaffListPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.inventoryList}
+          element={
+            <ModuleOnly>
+              <InventoryListPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.addInventoryItem}
+          element={
+            <ModuleOnly>
+              <AddInventoryItemPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.editInventoryItem}
+          element={
+            <ModuleOnly>
+              <EditInventoryItemPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.inventoryBranchStock}
+          element={
+            <ModuleOnly>
+              <InventoryBranchStockPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.attendance}
+          element={
+            <ModuleOnly>
+              <AttendancePage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.manageLeave}
+          element={
+            <ModuleOnly>
+              <LeaveManagementPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.manageRelief}
+          element={
+            <ModuleOnly>
+              <ReliefManagementPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.scheduling}
+          element={
+            <ModuleOnly>
+              <SchedulingPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.prospectLeads}
+          element={
+            <ModuleOnly>
+              <ProspectLeadsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.prospects}
+          element={
+            <ModuleOnly>
+              <ProspectsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.prospectDetail}
+          element={
+            <ModuleOnly>
+              <ProspectDetailPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.prospectGuards}
+          element={
+            <ModuleOnly>
+              <ProspectGuardsPage />
+            </ModuleOnly>
+          }
+        />
+        <Route
+          path={APP_ROUTES.prospectGuardDetail}
+          element={
+            <ModuleOnly>
+              <ProspectGuardDetailPage />
+            </ModuleOnly>
+          }
+        />
+        <Route path={APP_ROUTES.branchList} element={<BranchListPage />} />
+        <Route path={APP_ROUTES.addBranch} element={<AddBranchPage />} />
+        <Route path={APP_ROUTES.editBranch} element={<EditBranchPage />} />
+      </Route>
 
       <Route path="*" element={<Navigate to={APP_ROUTES.login} replace />} />
     </Routes>

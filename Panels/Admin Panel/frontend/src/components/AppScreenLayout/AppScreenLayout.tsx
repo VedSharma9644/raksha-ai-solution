@@ -10,7 +10,8 @@ export interface AppScreenLayoutProps {
 
 export function AppScreenLayout({
   children,
-  showWorkingBranch = true,
+  /** Branch lives in AdminAppShell top bar — off by default. */
+  showWorkingBranch = false,
 }: AppScreenLayoutProps) {
   return (
     <main className="app-screen-layout">
