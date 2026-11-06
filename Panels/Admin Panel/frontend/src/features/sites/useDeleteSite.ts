@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteSite } from "@raskha/site-management";
+import { adminFetch } from "@raskha/shared";
 import { useConfirmDialog } from "../../components/ConfirmDialog";
-import { db } from "../../lib/firebase";
+import { APP_ROUTES } from "../../app/routePaths";
 
 export function useDeleteSite(siteId: string) {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function useDeleteSite(siteId: string) {
     const confirmed = await confirm({
       title: "Delete site?",
       message:
-        "Are you sure you want to delete this site? This cannot be undone.",
+        "Are you sure you want to delete this site? Guards assigned here will be unassigned. This cannot be undone.",
       confirmLabel: "Delete",
       cancelLabel: "Cancel",
       tone: "danger",
@@ -25,8 +25,10 @@ export function useDeleteSite(siteId: string) {
     setIsDeleting(true);
 
     try {
-      await deleteSite(db, siteId);
-      navigate("/sites", { replace: true });
+      await adminFetch(`/api/sites/${encodeURIComponent(siteId)}`, {
+        method: "DELETE",
+      });
+      navigate(APP_ROUTES.siteList, { replace: true });
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to delete site. Please try again.");

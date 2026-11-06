@@ -13,6 +13,7 @@ export interface BranchListScreenProps {
   onBack: () => void;
   onAddBranch: () => void;
   onEditBranch: (branchId: string) => void;
+  onDeleteBranch: (branchId: string) => void;
 }
 
 export function BranchListScreen({
@@ -22,6 +23,7 @@ export function BranchListScreen({
   onBack,
   onAddBranch,
   onEditBranch,
+  onDeleteBranch,
 }: BranchListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -104,7 +106,7 @@ export function BranchListScreen({
                         {branch.status === "active" ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td style={{ textAlign: "center" }}>
+                    <td className="branch-table__actions">
                       <button
                         type="button"
                         className="branch-action-btn"
@@ -113,6 +115,15 @@ export function BranchListScreen({
                         aria-label={`Edit ${branch.name}`}
                       >
                         Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="branch-action-btn branch-action-btn--delete"
+                        onClick={() => onDeleteBranch(branch.id)}
+                        title={`Delete ${branch.name}`}
+                        aria-label={`Delete ${branch.name}`}
+                      >
+                        Delete
                       </button>
                     </td>
                   </tr>

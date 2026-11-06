@@ -156,7 +156,7 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 /* ── Branch distribution button ── */
@@ -179,4 +179,23 @@
 .inventory-list-table__branch-btn:hover {
   background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
   border-color: var(--color-primary);
+}
+
+.inventory-list-table__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-error) 8%, var(--color-surface));
+  color: var(--color-error);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.inventory-list-table__delete-btn:hover {
+  background: color-mix(in srgb, var(--color-error) 16%, var(--color-surface));
+  border-color: var(--color-error);
 }

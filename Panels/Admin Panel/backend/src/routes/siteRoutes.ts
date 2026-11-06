@@ -57,5 +57,52 @@ export function createSiteRoutes(): Router {
     }
   });
 
+  // DELETE /api/sites/:id — agency admin only
+  router.delete("/:id", requireAgencyCaller, async (req: AgencyAuthRequest, res: Response) => {
+    try {
+      if (req.callerRole !== "agency") {
+        res.status(403).json({ error: "Only the agency admin can delete a site." });
+        return;
+      }
+
+      const adminDb = getFirestore();
+      const { id } = req.params as { id: string };
+      const snap = await adminDb.collection(SITES_COLLECTION).doc(id).get();
+      if (!snap.exists) {
+        res.status(404).json({ error: "Site not found." });
+        return;
+      }
+
+      const data = snap.data() as { agencyId?: string };
+      if (data.agencyId !== req.agencyId) {
+        res.status(403).json({ error: "Access denied." });
+        return;
+      }
+
+      const assigned = await adminDb
+        .collection("guards")
+        .where("assignedSiteId", "==", id)
+        .get();
+
+      const docs = assigned.docs;
+      for (let i = 0; i < docs.length; i += 400) {
+        const batch = adminDb.batch();
+        for (const guardDoc of docs.slice(i, i + 400)) {
+          batch.update(guardDoc.ref, {
+            assignedSiteId: "",
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      }
+
+      await adminDb.collection(SITES_COLLECTION).doc(id).delete();
+      res.json({ success: true });
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      res.status(500).json({ error: err.message ?? "Failed to delete site." });
+    }
+  });
+
   return router;
 }

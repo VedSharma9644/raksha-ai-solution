@@ -20,6 +20,7 @@ export interface InventoryListScreenProps {
   onAddItem: () => void;
   onSelectItem: (itemId: string) => void;
   onViewBranchStock: (itemId: string) => void;
+  onDeleteItem: (itemId: string) => void;
   onSeedDefaults: () => void;
 }
 
@@ -30,6 +31,7 @@ export function InventoryListScreen({
   onAddItem,
   onSelectItem,
   onViewBranchStock,
+  onDeleteItem,
   onSeedDefaults,
 }: InventoryListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -181,6 +183,15 @@ export function InventoryListScreen({
                           title="View branch distribution"
                         >
                           🏢 Branches
+                        </button>
+                        <button
+                          type="button"
+                          className="inventory-list-table__delete-btn"
+                          onClick={() => onDeleteItem(item.id)}
+                          title={`Delete ${item.name}`}
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          Delete
                         </button>
                       </td>
                     </tr>

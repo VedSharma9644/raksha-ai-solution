@@ -1,6 +1,8 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { adminFetch } from "@raskha/shared";
 import { APP_ROUTES, assignGuardsPath, editSitePath, schedulingPath } from "../app/routePaths";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import { SiteListScreen } from "../features/sites";
 import { useSiteList } from "../features/sites";
 import { useGuardList } from "../features/guards/useGuardList";
@@ -11,8 +13,9 @@ export function SiteListPage() {
   const location = useLocation();
   const fromManageSchedule =
     (location.state as { from?: string } | null)?.from === "manage-schedule";
-  const { sites, isLoading: sitesLoading, error: sitesError } = useSiteList();
-  const { guards } = useGuardList();
+  const { confirm, alert } = useConfirmDialog();
+  const { sites, isLoading: sitesLoading, error: sitesError, reload } = useSiteList();
+  const { guards, reload: reloadGuards } = useGuardList();
   const { report } = useAgencyRosterCoverage(7);
 
   const understaffedSiteIds = useMemo(
@@ -31,6 +34,33 @@ export function SiteListPage() {
       totalGaps === 1 ? "" : "s"
     }).`;
   }, [report]);
+
+  const handleDeleteSite = useCallback(async (siteId: string) => {
+    const site = sites.find((item) => item.id === siteId);
+    const name = site?.siteName ?? "this site";
+    const confirmed = await confirm({
+      title: "Delete site?",
+      message: `Delete "${name}"? Guards assigned here will be unassigned. This cannot be undone.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+    try {
+      await adminFetch(`/api/sites/${encodeURIComponent(siteId)}`, {
+        method: "DELETE",
+      });
+      reload?.();
+      reloadGuards?.();
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      await alert({
+        title: "Could not delete",
+        message: e.message ?? "Failed to delete site.",
+        tone: "danger",
+      });
+    }
+  }, [alert, confirm, reload, reloadGuards, sites]);
 
   if (sitesLoading) return <p style={{ padding: "2rem" }}>Loading sites…</p>;
   if (sitesError) return <p style={{ padding: "2rem", color: "red" }}>{sitesError}</p>;
@@ -57,6 +87,7 @@ export function SiteListPage() {
       onSelectSite={(id) => navigate(editSitePath(id))}
       onAssignGuards={(id) => navigate(assignGuardsPath(id))}
       onSchedule={(id) => navigate(schedulingPath(id))}
+      onDeleteSite={handleDeleteSite}
     />
   );
 }

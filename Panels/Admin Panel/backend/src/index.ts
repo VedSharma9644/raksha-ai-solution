@@ -20,6 +20,7 @@ import { createProspectGuardRoutes } from "./routes/prospectGuardRoutes";
 import { createSiteRoutes } from "./routes/siteRoutes";
 import { createBranchRoutes } from "./routes/branchRoutes";
 import { createBranchStockRoutes } from "./routes/branchStockRoutes";
+import { createInventoryRoutes } from "./routes/inventoryRoutes";
 import { createGuardInventoryRoutes } from "./routes/guardInventoryRoutes";
 import { createPayrollRoutes } from "./routes/payrollRoutes";
 import { createEarningsRoutes } from "./routes/earningsRoutes";
@@ -59,6 +60,7 @@ initializeAdminApp({
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey,
   }),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
 
 // ── Firebase Client SDK (for Firestore / regular reads & writes) ─────────────
@@ -100,7 +102,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -123,6 +125,7 @@ app.use("/api/prospects", createProspectRoutes());
 app.use("/api/prospect-guards", createProspectGuardRoutes());
 app.use("/api/branches", createBranchRoutes());
 app.use("/api/branch-stock", createBranchStockRoutes());
+app.use("/api/inventory", createInventoryRoutes());
 app.use("/api/guard-inventory", createGuardInventoryRoutes());
 app.use("/api/payroll", createPayrollRoutes());
 app.use("/api/earnings", createEarningsRoutes());

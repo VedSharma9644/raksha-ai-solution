@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listHrStaffByAgency } from "@raskha/hr-management";
 import type { HrStaff } from "@raskha/hr-management";
 import { useAuthContext } from "../authentication";
@@ -11,6 +11,7 @@ export function useHrStaffList() {
   const [hrStaff, setHrStaff] = useState<HrStaff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     if (!agency) {
@@ -28,7 +29,9 @@ export function useHrStaffList() {
         setError(e.message ?? "Failed to load HR staff.");
       })
       .finally(() => setIsLoading(false));
-  }, [agency]);
+  }, [agency, tick]);
 
-  return { hrStaff, isLoading, error };
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  return { hrStaff, isLoading, error, reload };
 }

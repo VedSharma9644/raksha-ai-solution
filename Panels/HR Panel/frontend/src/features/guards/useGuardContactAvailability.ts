@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  checkGuardEmailAvailability,
-  checkGuardPhoneAvailability,
-} from "@raskha/guard-management";
-import { db } from "../../lib/firebase";
+import { adminCheckGuardContact } from "@raskha/shared";
 
 export type ContactFieldStatus = {
   checking: boolean;
@@ -55,13 +51,13 @@ export function useGuardContactAvailability(params: {
     setPhoneStatus({ checking: true, available: null, message: "Checking…" });
     const reqId = ++phoneReq.current;
     const timer = window.setTimeout(() => {
-      void checkGuardPhoneAvailability(db, trimmed, excludeGuardId)
+      void adminCheckGuardContact({ phone: trimmed, excludeGuardId })
         .then((result) => {
           if (reqId !== phoneReq.current) return;
           setPhoneStatus({
             checking: false,
-            available: result.available,
-            message: result.message ?? "",
+            available: result.phone?.available ?? null,
+            message: result.phone?.message ?? "",
           });
         })
         .catch(() => {
@@ -91,13 +87,13 @@ export function useGuardContactAvailability(params: {
     setEmailStatus({ checking: true, available: null, message: "Checking…" });
     const reqId = ++emailReq.current;
     const timer = window.setTimeout(() => {
-      void checkGuardEmailAvailability(db, trimmed, excludeGuardId)
+      void adminCheckGuardContact({ email: trimmed, excludeGuardId })
         .then((result) => {
           if (reqId !== emailReq.current) return;
           setEmailStatus({
             checking: false,
-            available: result.available,
-            message: result.message ?? "",
+            available: result.email?.available ?? null,
+            message: result.email?.message ?? "",
           });
         })
         .catch(() => {

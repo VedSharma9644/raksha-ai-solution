@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listSitesByAgency } from "@raskha/site-management";
 import type { Site } from "@raskha/site-management";
 import { useWebOps } from "../../context/WebOpsContext";
@@ -9,6 +9,7 @@ export function useSiteList() {
   const [sites, setSites] = useState<Site[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     if (!agencyId) {
@@ -37,7 +38,9 @@ export function useSiteList() {
         setError(e.message ?? "Failed to load sites.");
       })
       .finally(() => setIsLoading(false));
-  }, [agencyId, activeBranchId, db, role, assignedSiteIds]);
+  }, [agencyId, activeBranchId, db, role, assignedSiteIds, tick]);
 
-  return { sites, isLoading, error };
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  return { sites, isLoading, error, reload };
 }

@@ -27,7 +27,7 @@ export function NotificationDropdown({
     <div
       id={id}
       className="notification-dropdown"
-      role="region"
+      role="menu"
       aria-label="Notifications"
     >
       <div className="notification-dropdown__header">

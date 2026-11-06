@@ -16,6 +16,7 @@ export interface HrStaffListScreenProps {
   onBack: () => void;
   onAddHr: () => void;
   onSelectHr: (hrStaffId: string) => void;
+  onDeleteHr: (hrStaffId: string) => void;
 }
 
 export function HrStaffListScreen({
@@ -23,6 +24,7 @@ export function HrStaffListScreen({
   onBack,
   onAddHr,
   onSelectHr,
+  onDeleteHr,
 }: HrStaffListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -71,12 +73,13 @@ export function HrStaffListScreen({
                 <th scope="col">Email</th>
                 <th scope="col">Phone</th>
                 <th scope="col">Status</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="hr-staff-table__empty">
+                  <td colSpan={6} className="hr-staff-table__empty">
                     No HR users found.
                   </td>
                 </tr>
@@ -97,6 +100,20 @@ export function HrStaffListScreen({
                       >
                         {STATUS_LABELS[hr.status]}
                       </span>
+                    </td>
+                    <td className="hr-staff-table__actions">
+                      <button
+                        type="button"
+                        className="hr-staff-table__delete-btn"
+                        title={`Delete ${hr.fullName}`}
+                        aria-label={`Delete ${hr.fullName}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDeleteHr(hr.id);
+                        }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))

@@ -1,47 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createGuardAccount, normalizeGuardDocuments } from "@raskha/guard-management";
+import { normalizeGuardDocuments } from "@raskha/guard-management";
 import type { GuardDocument, GuardGender } from "@raskha/guard-management";
+import { adminFetch, adminUploadGuardFile } from "@raskha/shared";
 import { APP_ROUTES } from "../../app/routePaths";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
-import { db, storage, clientFirebaseConfig } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff/staffFormTypes";
 
-async function uploadDocumentIfPresent(
-  file: File | null,
-  path: string
-): Promise<string> {
+async function uploadDocumentIfPresent(file: File | null): Promise<string> {
   if (!file) return "";
-  const extension = file.name.includes(".")
-    ? file.name.slice(file.name.lastIndexOf("."))
-    : "";
-  const storageRef = ref(storage, `${path}${extension}`);
-  await uploadBytes(storageRef, file, {
-    contentType: file.type || "application/octet-stream",
-  });
-  return getDownloadURL(storageRef);
+  const saved = await adminUploadGuardFile(file);
+  return saved.url;
 }
 
-async function uploadGuardDocuments(
-  files: File[],
-  basePath: string
-): Promise<GuardDocument[]> {
+async function uploadGuardDocuments(files: File[]): Promise<GuardDocument[]> {
   return Promise.all(
-    files.map(async (file, index) => {
-      const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "file";
-      const storageRef = ref(
-        storage,
-        `${basePath}/documents/${Date.now()}-${index}-${safeName}`
-      );
-      await uploadBytes(storageRef, file, {
-        contentType: file.type || "application/octet-stream",
-      });
+    files.map(async (file) => {
+      const saved = await adminUploadGuardFile(file);
       return {
-        name: file.name || "Document",
-        url: await getDownloadURL(storageRef),
-        contentType: file.type || "application/octet-stream",
+        name: file.name || saved.name || "Document",
+        url: saved.url,
+        contentType: file.type || saved.contentType,
       };
     })
   );
@@ -64,67 +44,55 @@ export function useAddGuard() {
     setIsSubmitting(true);
 
     try {
-      const timestamp = Date.now();
-      const basePath = `agencies/${agency.id}/guards/${timestamp}`;
-
-      // Upload documents + profile picture to Firebase Storage (parallel)
       const [characterCertificateUrl, policeVerificationUrl, profilePictureUrl] =
         await Promise.all([
-          uploadDocumentIfPresent(
-            values.characterCertificateFile,
-            `${basePath}/character-certificate`
-          ),
-          uploadDocumentIfPresent(
-            values.policeVerificationFile,
-            `${basePath}/police-verification`
-          ),
-          uploadDocumentIfPresent(
-            values.profilePictureFile,
-            `${basePath}/profile-picture`
-          ),
+          uploadDocumentIfPresent(values.characterCertificateFile),
+          uploadDocumentIfPresent(values.policeVerificationFile),
+          uploadDocumentIfPresent(values.profilePictureFile),
         ]);
 
       const documents = [
         ...normalizeGuardDocuments(values.documents),
-        ...(await uploadGuardDocuments(values.documentFiles ?? [], basePath)),
+        ...(await uploadGuardDocuments(values.documentFiles ?? [])),
       ];
 
-      // Create Firebase Auth account + Firestore document (Auth UID as doc ID)
-      await createGuardAccount(db, clientFirebaseConfig, {
-        agencyId: agency.id,
-        password: values.password,
-        fullName: values.fullName,
-        fatherName: values.fatherName,
-        motherName: values.motherName,
-        gender: (values.gender || "male") as GuardGender,
-        phone: values.phone,
-        email: values.email,
-        address: values.address,
-        caste: values.caste,
-        height: values.height,
-        aadhaarNumber: values.aadhaarNumber,
-        panNumber: values.panNumber,
-        employeeCode: values.employeeCode,
-        post: values.post,
-        joiningDate: values.joiningDate,
-        salary: values.salary,
-        experience: values.experience,
-        education: values.education,
-        assignedSiteId: values.assignedSiteId,
-        weeklyOffDays: values.weeklyOffDays,
-        guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
-        interestedCity: values.interestedCity,
-        shiftFrom: values.shiftFrom,
-        shiftTo: values.shiftTo,
-        characterCertificateUrl,
-        policeVerificationUrl,
-        profilePictureUrl,
-        bankAccount: values.bankAccount,
-        esiNumber: values.esiNumber,
-        pfNumber: values.pfNumber,
-        notes: values.notes,
-        branchId: values.branchId || activeBranchId || null,
-        documents,
+      await adminFetch("/api/guards/account", {
+        method: "POST",
+        body: JSON.stringify({
+          password: values.password,
+          fullName: values.fullName,
+          fatherName: values.fatherName,
+          motherName: values.motherName,
+          gender: (values.gender || "male") as GuardGender,
+          phone: values.phone,
+          email: values.email,
+          address: values.address,
+          caste: values.caste,
+          height: values.height,
+          aadhaarNumber: values.aadhaarNumber,
+          panNumber: values.panNumber,
+          employeeCode: values.employeeCode,
+          post: values.post,
+          joiningDate: values.joiningDate,
+          salary: values.salary,
+          experience: values.experience,
+          education: values.education,
+          assignedSiteId: values.assignedSiteId,
+          weeklyOffDays: values.weeklyOffDays,
+          guardType: (values.guardType || "civilian") as "ex-serviceman" | "civilian",
+          interestedCity: values.interestedCity,
+          shiftFrom: values.shiftFrom,
+          shiftTo: values.shiftTo,
+          characterCertificateUrl,
+          policeVerificationUrl,
+          profilePictureUrl,
+          bankAccount: values.bankAccount,
+          esiNumber: values.esiNumber,
+          pfNumber: values.pfNumber,
+          notes: values.notes,
+          branchId: values.branchId || activeBranchId || null,
+          documents,
+        }),
       });
 
       navigate(APP_ROUTES.employeeList, { replace: true });

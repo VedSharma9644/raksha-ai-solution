@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import {
+  requireAgencyCaller,
+  type AgencyAuthRequest,
+} from "../middleware/requireAgencyCaller";
 
 export function createHrStaffRoutes(): Router {
   const router = Router();
@@ -65,6 +69,42 @@ export function createHrStaffRoutes(): Router {
     } catch (error: unknown) {
       const err = error as { message?: string };
       res.status(500).json({ error: err.message ?? "Failed to update password." });
+    }
+  });
+
+  // DELETE /api/hr-staff/:id — agency admin only
+  router.delete("/:id", requireAgencyCaller, async (req: AgencyAuthRequest, res: Response) => {
+    try {
+      if (req.callerRole !== "agency") {
+        res.status(403).json({ error: "Only the agency admin can delete an HR user." });
+        return;
+      }
+
+      const adminDb = getFirestore();
+      const { id } = req.params as { id: string };
+      const snap = await adminDb.collection("hrStaff").doc(id).get();
+      if (!snap.exists) {
+        res.status(404).json({ error: "HR user not found." });
+        return;
+      }
+
+      const data = snap.data() as { agencyId?: string };
+      if (data.agencyId !== req.agencyId) {
+        res.status(403).json({ error: "Access denied." });
+        return;
+      }
+
+      await adminDb.collection("hrStaff").doc(id).delete();
+      try {
+        await getAuth().deleteUser(id);
+      } catch {
+        /* ignore missing auth user */
+      }
+
+      res.json({ success: true });
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      res.status(500).json({ error: err.message ?? "Failed to delete HR user." });
     }
   });
 

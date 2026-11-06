@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteHrStaff } from "@raskha/hr-management";
+import { adminFetch } from "@raskha/shared";
 import { useConfirmDialog } from "../../components/ConfirmDialog";
-import { db } from "../../lib/firebase";
+import { APP_ROUTES } from "../../app/routePaths";
 
 export function useDeleteHrStaff(hrStaffId: string) {
   const navigate = useNavigate();
@@ -26,8 +26,10 @@ export function useDeleteHrStaff(hrStaffId: string) {
     setIsDeleting(true);
 
     try {
-      await deleteHrStaff(db, hrStaffId);
-      navigate("/hr", { replace: true });
+      await adminFetch(`/api/hr-staff/${encodeURIComponent(hrStaffId)}`, {
+        method: "DELETE",
+      });
+      navigate(APP_ROUTES.hrList, { replace: true });
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to delete HR user. Please try again.");

@@ -4,6 +4,8 @@ export {
   adminAuthHeaders,
   adminFetch,
   adminFetchBlob,
+  adminUploadGuardFile,
+  adminCheckGuardContact,
   type GetIdToken,
   type AdminAuthHeaderOptions,
   type AdminFetchOptions,

@@ -12,18 +12,34 @@ service firebase.storage {
       return isSignedIn() && request.auth.uid == agencyId;
     }
 
+    function isActiveHrStaff(agencyId) {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/hrStaff/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/hrStaff/$(request.auth.uid)).data.agencyId == agencyId
+        && firestore.get(/databases/(default)/documents/hrStaff/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function hasAgencyAccess(agencyId) {
+      return isAgencyOwner(agencyId) || isActiveHrStaff(agencyId);
+    }
+
     function isAllowedDoc() {
-      return request.resource.size < 10 * 1024 * 1024
+      return request.resource.size < 15 * 1024 * 1024
         && (
           request.resource.contentType.matches('image/.*')
           || request.resource.contentType == 'application/pdf'
+          || request.resource.contentType == 'application/msword'
+          || request.resource.contentType.matches('application/vnd\\..*')
+          || request.resource.contentType == 'text/plain'
+          || request.resource.contentType == 'application/zip'
+          || request.resource.contentType == 'application/octet-stream'
         );
     }
 
     match /agencies/{agencyId}/{allPaths=**} {
-      allow read: if isAgencyOwner(agencyId);
-      allow write: if isAgencyOwner(agencyId) && isAllowedDoc();
-      allow delete: if isAgencyOwner(agencyId);
+      allow read: if hasAgencyAccess(agencyId);
+      allow write: if hasAgencyAccess(agencyId) && isAllowedDoc();
+      allow delete: if hasAgencyAccess(agencyId);
     }
   }
 }

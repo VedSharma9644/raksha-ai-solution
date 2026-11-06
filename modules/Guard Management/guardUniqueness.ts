@@ -29,11 +29,18 @@ export function normalizeGuardEmail(raw: string): string {
  * address so the guard can sign in with mobile number or Guard ID.
  * The synthetic address is not shown on the guard record.
  */
-export function guardAuthEmail(email: string, phone: string): string {
+export function guardAuthEmail(
+  email: string,
+  phone: string,
+  fallbackDomain?: string
+): string {
   const normalized = normalizeGuardEmail(email);
   if (normalized.includes("@")) return normalized;
   const digits = normalizeGuardPhone(phone);
-  return `guard.${digits || "unknown"}@guards.invalid`;
+  const domain = String(fallbackDomain ?? "firebaseapp.com")
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
+  return `guard.${digits || "unknown"}@${domain || "firebaseapp.com"}`;
 }
 
 /** Phone spellings commonly stored by Admin/HR forms. */

@@ -1,19 +1,236 @@
 import type { Firestore } from "firebase/firestore";
 import { Router, type Request, type Response } from "express";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import {
   addGuard,
   getGuardById,
   guardAuthEmail,
   listGuardsByAgency,
   normalizeGuardDocuments,
+  normalizeGuardEmail,
   updateGuard,
 } from "@raskha/guard-management";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
+import {
+  assertGuardContactUniqueAdmin,
+  findGuardIdByEmailAdmin,
+  findGuardIdByPhoneAdmin,
+  saveGuardFileAdmin,
+} from "../services/guardAdmin";
 
 export function createGuardRoutes(db: Firestore): Router {
   const router = Router();
+
+  // GET /api/guards/contact-availability — phone/email uniqueness (Admin SDK)
+  router.get(
+    "/contact-availability",
+    requireAgencyCaller,
+    async (req: AgencyAuthRequest, res: Response) => {
+      try {
+        const phone = typeof req.query.phone === "string" ? req.query.phone : "";
+        const email = typeof req.query.email === "string" ? req.query.email : "";
+        const excludeGuardId =
+          typeof req.query.excludeGuardId === "string"
+            ? req.query.excludeGuardId
+            : undefined;
+
+        const result: {
+          phone?: { available: boolean; message: string };
+          email?: { available: boolean; message: string };
+        } = {};
+
+        if (phone.trim()) {
+          const existing = await findGuardIdByPhoneAdmin(phone, excludeGuardId);
+          result.phone = existing
+            ? {
+                available: false,
+                message:
+                  "This mobile number is already registered to another guard.",
+              }
+            : { available: true, message: "Mobile number is available." };
+        }
+
+        if (email.trim()) {
+          const existing = await findGuardIdByEmailAdmin(email, excludeGuardId);
+          result.email = existing
+            ? {
+                available: false,
+                message: "This email is already registered to another guard.",
+              }
+            : { available: true, message: "Email is available." };
+        }
+
+        res.json(result);
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        res
+          .status(500)
+          .json({ error: err.message ?? "Failed to check contact availability." });
+      }
+    }
+  );
+
+  // POST /api/guards/files — upload a guard document (Admin SDK, bypasses Storage rules)
+  router.post(
+    "/files",
+    requireAgencyCaller,
+    async (req: AgencyAuthRequest, res: Response) => {
+      try {
+        const fileName =
+          typeof req.body?.fileName === "string" ? req.body.fileName : "file";
+        const contentType =
+          typeof req.body?.contentType === "string"
+            ? req.body.contentType
+            : "application/octet-stream";
+        const dataBase64 =
+          typeof req.body?.dataBase64 === "string" ? req.body.dataBase64 : "";
+
+        const saved = await saveGuardFileAdmin({
+          agencyId: req.agencyId!,
+          fileName,
+          contentType,
+          dataBase64,
+        });
+        res.status(201).json(saved);
+      } catch (error: unknown) {
+        const err = error as { message?: string; statusCode?: number };
+        res
+          .status(typeof err.statusCode === "number" ? err.statusCode : 500)
+          .json({ error: err.message ?? "Failed to upload file." });
+      }
+    }
+  );
+
+  // POST /api/guards/account — create Auth user + Firestore guard (Admin SDK)
+  router.post(
+    "/account",
+    requireAgencyCaller,
+    async (req: AgencyAuthRequest, res: Response) => {
+      try {
+        const body = req.body as Record<string, unknown>;
+        const fullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
+        const employeeCode =
+          typeof body.employeeCode === "string" ? body.employeeCode.trim() : "";
+        const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+        const password = typeof body.password === "string" ? body.password : "";
+        const email = normalizeGuardEmail(
+          typeof body.email === "string" ? body.email : ""
+        );
+
+        if (!fullName || !employeeCode || !phone || !password) {
+          res.status(400).json({ error: "Missing required fields." });
+          return;
+        }
+        if (password.length < 8) {
+          res.status(400).json({ error: "Password must be at least 8 characters." });
+          return;
+        }
+
+        await assertGuardContactUniqueAdmin({ phone, email });
+
+        const authEmail = guardAuthEmail(
+          email,
+          phone,
+          process.env.FIREBASE_AUTH_DOMAIN
+        );
+        const user = await getAuth().createUser({
+          email: authEmail,
+          password,
+          displayName: fullName,
+        });
+
+        const guardData = {
+          id: user.uid,
+          agencyId: req.agencyId,
+          fullName,
+          fatherName: typeof body.fatherName === "string" ? body.fatherName : "",
+          motherName: typeof body.motherName === "string" ? body.motherName : "",
+          gender: (body.gender as "male" | "female" | "other") ?? "male",
+          phone,
+          email,
+          address: typeof body.address === "string" ? body.address : "",
+          caste: typeof body.caste === "string" ? body.caste : "",
+          height: typeof body.height === "string" ? body.height : "",
+          aadhaarNumber:
+            typeof body.aadhaarNumber === "string" ? body.aadhaarNumber : "",
+          panNumber: typeof body.panNumber === "string" ? body.panNumber : "",
+          employeeCode,
+          post: typeof body.post === "string" ? body.post : "",
+          joiningDate: typeof body.joiningDate === "string" ? body.joiningDate : "",
+          salary: typeof body.salary === "string" ? body.salary : "",
+          experience: typeof body.experience === "string" ? body.experience : "",
+          education: typeof body.education === "string" ? body.education : "",
+          assignedSiteId:
+            typeof body.assignedSiteId === "string" ? body.assignedSiteId : "",
+          weeklyOffDays: Array.isArray(body.weeklyOffDays)
+            ? body.weeklyOffDays.filter((day) => typeof day === "string")
+            : [],
+          guardType:
+            (body.guardType as "ex-serviceman" | "civilian") ?? "civilian",
+          interestedCity:
+            typeof body.interestedCity === "string" ? body.interestedCity : "",
+          shiftFrom: typeof body.shiftFrom === "string" ? body.shiftFrom : "",
+          shiftTo: typeof body.shiftTo === "string" ? body.shiftTo : "",
+          characterCertificateUrl:
+            typeof body.characterCertificateUrl === "string"
+              ? body.characterCertificateUrl
+              : "",
+          policeVerificationUrl:
+            typeof body.policeVerificationUrl === "string"
+              ? body.policeVerificationUrl
+              : "",
+          profilePictureUrl:
+            typeof body.profilePictureUrl === "string"
+              ? body.profilePictureUrl
+              : "",
+          bankAccount: typeof body.bankAccount === "string" ? body.bankAccount : "",
+          esiNumber: typeof body.esiNumber === "string" ? body.esiNumber : "",
+          pfNumber: typeof body.pfNumber === "string" ? body.pfNumber : "",
+          notes: typeof body.notes === "string" ? body.notes : "",
+          branchId: typeof body.branchId === "string" && body.branchId
+            ? body.branchId
+            : null,
+          documents: normalizeGuardDocuments(body.documents),
+          status: "active",
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        try {
+          await getFirestore().collection("guards").doc(user.uid).set(guardData);
+        } catch (writeError) {
+          await getAuth().deleteUser(user.uid).catch(() => undefined);
+          throw writeError;
+        }
+
+        res.status(201).json({ id: user.uid, ...guardData });
+      } catch (error: unknown) {
+        const err = error as {
+          message?: string;
+          statusCode?: number;
+          code?: string;
+        };
+        if (err.code === "auth/email-already-exists") {
+          res.status(409).json({
+            error: "This email is already registered to another account.",
+          });
+          return;
+        }
+        if (err.code === "auth/invalid-email") {
+          res.status(400).json({ error: "Enter a valid email address." });
+          return;
+        }
+        const status =
+          typeof err.statusCode === "number"
+            ? err.statusCode
+            : err.code === "guard/phone-taken" || err.code === "guard/email-taken"
+              ? 409
+              : 500;
+        res.status(status).json({ error: err.message ?? "Failed to add guard." });
+      }
+    }
+  );
 
   // POST /api/guards — add a new guard
   router.post("/", async (req: Request, res: Response) => {
@@ -131,7 +348,11 @@ export function createGuardRoutes(db: Firestore): Router {
       const data = guardDoc.data() as { email?: string; phone?: string };
       const email = typeof data.email === "string" ? data.email.trim() : "";
       const phone = typeof data.phone === "string" ? data.phone : "";
-      const authEmail = guardAuthEmail(email, phone);
+      const authEmail = guardAuthEmail(
+        email,
+        phone,
+        process.env.FIREBASE_AUTH_DOMAIN
+      );
 
       try {
         await getAuth().updateUser(

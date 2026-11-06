@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "../Button";
+import { usePageBackHotkeys } from "../../../../../../modules/Web Ops/lib/usePageBackHotkeys";
 import "./PageHeader.css";
 
 export interface PageHeaderProps {
@@ -17,6 +18,8 @@ export function PageHeader({
   backLabel = "Back",
   actions,
 }: PageHeaderProps) {
+  usePageBackHotkeys(onBack);
+
   return (
     <header className="page-header">
       <div className="page-header__copy">

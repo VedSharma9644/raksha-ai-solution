@@ -131,6 +131,51 @@ export async function adminFetch<T>(
   return data;
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function adminUploadGuardFile(file: File): Promise<{
+  url: string;
+  name: string;
+  contentType: string;
+  path: string;
+}> {
+  const dataBase64 = await fileToBase64(file);
+  return adminFetch("/api/guards/files", {
+    method: "POST",
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type || "application/octet-stream",
+      dataBase64,
+    }),
+  });
+}
+
+export async function adminCheckGuardContact(params: {
+  phone?: string;
+  email?: string;
+  excludeGuardId?: string;
+}): Promise<{
+  phone?: { available: boolean; message?: string };
+  email?: { available: boolean; message?: string };
+}> {
+  const query = new URLSearchParams();
+  if (params.phone) query.set("phone", params.phone);
+  if (params.email) query.set("email", params.email);
+  if (params.excludeGuardId) query.set("excludeGuardId", params.excludeGuardId);
+  return adminFetch(`/api/guards/contact-availability?${query.toString()}`);
+}
+
 /** Authenticated fetch that returns a Blob (e.g. CSV / PDF download). */
 export async function adminFetchBlob(
   path: string,

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useConfirmDialog } from "../../components/ConfirmDialog";
 import {
   listInventoryItemsByAgency,
   seedDefaultInventoryItems,
-  deleteInventoryItem,
   updateInventoryItem,
   addInventoryItem,
 } from "@raskha/inventory-management";
@@ -133,6 +133,7 @@ export function useAddInventoryItem() {
 
 export function useEditInventoryItem(itemId: string) {
   const navigate = useNavigate();
+  const { confirm } = useConfirmDialog();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -159,10 +160,22 @@ export function useEditInventoryItem(itemId: string) {
   }
 
   async function deleteItem() {
+    const confirmed = await confirm({
+      title: "Delete item?",
+      message:
+        "Delete this inventory item? Branch allocations and guard assignments for it will also be removed. This cannot be undone.",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+
     setError("");
     setIsDeleting(true);
     try {
-      await deleteInventoryItem(db, itemId);
+      await adminFetch(`/api/inventory/${encodeURIComponent(itemId)}`, {
+        method: "DELETE",
+      });
       navigate(APP_ROUTES.inventoryList, { replace: true });
     } catch (err: unknown) {
       const e = err as { message?: string };

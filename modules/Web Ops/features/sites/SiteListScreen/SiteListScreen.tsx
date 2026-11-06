@@ -58,6 +58,19 @@ function IconShield() {
   );
 }
 
+function IconTrash() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14H6L5 6"/>
+      <path d="M10 11v6M14 11v6"/>
+      <path d="M9 6V4h6v2"/>
+    </svg>
+  );
+}
+
 export interface SiteListScreenProps {
   sites: Site[];
   guards: Guard[];
@@ -72,6 +85,8 @@ export interface SiteListScreenProps {
   onSelectSite?: (siteId: string) => void;
   onAssignGuards: (siteId: string) => void;
   onSchedule: (siteId: string) => void;
+  /** Agency admin only — shown when canEditSites is true. */
+  onDeleteSite?: (siteId: string) => void;
 }
 
 export function SiteListScreen({
@@ -85,6 +100,7 @@ export function SiteListScreen({
   onSelectSite,
   onAssignGuards,
   onSchedule,
+  onDeleteSite,
 }: SiteListScreenProps) {
   const { capabilities } = useWebOps();
   const canEditSites = capabilities.canEditSites;
@@ -169,7 +185,7 @@ export function SiteListScreen({
                 <th scope="col">Manager</th>
                 <th scope="col" style={{ textAlign: "center" }}>Guards</th>
                 <th scope="col">Status</th>
-                <th scope="col" style={{ width: "120px", textAlign: "center" }}>Actions</th>
+                <th scope="col" style={{ width: "148px", textAlign: "center" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -241,6 +257,17 @@ export function SiteListScreen({
                           >
                             <IconShield />
                           </button>
+                          {canEditSites && onDeleteSite ? (
+                            <button
+                              type="button"
+                              className="site-action-btn site-action-btn--delete"
+                              onClick={() => onDeleteSite(site.id)}
+                              title="Delete site"
+                              aria-label={`Delete ${site.siteName}`}
+                            >
+                              <IconTrash />
+                            </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>

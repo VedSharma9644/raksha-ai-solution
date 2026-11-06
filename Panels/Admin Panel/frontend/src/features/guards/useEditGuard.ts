@@ -1,46 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getGuardById, normalizeGuardDocuments } from "@raskha/guard-management";
 import type { Guard, GuardDocument, GuardGender } from "@raskha/guard-management";
-import { adminFetch } from "@raskha/shared";
+import { adminFetch, adminUploadGuardFile } from "@raskha/shared";
 import { APP_ROUTES } from "../../app/routePaths";
-import { db, storage } from "../../lib/firebase";
+import { db } from "../../lib/firebase";
 import type { StaffMemberFormValues } from "../staff";
 
-async function uploadDocumentIfPresent(
-  file: File | null,
-  path: string
-): Promise<string> {
+async function uploadDocumentIfPresent(file: File | null): Promise<string> {
   if (!file) return "";
-  const extension = file.name.includes(".")
-    ? file.name.slice(file.name.lastIndexOf("."))
-    : "";
-  const storageRef = ref(storage, `${path}${extension}`);
-  await uploadBytes(storageRef, file, {
-    contentType: file.type || "application/octet-stream",
-  });
-  return getDownloadURL(storageRef);
+  const saved = await adminUploadGuardFile(file);
+  return saved.url;
 }
 
-async function uploadGuardDocuments(
-  files: File[],
-  basePath: string
-): Promise<GuardDocument[]> {
+async function uploadGuardDocuments(files: File[]): Promise<GuardDocument[]> {
   return Promise.all(
-    files.map(async (file, index) => {
-      const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "file";
-      const storageRef = ref(
-        storage,
-        `${basePath}/documents/${Date.now()}-${index}-${safeName}`
-      );
-      await uploadBytes(storageRef, file, {
-        contentType: file.type || "application/octet-stream",
-      });
+    files.map(async (file) => {
+      const saved = await adminUploadGuardFile(file);
       return {
-        name: file.name || "Document",
-        url: await getDownloadURL(storageRef),
-        contentType: file.type || "application/octet-stream",
+        name: file.name || saved.name || "Document",
+        url: saved.url,
+        contentType: file.type || saved.contentType,
       };
     })
   );
@@ -80,34 +60,22 @@ export function useEditGuard(guardId: string) {
     setIsSubmitting(true);
 
     try {
-      const basePath = `agencies/${guard?.agencyId ?? "unknown"}/guards/${guardId}`;
-
-      // Upload only if a new file was chosen — otherwise keep existing URL
       const [characterCertificateUrl, policeVerificationUrl, profilePictureUrl] =
         await Promise.all([
           values.characterCertificateFile
-            ? uploadDocumentIfPresent(
-                values.characterCertificateFile,
-                `${basePath}/character-certificate`
-              )
+            ? uploadDocumentIfPresent(values.characterCertificateFile)
             : Promise.resolve(values.characterCertificateUrl),
           values.policeVerificationFile
-            ? uploadDocumentIfPresent(
-                values.policeVerificationFile,
-                `${basePath}/police-verification`
-              )
+            ? uploadDocumentIfPresent(values.policeVerificationFile)
             : Promise.resolve(values.policeVerificationUrl),
           values.profilePictureFile
-            ? uploadDocumentIfPresent(
-                values.profilePictureFile,
-                `${basePath}/profile-picture`
-              )
+            ? uploadDocumentIfPresent(values.profilePictureFile)
             : Promise.resolve(values.profilePictureUrl),
         ]);
 
       const documents = [
         ...normalizeGuardDocuments(values.documents),
-        ...(await uploadGuardDocuments(values.documentFiles ?? [], basePath)),
+        ...(await uploadGuardDocuments(values.documentFiles ?? [])),
       ];
 
       await adminFetch(`/api/guards/${guardId}`, {
@@ -146,7 +114,6 @@ export function useEditGuard(guardId: string) {
           branchId: values.branchId || null,
           documents,
         }),
-        requireAuth: false,
       });
 
       // If a new password was supplied, update Firebase Auth via backend
@@ -154,7 +121,6 @@ export function useEditGuard(guardId: string) {
         await adminFetch(`/api/guards/${guardId}/password`, {
           method: "PUT",
           body: JSON.stringify({ password: values.password }),
-          requireAuth: false,
         });
       }
 
