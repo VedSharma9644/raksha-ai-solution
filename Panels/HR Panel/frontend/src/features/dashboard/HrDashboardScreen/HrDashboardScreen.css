@@ -35,7 +35,7 @@
 }
 
 .hr-dashboard__brand-name {
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
   font-weight: var(--font-weight-extrabold);
   letter-spacing: -0.03em;
   color: var(--color-primary-deep);

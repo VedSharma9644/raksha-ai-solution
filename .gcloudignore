@@ -1,0 +1,20 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.firebase
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/.tmp
+**/tsconfig.*.tsbuildinfo
+Panels/*/frontend
+Panels/**/frontend
+Panels/Employee Panel
+Panels/Guard/App
+**/android
+**/release-signing
+**/*.jks
+**/.cxx
+firebase-debug.log

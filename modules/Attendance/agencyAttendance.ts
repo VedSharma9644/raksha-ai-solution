@@ -145,6 +145,124 @@ function durationMinutesBetween(start: Date, end: Date): number {
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60_000));
 }
 
+type RawDoc = { id: string; data: Record<string, unknown> };
+
+async function countActiveGuards(agencyId: string): Promise<number> {
+  const guardsSnap = await getFirestore()
+    .collection(GUARDS_COLLECTION)
+    .where("agencyId", "==", agencyId)
+    .get();
+  return guardsSnap.docs.filter((doc) => {
+    const status = String(doc.data()?.status ?? "active");
+    return status === "active";
+  }).length;
+}
+
+/** Date-scoped attendance docs for one agency day (requires agencyId+dutyDate index). */
+async function loadAgencyAttendanceDocsForDate(
+  agencyId: string,
+  date: string
+): Promise<RawDoc[]> {
+  const snap = await getFirestore()
+    .collection(ATTENDANCE_COLLECTION)
+    .where("agencyId", "==", agencyId)
+    .where("dutyDate", "==", date)
+    .get();
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    data: (doc.data() ?? {}) as Record<string, unknown>,
+  }));
+}
+
+function computeStatsFromPunchIns(
+  punchIns: RawDoc[],
+  activeGuardCount: number
+): AgencyAttendanceStatsDto {
+  const presentGuardIds = new Set<string>();
+  let onShift = 0;
+  for (const doc of punchIns) {
+    const type = String(doc.data.type ?? "punch_in");
+    if (type !== "punch_in") {
+      continue;
+    }
+    const guardId = String(doc.data.guardId ?? "");
+    if (guardId) {
+      presentGuardIds.add(guardId);
+    }
+    const punchedOutAt = toDate(doc.data.punchedOutAt);
+    if (!punchedOutAt) {
+      onShift += 1;
+    }
+  }
+  const presentToday = presentGuardIds.size;
+  return {
+    presentToday,
+    absentToday: Math.max(0, activeGuardCount - presentToday),
+    onShift,
+  };
+}
+
+/**
+ * Light counts only — no record/interval/selfie DTO fan-out.
+ * Used by dashboard charts and notification absent alerts.
+ */
+export async function getAgencyAttendanceStatsForDate(params: {
+  agencyId: string;
+  date: string;
+}): Promise<AgencyAttendanceStatsDto> {
+  const agencyId = params.agencyId.trim();
+  if (!agencyId) {
+    throw Object.assign(new Error("agencyId is required."), { statusCode: 400 });
+  }
+  if (!isValidDateKey(params.date)) {
+    throw Object.assign(new Error("date must be YYYY-MM-DD."), {
+      statusCode: 400,
+    });
+  }
+
+  const [docs, activeGuardCount] = await Promise.all([
+    loadAgencyAttendanceDocsForDate(agencyId, params.date),
+    countActiveGuards(agencyId),
+  ]);
+
+  return computeStatsFromPunchIns(docs, activeGuardCount);
+}
+
+/**
+ * Batch light stats for dashboard date ranges (capped by caller).
+ */
+export async function getAgencyAttendanceStatsForDates(params: {
+  agencyId: string;
+  dates: string[];
+}): Promise<Record<string, AgencyAttendanceStatsDto>> {
+  const agencyId = params.agencyId.trim();
+  if (!agencyId) {
+    throw Object.assign(new Error("agencyId is required."), { statusCode: 400 });
+  }
+
+  const uniqueDates = [
+    ...new Set(
+      params.dates
+        .map((d) => d.trim())
+        .filter((d) => isValidDateKey(d))
+    ),
+  ];
+
+  if (uniqueDates.length === 0) {
+    return {};
+  }
+
+  const activeGuardCount = await countActiveGuards(agencyId);
+  const entries = await Promise.all(
+    uniqueDates.map(async (date) => {
+      const docs = await loadAgencyAttendanceDocsForDate(agencyId, date);
+      return [date, computeStatsFromPunchIns(docs, activeGuardCount)] as const;
+    })
+  );
+
+  return Object.fromEntries(entries);
+}
+
 /**
  * Agency-scoped attendance for Admin / HR panels for one calendar day (IST).
  */
@@ -164,17 +282,10 @@ export async function listAgencyAttendanceForDate(params: {
     });
   }
 
-  const db = getFirestore();
-  const [attendanceSnap, guardsSnap] = await Promise.all([
-    db.collection(ATTENDANCE_COLLECTION).where("agencyId", "==", agencyId).get(),
-    db.collection(GUARDS_COLLECTION).where("agencyId", "==", agencyId).get(),
+  const [docs, activeGuardCount] = await Promise.all([
+    loadAgencyAttendanceDocsForDate(agencyId, params.date),
+    countActiveGuards(agencyId),
   ]);
-
-  type RawDoc = { id: string; data: Record<string, unknown> };
-  const docs: RawDoc[] = attendanceSnap.docs.map((doc) => ({
-    id: doc.id,
-    data: (doc.data() ?? {}) as Record<string, unknown>,
-  }));
 
   const punchIns = docs.filter((doc) => {
     const type = String(doc.data.type ?? "punch_in");
@@ -208,6 +319,7 @@ export async function listAgencyAttendanceForDate(params: {
         ? doc.data.dutyDate.trim()
         : "";
     const punchInDate = storedDutyDate || toIstDateKey(punchedAt);
+    // Safety: query already scopes by dutyDate; skip mismatches / legacy gaps.
     if (punchInDate !== params.date) {
       continue;
     }
@@ -294,21 +406,15 @@ export async function listAgencyAttendanceForDate(params: {
   });
 
   const presentGuardIds = new Set(records.map((r) => r.guardId).filter(Boolean));
-  const activeGuardCount = guardsSnap.docs.filter((doc) => {
-    const status = String(doc.data()?.status ?? "active");
-    return status === "active";
-  }).length;
-
   const onShift = records.filter((r) => r.punchOutTime === null).length;
   const presentToday = presentGuardIds.size;
-  const absentToday = Math.max(0, activeGuardCount - presentToday);
 
   return {
     date: params.date,
     records,
     stats: {
       presentToday,
-      absentToday,
+      absentToday: Math.max(0, activeGuardCount - presentToday),
       onShift,
     },
   };

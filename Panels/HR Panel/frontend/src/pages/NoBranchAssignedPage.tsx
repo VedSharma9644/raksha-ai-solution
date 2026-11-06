@@ -10,7 +10,7 @@ export function NoBranchAssignedPage() {
       <div className="branch-selection-page">
         <div className="branch-selection-page__card">
           <div className="branch-selection-page__header">
-            <p className="branch-selection-page__brand">Raskha</p>
+            <p className="branch-selection-page__brand">Amrat Security Agency</p>
             <h1 className="branch-selection-page__title">No Branch Assigned</h1>
             <p className="branch-selection-page__subtitle">
               Your account is not linked to any active branch yet. Ask your agency

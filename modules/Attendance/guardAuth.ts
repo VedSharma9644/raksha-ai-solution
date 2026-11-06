@@ -110,7 +110,8 @@ function demoPhone(): string {
 
 function demoContext(
   identifier: string,
-  password: string
+  password: string,
+  loginMethod: GuardLoginMethod = "auto"
 ): AuthenticatedGuardContext | null {
   const expectedId = (
     process.env.GUARD_DEMO_ID || DEMO_GUARD_ID
@@ -121,10 +122,17 @@ function demoContext(
   const id = identifier.trim();
   const phone = normalizePhone(id);
 
-  const idMatches =
-    id.toUpperCase() === expectedId ||
-    phone === expectedPhone ||
-    id.toLowerCase() === "demo@raksha.local";
+  let idMatches = false;
+  if (loginMethod === "phone") {
+    idMatches = phone === expectedPhone;
+  } else if (loginMethod === "employeeCode") {
+    idMatches = id.toUpperCase() === expectedId;
+  } else {
+    idMatches =
+      id.toUpperCase() === expectedId ||
+      phone === expectedPhone ||
+      id.toLowerCase() === "demo@raksha.local";
+  }
 
   if (idMatches && password === expectedPassword) {
     return {
@@ -212,14 +220,6 @@ async function findGuardByEmail(email: string): Promise<GuardDoc | null> {
 }
 
 export async function findGuardByIdentifier(
-  identifier: string
-): Promise<GuardDoc | null> {
-  const trimmed = identifier.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.includes("@")) {
   identifier: string,
   loginMethod: GuardLoginMethod = "auto"
 ): Promise<GuardDoc | null> {
@@ -243,6 +243,15 @@ export async function findGuardByIdentifier(
       return null;
     }
     return findGuardByEmployeeCode(trimmed);
+  }
+
+  // auto — legacy order: email → phone → employee code
+  if (trimmed.includes("@")) {
+    const byEmail = await findGuardByEmail(trimmed);
+    if (byEmail) {
+      return byEmail;
+    }
+  }
 
   if (isValidIndianMobile(trimmed) || normalizePhone(trimmed).length >= 10) {
     const byPhone = await findGuardByPhone(trimmed);
@@ -315,14 +324,6 @@ export async function authenticateGuard(
   const identifier = params.identifier.trim();
   const password = params.password;
   const demoMode = params.demoMode !== false;
-
-  if (!identifier || !password) {
-    return null;
-  }
-
-  try {
-    const guard = await findGuardByIdentifier(identifier);
-    if (guard) {
   const loginMethod: GuardLoginMethod = params.loginMethod ?? "auto";
 
   if (!identifier || !password) {
@@ -351,3 +352,10 @@ export async function authenticateGuard(
 
   if (demoMode) {
     const matched = demoContext(identifier, password, loginMethod);
+    if (matched) {
+      return withLiveRosterDuty(matched);
+    }
+  }
+
+  return null;
+}

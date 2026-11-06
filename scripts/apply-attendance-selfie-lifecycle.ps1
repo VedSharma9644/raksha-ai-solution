@@ -5,7 +5,7 @@
 #   .\scripts\apply-attendance-selfie-lifecycle.ps1
 #   .\scripts\apply-attendance-selfie-lifecycle.ps1 -Bucket app-raksha.firebasestorage.app
 param(
-  [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "app-raksha" }),
+  [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "security-app-database-aa2a1" }),
   [string]$Bucket = ""
 )
 

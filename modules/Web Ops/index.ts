@@ -68,6 +68,7 @@ export {
   GuardMonthReview,
   useAgencyAttendance,
   fetchAgencyAttendanceDay,
+  fetchAgencyAttendanceStats,
   fetchAttendanceCorrection,
   saveAttendanceCorrection,
   clearAttendanceCorrection,

@@ -71,6 +71,37 @@ export async function fetchAgencyAttendanceDay(
   );
 }
 
+export type AgencyAttendanceStatsResponse = {
+  date: string;
+  stats: AttendanceStats;
+};
+
+export type AgencyAttendanceStatsBatchResponse = {
+  dates: AgencyAttendanceStatsResponse[];
+};
+
+/** Light counts only — no attendance record payload. */
+export async function fetchAgencyAttendanceStats(
+  dates: string[]
+): Promise<AgencyAttendanceStatsBatchResponse> {
+  const unique = [...new Set(dates.map((d) => d.trim()).filter(Boolean))];
+  if (unique.length === 0) {
+    return { dates: [] };
+  }
+  if (unique.length === 1) {
+    const single = await adminFetch<AgencyAttendanceStatsResponse>(
+      `/api/attendance/stats?date=${encodeURIComponent(unique[0]!)}`,
+      { errorMessage: "You must be signed in to view attendance." }
+    );
+    return { dates: [single] };
+  }
+  const query = new URLSearchParams({ dates: unique.join(",") });
+  return adminFetch<AgencyAttendanceStatsBatchResponse>(
+    `/api/attendance/stats?${query.toString()}`,
+    { errorMessage: "You must be signed in to view attendance." }
+  );
+}
+
 export async function fetchGuardAttendanceHistory(params: {
   guardId: string;
   year: number;

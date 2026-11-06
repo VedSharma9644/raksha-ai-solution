@@ -25,7 +25,7 @@ export function LoginScreen({
 
       <section className="login-screen__panel" aria-labelledby="login-heading">
         <header className="login-screen__brand">
-          <p className="login-screen__brand-name">Raskha</p>
+          <p className="login-screen__brand-name">Amrat Security Agency</p>
           <p className="login-screen__brand-panel">HR Panel</p>
         </header>
 

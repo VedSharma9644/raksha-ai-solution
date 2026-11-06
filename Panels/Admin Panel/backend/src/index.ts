@@ -25,6 +25,7 @@ import { createPayrollRoutes } from "./routes/payrollRoutes";
 import { createEarningsRoutes } from "./routes/earningsRoutes";
 import { createInvoiceRoutes } from "./routes/invoiceRoutes";
 import { createMoneyOutRoutes } from "./routes/moneyOutRoutes";
+import { verifyAgencyLogin } from "./routes/verifyAgencyLogin";
 
 // Local monorepo .env; Cloud Run injects env vars instead
 const rootEnv = resolve(process.cwd(), "../../../.env");
@@ -127,6 +128,7 @@ app.use("/api/payroll", createPayrollRoutes());
 app.use("/api/earnings", createEarningsRoutes());
 app.use("/api/invoices", createInvoiceRoutes());
 app.use("/api/money-out", createMoneyOutRoutes());
+app.post("/api/agencies/verify-login", verifyAgencyLogin);
 
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () => {

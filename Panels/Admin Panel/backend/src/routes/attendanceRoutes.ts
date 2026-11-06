@@ -2,6 +2,8 @@ import { Router, type Response } from "express";
 import {
   deleteAttendanceDayOverride,
   getAttendanceDayOverride,
+  getAgencyAttendanceStatsForDate,
+  getAgencyAttendanceStatsForDates,
   isAttendanceCorrectionStatus,
   listAgencyAttendanceForDate,
   listAttendanceHistory,
@@ -84,6 +86,65 @@ export function createAttendanceRoutes(): Router {
     } catch (error: unknown) {
       res.status(statusCodeOf(error)).json({
         error: messageOf(error, "Failed to load attendance."),
+      });
+    }
+  });
+
+  /**
+   * Light attendance counts only (no record/selfie payload).
+   * ?date=YYYY-MM-DD | ?dates=d1,d2,... (max 31)
+   */
+  router.get("/stats", async (req: AgencyAuthRequest, res: Response) => {
+    try {
+      const agencyId = req.agencyId;
+      if (!agencyId) {
+        res.status(401).json({ error: "Unauthorized." });
+        return;
+      }
+
+      const datesRaw =
+        typeof req.query.dates === "string" ? req.query.dates.trim() : "";
+      if (datesRaw) {
+        const dates = datesRaw
+          .split(",")
+          .map((d) => d.trim())
+          .filter(Boolean);
+        if (dates.length === 0) {
+          res.status(400).json({ error: "dates must include at least one YYYY-MM-DD." });
+          return;
+        }
+        if (dates.length > 31) {
+          res.status(400).json({ error: "dates is capped at 31 entries." });
+          return;
+        }
+        const byDate = await getAgencyAttendanceStatsForDates({
+          agencyId,
+          dates,
+        });
+        res.json({
+          dates: Object.entries(byDate).map(([date, stats]) => ({
+            date,
+            stats,
+          })),
+        });
+        return;
+      }
+
+      const date =
+        typeof req.query.date === "string" && req.query.date.trim()
+          ? req.query.date.trim()
+          : new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            }).format(new Date());
+
+      const stats = await getAgencyAttendanceStatsForDate({ agencyId, date });
+      res.json({ date, stats });
+    } catch (error: unknown) {
+      res.status(statusCodeOf(error)).json({
+        error: messageOf(error, "Failed to load attendance stats."),
       });
     }
   });

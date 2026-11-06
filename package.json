@@ -10,8 +10,8 @@
         "Panels/Employee Panel/Employee Web/frontend",
         "Panels/Employee Panel/Employee Web/backend",
         "Panels/Employee Panel/Employee App/frontend",
-        "Panels/Guard Panel/Guard App/frontend",
-        "Panels/Guard Panel/guard app backend"
+        "Panels/Guard/App/frontend",
+        "Panels/Guard/guard app backend"
     ],
     "scripts": {
         "dev": "concurrently --names \"ADMIN-BE,ADMIN-FE,HR-BE,HR-FE,SA-BE,SA-FE\" --prefix-colors \"bgRed.bold,bgBlue.bold,bgCyan.bold,bgGreen.bold,bgMagenta.bold,bgYellow.bold\" \"npm run dev --prefix \\\"Panels/Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Admin Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/HR Panel/frontend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/backend\\\"\" \"npm run dev --prefix \\\"Panels/Super Admin Panel/frontend\\\"\"",

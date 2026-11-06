@@ -7,6 +7,14 @@
         { "fieldPath": "guardId", "order": "ASCENDING" },
         { "fieldPath": "dutyDate", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "attendanceRecords",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agencyId", "order": "ASCENDING" },
+        { "fieldPath": "dutyDate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

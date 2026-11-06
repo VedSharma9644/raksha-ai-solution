@@ -10,8 +10,8 @@ import {
   verifyAgencyWithRaksha,
 } from "./rakshaVerify";
 
-const VERIFY_PASS_MESSAGE = "Verification from Raksha Passed";
-const VERIFY_FAIL_MESSAGE = "Verification failed, please contact Raksha";
+const VERIFY_PASS_MESSAGE = "Verification from Amrat Security Agency Passed";
+const VERIFY_FAIL_MESSAGE = "Verification failed, please contact Amrat Security Agency";
 const PASS_DISPLAY_MS = 900;
 
 function resolveErrorMessage(error: unknown): string {
@@ -23,7 +23,7 @@ function resolveErrorMessage(error: unknown): string {
     case "auth/wrong-password":
       return "Invalid email or password.";
     case "auth/user-disabled":
-      return "This agency account is paused. Contact Raksha to reactivate.";
+      return "This agency account is paused. Contact Amrat Security Agency to reactivate.";
     case "auth/too-many-requests":
       return "Too many attempts. Please try again later.";
     case "auth/network-request-failed":
@@ -66,7 +66,7 @@ export function useLogin() {
         password,
       });
 
-      setStatusMessage("Verifying with Raksha…");
+      setStatusMessage("Verifying with Amrat Security Agency…");
       const idToken = await credential.user.getIdToken();
       const outcome = await verifyAgencyWithRaksha(idToken);
 

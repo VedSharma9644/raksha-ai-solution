@@ -134,7 +134,7 @@ export function AdminAppShell() {
             Menu
           </button>
           <div className="admin-shell__brand-text">
-            <p className="admin-shell__brand-name">Raskha</p>
+            <p className="admin-shell__brand-name">Amrat Security Agency</p>
             <p className="admin-shell__brand-panel">Agency Admin</p>
           </div>
         </div>

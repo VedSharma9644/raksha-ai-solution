@@ -139,6 +139,8 @@ export {
 
 export {
   listAgencyAttendanceForDate,
+  getAgencyAttendanceStatsForDate,
+  getAgencyAttendanceStatsForDates,
   type AgencyAttendanceDayResponse,
   type AgencyAttendanceIntervalDto,
   type AgencyAttendanceRecordDto,

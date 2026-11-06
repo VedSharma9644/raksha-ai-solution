@@ -1156,16 +1156,10 @@ export async function markIntervalCheckin(
   const prior = await listIntervalCheckinsForShift(open.id);
   const lastCheckinAt =
     prior.length > 0 ? prior[prior.length - 1]!.punchedAt : null;
-  const window = computeIntervalCheckinStatus({
-    intervalMinutes,
-    shiftActive: true,
-    punchInAt: open.punchedAt,
-    lastCheckinAt,
-    completedCount: prior.length,
-  const dutyDate =
+  const dutyDateForWindow =
     open.dutyDate?.trim() || toDutyDateKey(open.punchedAt);
   const shiftEndsAt = shiftWindowIst(
-    dutyDate,
+    dutyDateForWindow,
     params.guard.shiftFrom,
     params.guard.shiftTo
   ).end;
@@ -1185,8 +1179,6 @@ export async function markIntervalCheckin(
           "Interval photo check-ins for this shift are done. Use End shift when you are ready to leave."
         ),
         { statusCode: 400 }
-      );
-    }
       );
     }
     if (window.status === "waiting" && window.dueAt) {

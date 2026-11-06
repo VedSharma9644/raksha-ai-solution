@@ -13,9 +13,14 @@ export { formatDuration, ATTENDANCE_CORRECTION_STATUS_OPTIONS } from "./attendan
 export { useAgencyAttendance } from "./useAgencyAttendance";
 export {
   fetchAgencyAttendanceDay,
+  fetchAgencyAttendanceStats,
   fetchAttendanceCorrection,
   saveAttendanceCorrection,
   clearAttendanceCorrection,
+} from "./attendanceApi";
+export type {
+  AgencyAttendanceStatsResponse,
+  AgencyAttendanceStatsBatchResponse,
 } from "./attendanceApi";
 export {
   SAMPLE_ATTENDANCE_RECORDS,

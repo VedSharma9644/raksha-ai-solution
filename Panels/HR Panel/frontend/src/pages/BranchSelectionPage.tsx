@@ -16,7 +16,7 @@ export function BranchSelectionPage() {
     <div className="branch-selection-page">
       <div className="branch-selection-page__card">
         <div className="branch-selection-page__header">
-          <p className="branch-selection-page__brand">Raskha</p>
+          <p className="branch-selection-page__brand">Amrat Security Agency</p>
           <h1 className="branch-selection-page__title">Select Your Branch</h1>
           <p className="branch-selection-page__subtitle">
             You have access to multiple branches. Choose which one to work in.

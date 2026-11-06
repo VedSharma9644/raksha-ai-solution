@@ -3,9 +3,9 @@
  * Keep these in sync with .firebaserc hosting sites.
  */
 export const PANEL_ORIGINS = {
-  superAdmin: "https://app-raksha-super-admin.web.app",
-  agencyAdmin: "https://app-raksha-agency-admin.web.app",
-  hr: "https://app-raksha-hr.web.app",
+  superAdmin: "https://amrat-security-super-admin.web.app",
+  agencyAdmin: "https://security-app-agency-admin.web.app",
+  hr: "https://security-app-hr.web.app",
 } as const;
 
 export type PanelKey = keyof typeof PANEL_ORIGINS;

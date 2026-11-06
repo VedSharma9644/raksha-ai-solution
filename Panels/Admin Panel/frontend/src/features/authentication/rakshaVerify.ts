@@ -1,4 +1,5 @@
 import type { Timestamp } from "firebase/firestore";
+import { resolveAdminApiBase } from "@raskha/shared";
 
 /** Days of offline grace after a successful Raksha verification. Prefer env for testing. */
 export const AGENCY_VERIFY_GRACE_DAYS = Number(
@@ -8,10 +9,7 @@ export const AGENCY_VERIFY_GRACE_DAYS = Number(
 const VERIFY_TIMEOUT_MS = 8_000;
 
 function superAdminApiBase(): string {
-  return (
-    import.meta.env.VITE_SUPER_ADMIN_API_URL?.replace(/\/$/, "") ||
-    "http://localhost:3003"
-  );
+  return resolveAdminApiBase();
 }
 
 export type RakshaVerifyOutcome =

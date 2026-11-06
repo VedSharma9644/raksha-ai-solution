@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-PROJECT_ID="${GCP_PROJECT_ID:-app-raksha}"
+PROJECT_ID="${GCP_PROJECT_ID:-security-app-database-aa2a1}"
 BUCKET="${1:-}"
 if [[ -z "$BUCKET" && -f .env ]]; then
   BUCKET="$(grep -E '^\s*FIREBASE_STORAGE_BUCKET\s*=' .env | head -1 | cut -d= -f2- | tr -d ' \"')"

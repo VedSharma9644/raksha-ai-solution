@@ -9,12 +9,12 @@
       "http://127.0.0.1:5174",
       "http://127.0.0.1:5175",
       "http://127.0.0.1:5176",
-      "https://app-raksha-super-admin.web.app",
-      "https://app-raksha-agency-admin.web.app",
-      "https://app-raksha-hr.web.app",
-      "https://app-raksha-super-admin.firebaseapp.com",
-      "https://app-raksha-agency-admin.firebaseapp.com",
-      "https://app-raksha-hr.firebaseapp.com"
+      "https://amrat-security-super-admin.web.app",
+      "https://security-app-agency-admin.web.app",
+      "https://security-app-hr.web.app",
+      "https://amrat-security-super-admin.firebaseapp.com",
+      "https://security-app-agency-admin.firebaseapp.com",
+      "https://security-app-hr.firebaseapp.com"
     ],
     "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
     "responseHeader": [

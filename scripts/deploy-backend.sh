@@ -7,7 +7,7 @@
 set -euo pipefail
 
 PANEL="${1:-}"
-PROJECT_ID="${GCP_PROJECT_ID:-app-raksha}"
+PROJECT_ID="${GCP_PROJECT_ID:-security-app-database-aa2a1}"
 REGION="${GCP_REGION:-asia-south1}"
 REPO="${ARTIFACT_REPO:-raskha-backends}"
 
@@ -26,7 +26,7 @@ case "$PANEL" in
     ;;
   guard)
     SERVICE="raskha-guard-app-api"
-    DOCKERFILE="Panels/Guard Panel/guard app backend/Dockerfile"
+    DOCKERFILE="Panels/Guard/guard app backend/Dockerfile"
     ;;
   *)
     echo "Usage: $0 <admin|hr|super-admin|guard>"

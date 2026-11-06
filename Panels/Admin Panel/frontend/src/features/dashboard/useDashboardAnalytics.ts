@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import { listSitesByAgency } from "@raskha/site-management";
-import { fetchAgencyAttendanceDay } from "@raskha/web-ops";
+import { fetchAgencyAttendanceStats } from "@raskha/web-ops";
 import { db } from "../../lib/firebase";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
@@ -149,7 +149,7 @@ export function useDashboardAnalytics(range: DashboardDateRange): DashboardAnaly
       const days = sampleDays(range.from, range.to, 14);
       const todayYmd = formatYmd(new Date());
 
-      const [summary, prevSummary, guards, sites, attendanceResults] =
+      const [summary, prevSummary, guards, sites, attendanceBatch] =
         await Promise.all([
           fetchEarningsSummaryApi({ ...currentMonths, branchId }).catch(
             () => null,
@@ -159,13 +159,7 @@ export function useDashboardAnalytics(range: DashboardDateRange): DashboardAnaly
           ),
           listGuardsByAgency(db, agency.id),
           listSitesByAgency(db, agency.id),
-          Promise.all(
-            days.map((date) =>
-              fetchAgencyAttendanceDay(date, branchId)
-                .then((res) => ({ date, res }))
-                .catch(() => null),
-            ),
-          ),
+          fetchAgencyAttendanceStats(days).catch(() => ({ dates: [] })),
         ]);
 
       const filteredGuards = branchId
@@ -190,21 +184,34 @@ export function useDashboardAnalytics(range: DashboardDateRange): DashboardAnaly
           value: s.moneyIn,
         }));
 
-      const attendanceDays = attendanceResults
-        .filter(Boolean)
-        .map((row) => ({
-          label: shortLabel(row!.date),
-          present: row!.res.stats.presentToday,
-          absent: row!.res.stats.absentToday,
-          onShift: row!.res.stats.onShift,
-        }));
+      const statsByDate = new Map(
+        (attendanceBatch.dates ?? []).map((row) => [row.date, row.stats]),
+      );
 
-      const todayRow = attendanceResults.find((r) => r?.date === todayYmd);
-      const attendanceToday = todayRow
+      const attendanceDays = days
+        .map((date) => {
+          const stats = statsByDate.get(date);
+          if (!stats) return null;
+          return {
+            label: shortLabel(date),
+            present: stats.presentToday,
+            absent: stats.absentToday,
+            onShift: stats.onShift,
+          };
+        })
+        .filter(Boolean) as Array<{
+        label: string;
+        present: number;
+        absent: number;
+        onShift: number;
+      }>;
+
+      const todayStats = statsByDate.get(todayYmd);
+      const attendanceToday = todayStats
         ? {
-            present: todayRow.res.stats.presentToday,
-            absent: todayRow.res.stats.absentToday,
-            onShift: todayRow.res.stats.onShift,
+            present: todayStats.presentToday,
+            absent: todayStats.absentToday,
+            onShift: todayStats.onShift,
           }
         : attendanceDays.length > 0
           ? {

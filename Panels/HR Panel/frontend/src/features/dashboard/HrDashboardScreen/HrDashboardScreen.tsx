@@ -27,7 +27,7 @@ export function HrDashboardScreen({
     <main className="hr-dashboard">
       <header className="hr-dashboard__header">
         <div className="hr-dashboard__brand">
-          <p className="hr-dashboard__brand-name">Raskha</p>
+          <p className="hr-dashboard__brand-name">Amrat Security Agency</p>
           <p className="hr-dashboard__brand-panel">HR Dashboard</p>
         </div>
 
@@ -56,7 +56,7 @@ export function HrDashboardScreen({
         {actions.length === 0 ? (
           <p className="hr-dashboard__support">
             No modules are enabled for this agency yet. Ask your Agency Admin or
-            Raksha Super Admin to enable the features in your plan.
+            Amrat Security Agency Super Admin to enable the features in your plan.
           </p>
         ) : (
           actions.map((action) => (

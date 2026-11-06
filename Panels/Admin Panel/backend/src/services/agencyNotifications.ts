@@ -1,5 +1,5 @@
 import { getFirestore, type Timestamp } from "firebase-admin/firestore";
-import { listAgencyAttendanceForDate } from "@raskha/attendance";
+import { getAgencyAttendanceStatsForDate } from "@raskha/attendance";
 import { INVENTORY_COLLECTION } from "@raskha/inventory-management";
 import { listLeaveRequestsForAgency } from "@raskha/leave";
 import {
@@ -94,7 +94,7 @@ export async function listAgencyNotifications(
   const tomorrow = addDaysToDateKey(today, 1);
   const nowIso = new Date().toISOString();
 
-  const [leaves, reliefs, attendance, inventorySnap] = await Promise.all([
+  const [leaves, reliefs, attendanceStats, inventorySnap] = await Promise.all([
     listLeaveRequestsForAgency({
       agencyId: trimmed,
       status: ["pending", "approved"],
@@ -103,7 +103,7 @@ export async function listAgencyNotifications(
       agencyId: trimmed,
       status: "pending",
     }),
-    listAgencyAttendanceForDate({ agencyId: trimmed, date: today }),
+    getAgencyAttendanceStatsForDate({ agencyId: trimmed, date: today }),
     getFirestore()
       .collection(INVENTORY_COLLECTION)
       .where("agencyId", "==", trimmed)
@@ -149,12 +149,12 @@ export async function listAgencyNotifications(
     }
   }
 
-  if (attendance.stats.absentToday > 0) {
+  if (attendanceStats.absentToday > 0) {
     notifications.push({
       id: `attendance:absent:${today}`,
       kind: "attendance_alert",
       title: "Missed attendance",
-      message: `${attendance.stats.absentToday} active guard${attendance.stats.absentToday === 1 ? " has" : "s have"} not punched in today (${today}).`,
+      message: `${attendanceStats.absentToday} active guard${attendanceStats.absentToday === 1 ? " has" : "s have"} not punched in today (${today}).`,
       createdAt: nowIso,
       action: "attendance",
     });

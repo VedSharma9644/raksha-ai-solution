@@ -18,7 +18,7 @@ export async function renderSiteInvoicePdf(
       margin: 48,
       info: {
         Title: invoice.invoiceNumber,
-        Author: invoice.billFrom.legalName || "Raskha",
+        Author: invoice.billFrom.legalName || "Amrat Security Agency",
       },
     });
     const chunks: Buffer[] = [];

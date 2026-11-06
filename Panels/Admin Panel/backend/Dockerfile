@@ -27,7 +27,7 @@ ENV PORT=8080
 COPY --from=build /app/backend/dist ./dist
 
 RUN npm init -y >/dev/null \
-    && npm install --omit=dev --no-audit --no-fund express dotenv firebase firebase-admin \
+    && npm install --omit=dev --no-audit --no-fund express dotenv firebase firebase-admin pdfkit \
     && npm cache clean --force
 
 EXPOSE 8080

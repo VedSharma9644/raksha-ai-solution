@@ -8,7 +8,7 @@ param(
   [ValidateSet("admin", "hr", "super-admin", "guard")]
   [string]$Panel,
 
-  [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "app-raksha" }),
+  [string]$ProjectId = $(if ($env:GCP_PROJECT_ID) { $env:GCP_PROJECT_ID } else { "security-app-database-aa2a1" }),
   [string]$Region = $(if ($env:GCP_REGION) { $env:GCP_REGION } else { "asia-south1" }),
   [string]$Repo = $(if ($env:ARTIFACT_REPO) { $env:ARTIFACT_REPO } else { "raskha-backends" })
 )
@@ -32,7 +32,7 @@ switch ($Panel) {
   }
   "guard" {
     $Service = "raskha-guard-app-api"
-    $Dockerfile = "Panels/Guard Panel/guard app backend/Dockerfile"
+    $Dockerfile = "Panels/Guard/guard app backend/Dockerfile"
   }
 }
 

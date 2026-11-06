@@ -1,18 +1,18 @@
 {
   "projects": {
-    "default": "app-raksha"
+    "default": "security-app-database-aa2a1"
   },
   "targets": {
-    "app-raksha": {
+    "security-app-database-aa2a1": {
       "hosting": {
         "super-admin": [
-          "app-raksha-super-admin"
+          "amrat-security-super-admin"
         ],
         "agency-admin": [
-          "app-raksha-agency-admin"
+          "security-app-agency-admin"
         ],
         "hr": [
-          "app-raksha-hr"
+          "security-app-hr"
         ]
       }
     }

@@ -1,7 +1,7 @@
 const PANEL_ORIGINS = [
-  "https://app-raksha-super-admin.web.app",
-  "https://app-raksha-agency-admin.web.app",
-  "https://app-raksha-hr.web.app",
+  "https://amrat-security-super-admin.web.app",
+  "https://security-app-agency-admin.web.app",
+  "https://security-app-hr.web.app",
 ];
 
 function isLocalHostname(host: string): boolean {
