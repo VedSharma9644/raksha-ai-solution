@@ -1,0 +1,99 @@
+.multi-file-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.multi-file-field__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+}
+
+.multi-file-field__required {
+  color: var(--color-error, #dc2626);
+}
+
+.multi-file-field__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant, #6b7280);
+}
+
+.multi-file-field__input {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 0.375rem;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, #111827);
+  cursor: pointer;
+}
+
+.multi-file-field__input:focus {
+  outline: none;
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+.multi-file-field--error .multi-file-field__input {
+  border-color: var(--color-error, #dc2626);
+}
+
+.multi-file-field__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.multi-file-field__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 0.375rem;
+  background: var(--color-surface, #fff);
+  font-size: 0.85rem;
+}
+
+.multi-file-field__item a,
+.multi-file-field__item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multi-file-field__item a {
+  color: var(--color-primary, #2563eb);
+}
+
+.multi-file-field__remove {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-error, #dc2626);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.multi-file-field__remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.multi-file-field__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-error, #dc2626);
+}

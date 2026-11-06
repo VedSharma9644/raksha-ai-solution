@@ -2,15 +2,16 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  min-height: 3rem;
-  padding: 0 var(--space-md);
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-on-surface);
-  font-size: var(--font-size-label);
-  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   box-shadow: var(--shadow-surface);
   transition:
@@ -29,21 +30,36 @@
 }
 
 .notification-button__icon {
-  font-size: 1.1rem;
+  display: inline-flex;
   line-height: 1;
 }
 
+.notification-button__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .notification-button__badge {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.35rem;
-  height: 1.35rem;
-  padding: 0 0.35rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.25rem;
   border-radius: 9999px;
-  background: var(--color-primary-deep);
-  color: var(--color-on-primary);
-  font-size: 0.75rem;
+  background: var(--color-error, #ba1a1a);
+  color: #fff;
+  font-size: 0.62rem;
   font-weight: var(--font-weight-bold);
   line-height: 1;
 }

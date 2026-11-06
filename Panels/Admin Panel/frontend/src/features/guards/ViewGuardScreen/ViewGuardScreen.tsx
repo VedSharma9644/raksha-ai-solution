@@ -111,7 +111,7 @@ export function ViewGuardScreen({
         </div>
 
         {/* ── Documents ── */}
-        {(guard.characterCertificateUrl || guard.policeVerificationUrl) && (
+        {(guard.characterCertificateUrl || guard.policeVerificationUrl || (guard.documents?.length ?? 0) > 0) && (
           <div className="view-guard-screen__docs-section">
             <p className="view-guard-screen__section-heading">Documents</p>
             <div className="view-guard-screen__docs">
@@ -125,6 +125,17 @@ export function ViewGuardScreen({
                   📄 Police Verification
                 </a>
               )}
+              {guard.documents?.map((document) => (
+                <a
+                  key={document.url}
+                  href={document.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="view-guard-screen__doc-link"
+                >
+                  📄 {document.name || "Document"}
+                </a>
+              ))}
             </div>
           </div>
         )}

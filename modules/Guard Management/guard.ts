@@ -4,6 +4,32 @@ export type GuardStatus = "active" | "inactive" | "on_leave";
 
 export type GuardGender = "male" | "female" | "other";
 
+export interface GuardDocument {
+  name: string;
+  url: string;
+  contentType: string;
+}
+
+export function normalizeGuardDocuments(value: unknown): GuardDocument[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as { name?: unknown; url?: unknown; contentType?: unknown };
+    if (typeof record.url !== "string" || !record.url.trim()) return [];
+    return [
+      {
+        name:
+          typeof record.name === "string" && record.name.trim()
+            ? record.name.trim()
+            : "Document",
+        url: record.url.trim(),
+        contentType:
+          typeof record.contentType === "string" ? record.contentType : "",
+      },
+    ];
+  });
+}
+
 export interface Guard {
   id: string;
   agencyId: string;
@@ -49,6 +75,8 @@ export interface Guard {
   // Documents (Firebase Storage URLs)
   characterCertificateUrl: string;
   policeVerificationUrl: string;
+  /** Extra images or files attached by Admin or HR. */
+  documents?: GuardDocument[];
 
   // Financial / compliance
   bankAccount: string;

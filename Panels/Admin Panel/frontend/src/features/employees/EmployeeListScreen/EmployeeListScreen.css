@@ -4,7 +4,7 @@
 
 .employee-list-screen__filters {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
   padding: var(--space-lg);

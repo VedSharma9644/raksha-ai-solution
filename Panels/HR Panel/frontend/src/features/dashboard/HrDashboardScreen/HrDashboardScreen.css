@@ -1,6 +1,8 @@
 .hr-dashboard {
   min-height: 100svh;
   padding: var(--space-lg);
+  padding-top: max(var(--space-lg), env(safe-area-inset-top, 0px));
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom, 0px));
   background:
     radial-gradient(
       ellipse 70% 40% at 0% 0%,
@@ -70,7 +72,7 @@
 
 .hr-dashboard__actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr));
   gap: var(--space-md);
   max-width: 72rem;
   margin: 0 auto;
@@ -89,8 +91,51 @@
   }
 }
 
+@media (max-width: 720px) {
+  .hr-dashboard__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hr-dashboard__toolbar {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: end;
+    justify-items: end;
+    width: 100%;
+  }
+
+  .hr-dashboard__toolbar .branch-selector {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+  }
+
+  .hr-dashboard__brand-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 @media (max-width: 640px) {
   .hr-dashboard {
     padding: var(--space-md);
+    padding-top: max(var(--space-md), env(safe-area-inset-top, 0px));
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
   }
+
+  .hr-dashboard__toolbar .profile-menu__trigger-text {
+    display: none;
+  }
+
+  .hr-dashboard__toolbar .profile-menu__trigger,
+  .hr-dashboard__toolbar .notification-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0;
+  }
+
 }

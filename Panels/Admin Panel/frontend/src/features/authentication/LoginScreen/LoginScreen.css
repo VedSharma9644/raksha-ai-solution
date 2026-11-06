@@ -3,8 +3,13 @@
   display: grid;
   place-items: center;
   min-height: 100svh;
-  padding: var(--space-lg);
-  overflow: hidden;
+  min-height: 100dvh;
+  padding: max(var(--space-lg), env(safe-area-inset-top, 0px))
+    max(var(--space-lg), env(safe-area-inset-right, 0px))
+    max(var(--space-lg), env(safe-area-inset-bottom, 0px))
+    max(var(--space-lg), env(safe-area-inset-left, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .login-screen__atmosphere {
@@ -121,11 +126,17 @@
 
 @media (max-width: 480px) {
   .login-screen {
-    padding: var(--space-md);
+    padding: max(var(--space-md), env(safe-area-inset-top, 0px))
+      max(var(--space-md), env(safe-area-inset-right, 0px))
+      max(var(--space-md), env(safe-area-inset-bottom, 0px))
+      max(var(--space-md), env(safe-area-inset-left, 0px));
+    align-items: stretch;
   }
 
   .login-screen__panel {
+    max-width: none;
     padding: var(--space-lg);
     gap: var(--space-lg);
+    border-radius: var(--radius-md);
   }
 }

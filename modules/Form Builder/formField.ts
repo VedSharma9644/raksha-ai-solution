@@ -9,6 +9,8 @@ export type FormFieldType =
   | "checkbox"
   | "radio"
   | "file"
+  /** Several images or files on one field. */
+  | "files"
   | "phone"
   | "email"
   /** Renders PasswordField + Confirm PasswordField with show/hide toggle */

@@ -101,6 +101,22 @@ export function ViewGuardScreen({
           <InfoRow label="Status" value={STATUS_LABELS[guard.status] ?? guard.status} />
         </div>
 
+        {(guard.documents?.length ?? 0) > 0 ? (
+          <div className="view-guard-screen__info-grid">
+            {guard.documents?.map((document) => (
+              <a
+                key={document.url}
+                href={document.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="view-guard-screen__info-value"
+              >
+                {document.name || "Document"}
+              </a>
+            ))}
+          </div>
+        ) : null}
+
         <div className="view-guard-screen__inventory-section">
           <GuardInventoryPanel
             assignments={assignments}

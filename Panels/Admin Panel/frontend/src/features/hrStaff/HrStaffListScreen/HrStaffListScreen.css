@@ -18,6 +18,7 @@
 
 .hr-staff-table {
   width: 100%;
+  min-width: 36rem;
   border-collapse: collapse;
   font-size: 0.9rem;
 }

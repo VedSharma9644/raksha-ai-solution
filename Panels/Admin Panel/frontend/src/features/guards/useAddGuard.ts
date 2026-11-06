@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createGuardAccount } from "@raskha/guard-management";
-import type { GuardGender } from "@raskha/guard-management";
+import { createGuardAccount, normalizeGuardDocuments } from "@raskha/guard-management";
+import type { GuardDocument, GuardGender } from "@raskha/guard-management";
 import { APP_ROUTES } from "../../app/routePaths";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
@@ -22,6 +22,29 @@ async function uploadDocumentIfPresent(
     contentType: file.type || "application/octet-stream",
   });
   return getDownloadURL(storageRef);
+}
+
+async function uploadGuardDocuments(
+  files: File[],
+  basePath: string
+): Promise<GuardDocument[]> {
+  return Promise.all(
+    files.map(async (file, index) => {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "file";
+      const storageRef = ref(
+        storage,
+        `${basePath}/documents/${Date.now()}-${index}-${safeName}`
+      );
+      await uploadBytes(storageRef, file, {
+        contentType: file.type || "application/octet-stream",
+      });
+      return {
+        name: file.name || "Document",
+        url: await getDownloadURL(storageRef),
+        contentType: file.type || "application/octet-stream",
+      };
+    })
+  );
 }
 
 export function useAddGuard() {
@@ -61,6 +84,11 @@ export function useAddGuard() {
           ),
         ]);
 
+      const documents = [
+        ...normalizeGuardDocuments(values.documents),
+        ...(await uploadGuardDocuments(values.documentFiles ?? [], basePath)),
+      ];
+
       // Create Firebase Auth account + Firestore document (Auth UID as doc ID)
       await createGuardAccount(db, clientFirebaseConfig, {
         agencyId: agency.id,
@@ -96,6 +124,7 @@ export function useAddGuard() {
         pfNumber: values.pfNumber,
         notes: values.notes,
         branchId: values.branchId || activeBranchId || null,
+        documents,
       });
 
       navigate(APP_ROUTES.employeeList, { replace: true });

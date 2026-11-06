@@ -7,12 +7,6 @@ import { TextField } from "../../../components/TextField";
 import type { EmployeeListItem } from "../employeeListTypes";
 import "./EmployeeListScreen.css";
 
-const ROLE_LABELS = {
-  guard: "Guard",
-  supervisor: "Supervisor",
-  hr: "HR",
-} as const;
-
 const STATUS_LABELS = {
   active: "Active",
   on_leave: "On leave",
@@ -76,7 +70,6 @@ export function EmployeeListScreen({
   onDeleteEmployee,
 }: EmployeeListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
   const filteredEmployees = useMemo(() => {
@@ -87,11 +80,10 @@ export function EmployeeListScreen({
         employee.fullName.toLowerCase().includes(query) ||
         employee.employeeCode.toLowerCase().includes(query) ||
         employee.assignedSite.toLowerCase().includes(query);
-      const matchesRole = roleFilter.length === 0 || employee.role === roleFilter;
       const matchesStatus = statusFilter.length === 0 || employee.status === statusFilter;
-      return matchesQuery && matchesRole && matchesStatus;
+      return matchesQuery && matchesStatus;
     });
-  }, [employees, roleFilter, searchQuery, statusFilter]);
+  }, [employees, searchQuery, statusFilter]);
 
   return (
     <AppScreenLayout>
@@ -119,18 +111,6 @@ export function EmployeeListScreen({
             placeholder="Name, code, or site"
           />
           <SelectField
-            label="Role"
-            name="roleFilter"
-            value={roleFilter}
-            onChange={(event) => setRoleFilter(event.target.value)}
-            placeholder="All roles"
-            options={[
-              { value: "guard", label: "Guard" },
-              { value: "supervisor", label: "Supervisor" },
-              { value: "hr", label: "HR" },
-            ]}
-          />
-          <SelectField
             label="Status"
             name="statusFilter"
             value={statusFilter}
@@ -151,7 +131,6 @@ export function EmployeeListScreen({
                 <th scope="col" style={{ width: "48px" }}></th>
                 <th scope="col">Name</th>
                 <th scope="col">Code</th>
-                <th scope="col">Role</th>
                 <th scope="col">Site</th>
                 <th scope="col">Phone</th>
                 <th scope="col">Status</th>
@@ -161,8 +140,8 @@ export function EmployeeListScreen({
             <tbody>
               {filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="employee-list-table__empty">
-                    No employees match your filters.
+                  <td colSpan={7} className="employee-list-table__empty">
+                    No guards match your filters.
                   </td>
                 </tr>
               ) : (
@@ -173,7 +152,6 @@ export function EmployeeListScreen({
                     </td>
                     <td className="employee-list-table__name">{employee.fullName}</td>
                     <td>{employee.employeeCode}</td>
-                    <td>{ROLE_LABELS[employee.role]}</td>
                     <td>{employee.assignedSite}</td>
                     <td>{employee.phone}</td>
                     <td>

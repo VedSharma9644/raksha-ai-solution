@@ -1,6 +1,8 @@
 export {
   GUARDS_COLLECTION,
+  normalizeGuardDocuments,
   type Guard,
+  type GuardDocument,
   type GuardStatus,
   type GuardGender,
 } from "./guard";
@@ -24,6 +26,7 @@ export {
 export {
   normalizeGuardPhone,
   normalizeGuardEmail,
+  guardAuthEmail,
   guardPhoneLookupVariants,
   checkGuardPhoneAvailability,
   checkGuardEmailAvailability,

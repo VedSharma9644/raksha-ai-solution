@@ -40,6 +40,15 @@ export function AdminAppShell() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!navOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [navOpen]);
+
+  useEffect(() => {
     setOpenGroups((prev) => {
       const next = { ...prev };
       for (const item of ADMIN_NAV_ITEMS) {
@@ -129,17 +138,22 @@ export function AdminAppShell() {
           <button
             type="button"
             className="admin-shell__menu-btn"
+            aria-label={navOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={navOpen}
+            aria-controls="admin-agency-nav"
             onClick={() => setNavOpen((v) => !v)}
           >
-            Menu
+            <span className="admin-shell__menu-icon" aria-hidden="true" />
           </button>
           <div className="admin-shell__brand-text">
             <p className="admin-shell__brand-name">Amrat Security Agency</p>
             <p className="admin-shell__brand-panel">Agency Admin</p>
           </div>
         </div>
-        <div className="admin-shell__toolbar">
+        <div className="admin-shell__branch">
           <BranchSelector />
+        </div>
+        <div className="admin-shell__toolbar">
           <NotificationMenu
             notifications={visibleNotifications}
             onSelectNotification={handleSelectNotification}
@@ -150,7 +164,11 @@ export function AdminAppShell() {
       </header>
 
       <div className="admin-shell__body">
-        <aside className="admin-shell__sidebar" aria-label="Agency navigation">
+        <aside
+          id="admin-agency-nav"
+          className="admin-shell__sidebar"
+          aria-label="Agency navigation"
+        >
           <nav className="admin-shell__nav">
             {visibleItems.map((item) => {
               if (item.children && item.children.length > 0) {

@@ -11,9 +11,11 @@ import type { Firestore } from "firebase/firestore";
 import { initializeApp, deleteApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
 import { GUARDS_COLLECTION } from "./guard";
-import type { Guard, GuardStatus, GuardGender } from "./guard";
+import type { Guard, GuardStatus, GuardGender, GuardDocument } from "./guard";
+import { normalizeGuardDocuments } from "./guard";
 import {
   assertGuardContactUnique,
+  guardAuthEmail,
   normalizeGuardEmail,
 } from "./guardUniqueness";
 
@@ -52,6 +54,7 @@ export interface CreateGuardAccountParams {
   notes: string;
   /** Branch this guard belongs to. null/undefined = unassigned. */
   branchId?: string | null;
+  documents?: GuardDocument[];
 }
 
 /**
@@ -67,8 +70,15 @@ export async function createGuardAccount(
   firebaseConfig: object,
   params: CreateGuardAccountParams
 ): Promise<Guard> {
-  const { password, email, agencyId, ...rest } = params;
+  const { password, email, agencyId, documents, ...rest } = params;
   const normalizedEmail = normalizeGuardEmail(email);
+  if (normalizedEmail && !normalizedEmail.includes("@")) {
+    throw Object.assign(new Error("Enter a valid email address."), {
+      code: "guard/invalid-email",
+      statusCode: 400,
+    });
+  }
+  const authEmail = guardAuthEmail(normalizedEmail, params.phone);
 
   await assertGuardContactUnique(db, {
     phone: params.phone,
@@ -85,7 +95,7 @@ export async function createGuardAccount(
     const secondaryAuth = getAuth(secondaryApp);
     const credential = await createUserWithEmailAndPassword(
       secondaryAuth,
-      normalizedEmail,
+      authEmail,
       password
     );
     uid = credential.user.uid;
@@ -109,6 +119,7 @@ export async function createGuardAccount(
     agencyId,
     email: normalizedEmail,
     ...rest,
+    documents: normalizeGuardDocuments(documents),
     weeklyOffDays: Array.isArray(rest.weeklyOffDays) ? rest.weeklyOffDays : [],
     status: "active" as GuardStatus,
     createdAt: serverTimestamp(),

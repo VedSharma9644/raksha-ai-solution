@@ -10,17 +10,22 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "brand branch tools";
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   padding: 0.7rem var(--space-lg);
+  padding-top: max(0.7rem, env(safe-area-inset-top, 0px));
+  padding-left: max(var(--space-lg), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--space-lg), env(safe-area-inset-right, 0px));
   background: var(--color-primary);
   color: var(--color-on-primary);
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary-deep) 35%, transparent);
 }
 
 .admin-shell__brand {
+  grid-area: brand;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -31,6 +36,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
+  min-width: 0;
 }
 
 .admin-shell__brand-name {
@@ -40,6 +46,10 @@
   letter-spacing: -0.03em;
   line-height: 1.2;
   color: var(--color-on-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(42vw, 16rem);
 }
 
 .admin-shell__brand-panel {
@@ -49,19 +59,28 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-on-primary) 78%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-shell__branch {
+  grid-area: branch;
+  min-width: 0;
 }
 
 .admin-shell__toolbar {
+  grid-area: tools;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-sm);
-  flex-wrap: wrap;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 /* Soften toolbar controls on the primary header */
-.admin-shell__topbar .branch-selector,
-.admin-shell__topbar .branch-selector__select,
+.admin-shell__topbar .branch-selector__trigger,
 .admin-shell__topbar .notification-button,
 .admin-shell__topbar .profile-menu__trigger {
   background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
@@ -70,7 +89,7 @@
   box-shadow: none;
 }
 
-.admin-shell__topbar .branch-selector:hover,
+.admin-shell__topbar .branch-selector__trigger:hover,
 .admin-shell__topbar .notification-button:hover,
 .admin-shell__topbar .profile-menu__trigger:hover {
   background: color-mix(in srgb, var(--color-on-primary) 20%, transparent);
@@ -84,15 +103,61 @@
 
 .admin-shell__menu-btn {
   display: none;
-  padding: 0.45rem 0.7rem;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--color-on-primary) 40%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
   color: var(--color-on-primary);
-  font: inherit;
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-semibold);
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin-shell__menu-icon,
+.admin-shell__menu-icon::before,
+.admin-shell__menu-icon::after {
+  display: block;
+  width: 1.15rem;
+  height: 2px;
+  border-radius: 99px;
+  background: currentColor;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.admin-shell__menu-icon {
+  position: relative;
+}
+
+.admin-shell__menu-icon::before,
+.admin-shell__menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.admin-shell__menu-icon::before {
+  top: -6px;
+}
+
+.admin-shell__menu-icon::after {
+  top: 6px;
+}
+
+.admin-shell--nav-open .admin-shell__menu-icon {
+  background: transparent;
+}
+
+.admin-shell--nav-open .admin-shell__menu-icon::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.admin-shell--nav-open .admin-shell__menu-icon::after {
+  top: 0;
+  transform: rotate(-45deg);
 }
 
 .admin-shell__body {
@@ -213,14 +278,38 @@
     display: inline-flex;
   }
 
+  .admin-shell__topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand tools"
+      "branch branch";
+    row-gap: 0.45rem;
+    padding-inline: max(var(--space-md), env(safe-area-inset-left, 0px))
+      max(var(--space-md), env(safe-area-inset-right, 0px));
+  }
+
+  .admin-shell__branch .branch-selector {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-shell__brand-name {
+    max-width: 100%;
+  }
+
   .admin-shell__sidebar {
     position: fixed;
     left: 0;
-    top: 3.75rem;
-    height: calc(100svh - 3.75rem);
+    top: 0;
+    width: min(18.5rem, calc(100vw - 2.75rem));
+    height: 100svh;
+    height: 100dvh;
+    padding-top: calc(7.4rem + env(safe-area-inset-top, 0px));
+    padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom, 0px));
     transform: translateX(-105%);
     transition: transform 180ms ease;
     box-shadow: var(--shadow-raised);
+    z-index: 35;
   }
 
   .admin-shell--nav-open .admin-shell__sidebar {
@@ -230,10 +319,38 @@
   .admin-shell__backdrop {
     display: block;
     position: fixed;
-    inset: 3.75rem 0 0;
-    z-index: 28;
+    inset: 0;
+    z-index: 32;
     border: 0;
-    background: rgba(11, 28, 48, 0.35);
+    background: rgba(11, 28, 48, 0.4);
     cursor: pointer;
+  }
+
+  .admin-shell__topbar {
+    z-index: 40;
+  }
+
+  .admin-shell__toolbar .profile-menu__trigger-text {
+    display: none;
+  }
+
+  .admin-shell__toolbar .profile-menu__trigger,
+  .admin-shell__toolbar .notification-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell__brand-name {
+    max-width: 100%;
+    font-size: 0.92rem;
+  }
+
+  .admin-shell__brand-panel {
+    font-size: 0.62rem;
   }
 }

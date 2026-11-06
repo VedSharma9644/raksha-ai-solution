@@ -1,3 +1,5 @@
+import type { GuardDocument } from "@raskha/guard-management";
+
 export interface GuardFormValues {
   // Personal
   fullName: string;
@@ -41,6 +43,10 @@ export interface GuardFormValues {
   /** Existing URLs shown when editing */
   characterCertificateUrl: string;
   policeVerificationUrl: string;
+  /** Extra images or files chosen on this form, uploaded on save. */
+  documentFiles: File[];
+  /** Files already stored for this guard. */
+  documents: GuardDocument[];
 
   // Financial / compliance
   bankAccount: string;
@@ -86,6 +92,8 @@ export const EMPTY_GUARD_FORM: GuardFormValues = {
   policeVerificationFile: null,
   characterCertificateUrl: "",
   policeVerificationUrl: "",
+  documentFiles: [],
+  documents: [],
   profilePictureFile: null,
   profilePictureUrl: "",
   bankAccount: "",

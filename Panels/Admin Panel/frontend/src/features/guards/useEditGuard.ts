@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getGuardById } from "@raskha/guard-management";
-import type { Guard, GuardGender } from "@raskha/guard-management";
+import { getGuardById, normalizeGuardDocuments } from "@raskha/guard-management";
+import type { Guard, GuardDocument, GuardGender } from "@raskha/guard-management";
 import { adminFetch } from "@raskha/shared";
 import { APP_ROUTES } from "../../app/routePaths";
 import { db, storage } from "../../lib/firebase";
@@ -21,6 +21,29 @@ async function uploadDocumentIfPresent(
     contentType: file.type || "application/octet-stream",
   });
   return getDownloadURL(storageRef);
+}
+
+async function uploadGuardDocuments(
+  files: File[],
+  basePath: string
+): Promise<GuardDocument[]> {
+  return Promise.all(
+    files.map(async (file, index) => {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "file";
+      const storageRef = ref(
+        storage,
+        `${basePath}/documents/${Date.now()}-${index}-${safeName}`
+      );
+      await uploadBytes(storageRef, file, {
+        contentType: file.type || "application/octet-stream",
+      });
+      return {
+        name: file.name || "Document",
+        url: await getDownloadURL(storageRef),
+        contentType: file.type || "application/octet-stream",
+      };
+    })
+  );
 }
 
 export function useEditGuard(guardId: string) {
@@ -82,6 +105,11 @@ export function useEditGuard(guardId: string) {
             : Promise.resolve(values.profilePictureUrl),
         ]);
 
+      const documents = [
+        ...normalizeGuardDocuments(values.documents),
+        ...(await uploadGuardDocuments(values.documentFiles ?? [], basePath)),
+      ];
+
       await adminFetch(`/api/guards/${guardId}`, {
         method: "PUT",
         body: JSON.stringify({
@@ -116,6 +144,7 @@ export function useEditGuard(guardId: string) {
           pfNumber: values.pfNumber,
           notes: values.notes,
           branchId: values.branchId || null,
+          documents,
         }),
         requireAuth: false,
       });
@@ -169,6 +198,8 @@ export function useEditGuard(guardId: string) {
         policeVerificationFile: null,
         characterCertificateUrl: guard.characterCertificateUrl ?? "",
         policeVerificationUrl: guard.policeVerificationUrl ?? "",
+        documentFiles: [],
+        documents: normalizeGuardDocuments(guard.documents),
         profilePictureFile: null,
         profilePictureUrl: guard.profilePictureUrl ?? "",
         bankAccount: guard.bankAccount ?? "",

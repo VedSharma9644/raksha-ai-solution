@@ -61,6 +61,7 @@
 
 .payroll-settings-form__day {
   min-width: 5.5rem;
+  flex: 1 1 5.5rem;
   padding: 0.45rem 0.7rem;
   border-radius: 0.5rem;
   border: 1px solid var(--color-border, #e5e7eb);

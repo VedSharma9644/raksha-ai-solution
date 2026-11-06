@@ -15,9 +15,13 @@ import { PageHeader } from "../components/PageHeader";
 
 function toFormData(
   values: StaffMemberFormValues
-): Record<string, string | File | null> {
-  const data: Record<string, string | File | null> = {};
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(values)) {
+    if (key === "documents" || key === "documentFiles") {
+      data[key] = value;
+      continue;
+    }
     if (typeof value === "string" || value instanceof File || value === null) {
       data[key] = value;
     } else {
@@ -136,6 +140,12 @@ export function EditGuardPage() {
               (data["characterCertificateFile"] as File | null) ?? null;
             values.policeVerificationFile =
               (data["policeVerificationFile"] as File | null) ?? null;
+            values.documentFiles = Array.isArray(data["documentFiles"])
+              ? (data["documentFiles"] as File[])
+              : [];
+            values.documents = Array.isArray(data["documents"])
+              ? (data["documents"] as StaffMemberFormValues["documents"])
+              : initialValues.documents;
             await saveGuard(values);
           }}
         />

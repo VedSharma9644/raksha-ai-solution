@@ -315,3 +315,17 @@
   font-size: 0.9rem;
   color: var(--color-on-surface);
 }
+
+@media (max-width: 640px) {
+  .shift-config__shift-row {
+    flex-direction: column;
+  }
+
+  .shift-config__field--label,
+  .shift-config__field--type,
+  .shift-config__field--time,
+  .shift-config__field--guards {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}

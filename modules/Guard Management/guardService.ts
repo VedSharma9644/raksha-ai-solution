@@ -13,7 +13,8 @@ import {
 } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 import { GUARDS_COLLECTION } from "./guard";
-import type { Guard, GuardStatus, GuardGender } from "./guard";
+import type { Guard, GuardStatus, GuardGender, GuardDocument } from "./guard";
+import { normalizeGuardDocuments } from "./guard";
 import {
   assertGuardContactUnique,
   normalizeGuardEmail,
@@ -52,6 +53,7 @@ export interface AddGuardParams {
   notes: string;
   /** Branch this guard belongs to. null/undefined = unassigned. */
   branchId?: string | null;
+  documents?: GuardDocument[];
 }
 
 export interface UpdateGuardParams {
@@ -88,6 +90,7 @@ export interface UpdateGuardParams {
   status?: GuardStatus;
   /** Branch this guard belongs to. null = unassigned. */
   branchId?: string | null;
+  documents?: GuardDocument[];
 }
 
 export async function addGuard(
@@ -100,6 +103,7 @@ export async function addGuard(
   const guardData = {
     ...params,
     email,
+    documents: normalizeGuardDocuments(params.documents),
     weeklyOffDays: Array.isArray(params.weeklyOffDays)
       ? params.weeklyOffDays
       : [],
@@ -152,6 +156,10 @@ export async function updateGuard(
   const nextUpdates = { ...updates };
   if (typeof nextUpdates.email === "string") {
     nextUpdates.email = normalizeGuardEmail(nextUpdates.email);
+  }
+
+  if (nextUpdates.documents) {
+    nextUpdates.documents = normalizeGuardDocuments(nextUpdates.documents);
   }
 
   if (nextUpdates.phone || nextUpdates.email) {

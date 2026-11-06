@@ -4,6 +4,7 @@ import { listSitesByAgency } from "@raskha/site-management";
 import type { Site } from "@raskha/site-management";
 import { Button } from "../../../components/Button";
 import { FileField } from "../../../components/FileField";
+import { MultiFileField } from "../../../components/MultiFileField";
 import { FormPanel } from "../../../components/FormPanel";
 import { PasswordField } from "../../../components/PasswordField";
 import { SelectField } from "../../../components/SelectField";
@@ -105,9 +106,8 @@ export function StaffMemberForm({
     } else if (!/^[0-9+\-\s]{8,15}$/.test(values.phone.trim())) {
       nextErrors.phone = "Enter a valid phone number.";
     }
-    if (!values.email.trim()) {
-      nextErrors.email = "Enter an email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+    const email = values.email.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       nextErrors.email = "Enter a valid email address.";
     }
     if (!values.employeeCode.trim()) nextErrors.employeeCode = "Enter an employee code.";
@@ -148,7 +148,7 @@ export function StaffMemberForm({
           phoneStatus.message ||
           "This mobile number is already registered to another guard.";
       }
-      if (emailStatus.available === false) {
+      if (email.trim() && emailStatus.available === false) {
         nextErrors.email =
           emailStatus.message ||
           "This email is already registered to another guard.";
@@ -263,18 +263,17 @@ export function StaffMemberForm({
             onChange={(e) => updateField("email", e.target.value)}
             errorMessage={
               errors.email ||
-              (checkContacts && emailStatus.available === false
+              (checkContacts && values.email.trim() && emailStatus.available === false
                 ? emailStatus.message
                 : undefined)
             }
             hint={
-              checkContacts && !errors.email && emailStatus.available === true
+              checkContacts && values.email.trim() && !errors.email && emailStatus.available === true
                 ? emailStatus.message
-                : checkContacts && emailStatus.checking
+                : checkContacts && values.email.trim() && emailStatus.checking
                   ? "Checking availability…"
-                  : undefined
+                  : "Optional"
             }
-            required
             disabled={isSubmitting}
           />
           <SelectField
@@ -537,6 +536,17 @@ export function StaffMemberForm({
             errorMessage={errors.policeVerificationFile as string | undefined}
             disabled={isSubmitting}
           />
+          {role === "guard" ? (
+            <MultiFileField
+              label="Documents"
+              name="documents"
+              files={values.documentFiles}
+              existing={values.documents}
+              onFilesChange={(files) => updateField("documentFiles", files)}
+              onExistingChange={(documents) => updateField("documents", documents)}
+              disabled={isSubmitting}
+            />
+          ) : null}
         </div>
 
         {/* ── Section: Financial / Compliance ── */}

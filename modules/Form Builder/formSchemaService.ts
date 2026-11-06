@@ -20,11 +20,45 @@ export function formSchemaDocId(agencyId: string, formType: FormType): string {
   return `${agencyId}_${formType}`;
 }
 
+/**
+ * Guard email is optional, and the multi-file Documents field is always present.
+ * Saved agency schemas are patched on load so older forms pick this up.
+ */
+export function applyGuardFormFields(fields: FormField[]): FormField[] {
+  const documentsField: FormField = {
+    id: "documents",
+    label: "Documents",
+    type: "files",
+    required: false,
+    locked: true,
+    order: 28.5,
+  };
+  let next = fields.map((field) =>
+    field.id === "email" ? { ...field, required: false } : { ...field }
+  );
+  if (next.some((field) => field.id === "documents")) {
+    next = next.map((field) =>
+      field.id === "documents"
+        ? { ...field, type: "files", required: false, locked: true, label: field.label || "Documents" }
+        : field
+    );
+  } else {
+    const anchor =
+      next.find((field) => field.id === "policeVerificationFile") ??
+      next.find((field) => field.id === "section_documents");
+    next.push({
+      ...documentsField,
+      order: anchor ? anchor.order + 0.5 : documentsField.order,
+    });
+  }
+  return next.sort((a, b) => a.order - b.order);
+}
+
 /** Returns the built-in default fields for each form type. */
 export function getDefaultFields(formType: FormType): FormField[] {
   switch (formType) {
     case "guard":
-      return DEFAULT_GUARD_FIELDS;
+      return applyGuardFormFields(DEFAULT_GUARD_FIELDS);
     case "hr":
       return DEFAULT_HR_FIELDS;
     case "site":

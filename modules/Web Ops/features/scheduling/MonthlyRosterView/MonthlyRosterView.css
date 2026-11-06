@@ -362,4 +362,28 @@
   .monthly-roster__sidebar {
     width: 100%;
   }
+
+  .monthly-roster__nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .monthly-roster__month-label {
+    min-width: 0;
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  .monthly-roster__calendar {
+    overflow-x: auto;
+  }
+
+  .monthly-roster__cell {
+    min-height: 44px;
+    padding: 0.2rem 0.15rem 0.25rem;
+  }
+
+  .monthly-roster__week-day {
+    font-size: 0.62rem;
+  }
 }

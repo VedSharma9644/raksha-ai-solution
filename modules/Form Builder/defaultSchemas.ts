@@ -13,7 +13,7 @@ export const DEFAULT_GUARD_FIELDS: FormField[] = [
   { id: "fatherName", label: "Father's Name", type: "text", required: false, locked: false, order: 3 },
   { id: "motherName", label: "Mother's Name", type: "text", required: false, locked: false, order: 4 },
   { id: "phone", label: "Mobile Number", type: "phone", required: true, locked: true, order: 5 },
-  { id: "email", label: "Email", type: "email", required: true, locked: true, order: 6 },
+  { id: "email", label: "Email", type: "email", required: false, locked: true, order: 6 },
   { id: "gender", label: "Gender", type: "select", required: true, locked: true, order: 7,
     options: [
       { value: "male",   label: "Male" },
@@ -46,6 +46,7 @@ export const DEFAULT_GUARD_FIELDS: FormField[] = [
   { id: "section_documents", label: "Documents", type: "section", required: false, locked: false, order: 26 },
   { id: "characterCertificateFile", label: "Character Certificate", type: "file", required: false, locked: false, order: 27 },
   { id: "policeVerificationFile", label: "Police Verification", type: "file", required: false, locked: false, order: 28 },
+  { id: "documents", label: "Documents", type: "files", required: false, locked: true, order: 28.5 },
 
   { id: "section_financial", label: "Financial & Compliance", type: "section", required: false, locked: false, order: 29 },
   { id: "bankAccount", label: "Bank Account Number", type: "text", required: false, locked: false, order: 30 },

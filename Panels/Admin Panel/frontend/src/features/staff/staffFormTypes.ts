@@ -1,3 +1,5 @@
+import type { GuardDocument } from "@raskha/guard-management";
+
 export type StaffRole = "guard" | "supervisor" | "hr";
 
 export interface StaffMemberFormValues {
@@ -42,6 +44,10 @@ export interface StaffMemberFormValues {
   /** Existing URLs shown when editing */
   characterCertificateUrl: string;
   policeVerificationUrl: string;
+  /** Extra images or files chosen on this form, uploaded on save. */
+  documentFiles: File[];
+  /** Files already stored for this guard. */
+  documents: GuardDocument[];
 
   // Financial / compliance
   bankAccount: string;
@@ -92,6 +98,8 @@ export const EMPTY_STAFF_MEMBER_FORM: StaffMemberFormValues = {
   policeVerificationFile: null,
   characterCertificateUrl: "",
   policeVerificationUrl: "",
+  documentFiles: [],
+  documents: [],
   profilePictureFile: null,
   profilePictureUrl: "",
   bankAccount: "",

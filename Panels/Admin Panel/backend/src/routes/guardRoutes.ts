@@ -5,7 +5,9 @@ import { getFirestore } from "firebase-admin/firestore";
 import {
   addGuard,
   getGuardById,
+  guardAuthEmail,
   listGuardsByAgency,
+  normalizeGuardDocuments,
   updateGuard,
 } from "@raskha/guard-management";
 import { requireAgencyCaller, type AgencyAuthRequest } from "../middleware/requireAgencyCaller";
@@ -19,7 +21,7 @@ export function createGuardRoutes(db: Firestore): Router {
       const { agencyId, fullName, employeeCode, phone, email, assignedSiteId, notes } =
         req.body;
 
-      if (!agencyId || !fullName || !employeeCode || !phone || !email) {
+      if (!agencyId || !fullName || !employeeCode || !phone) {
         res.status(400).json({ error: "Missing required fields." });
         return;
       }
@@ -32,7 +34,7 @@ export function createGuardRoutes(db: Firestore): Router {
         gender: (req.body.gender as "male" | "female" | "other") ?? "male",
         employeeCode,
         phone,
-        email,
+        email: email ?? "",
         address: req.body.address ?? "",
         caste: req.body.caste ?? "",
         height: req.body.height ?? "",
@@ -54,6 +56,7 @@ export function createGuardRoutes(db: Firestore): Router {
         bankAccount: req.body.bankAccount ?? "",
         pfNumber: req.body.pfNumber ?? "",
         notes: notes ?? "",
+        documents: normalizeGuardDocuments(req.body.documents),
       });
 
       res.status(201).json(guard);
@@ -125,36 +128,31 @@ export function createGuardRoutes(db: Firestore): Router {
         res.status(404).json({ error: "Guard not found." });
         return;
       }
-      const email = (guardDoc.data() as { email?: string })?.email;
-      if (!email) {
-        res.status(400).json({ error: "Guard has no email address on record." });
-        return;
-      }
+      const data = guardDoc.data() as { email?: string; phone?: string };
+      const email = typeof data.email === "string" ? data.email.trim() : "";
+      const phone = typeof data.phone === "string" ? data.phone : "";
+      const authEmail = guardAuthEmail(email, phone);
 
       try {
-        // Fast path: guard has an Auth account — update password AND keep email in sync
-        await getAuth().updateUser(id, { password, email });
+        await getAuth().updateUser(
+          id,
+          email.includes("@") ? { password, email: authEmail } : { password }
+        );
       } catch (authErr: unknown) {
         const e = authErr as { code?: string };
         if (e.code !== "auth/user-not-found") throw authErr;
 
-        // Slow path: no Auth account yet — create one now
         try {
-          await getAuth().createUser({ uid: id, email, password });
+          await getAuth().createUser({ uid: id, email: authEmail, password });
         } catch (createErr: unknown) {
           const ce = createErr as { code?: string };
           if (ce.code === "auth/email-already-exists") {
-            // Another Auth account already holds this email.
-            // If its UID doesn't match the guard's Firestore ID it's an orphaned
-            // account — delete it and create the correct one.
-            const existing = await getAuth().getUserByEmail(email);
+            const existing = await getAuth().getUserByEmail(authEmail);
             if (existing.uid === id) {
-              // Edge case: UID matches — just update password
               await getAuth().updateUser(id, { password });
             } else {
-              // Orphaned account: remove it and create the correct one
               await getAuth().deleteUser(existing.uid);
-              await getAuth().createUser({ uid: id, email, password });
+              await getAuth().createUser({ uid: id, email: authEmail, password });
             }
           } else {
             throw createErr;
@@ -178,6 +176,33 @@ export function createGuardRoutes(db: Firestore): Router {
 
       // Prevent overwriting immutable fields
       const { agencyId: _a, createdAt: _c, ...safeUpdates } = updates;
+
+      if (typeof safeUpdates.email === "string") {
+        const email = safeUpdates.email.trim().toLowerCase();
+        if (email && !email.includes("@")) {
+          res.status(400).json({ error: "Enter a valid email address." });
+          return;
+        }
+        safeUpdates.email = email;
+        if (email.includes("@")) {
+          try {
+            await getAuth().updateUser(id, { email });
+          } catch (authErr: unknown) {
+            const code = (authErr as { code?: string }).code;
+            if (code === "auth/email-already-exists") {
+              res.status(409).json({
+                error: "This email is already registered to another account.",
+              });
+              return;
+            }
+            if (code !== "auth/user-not-found") throw authErr;
+          }
+        }
+      }
+
+      if ("documents" in safeUpdates) {
+        safeUpdates.documents = normalizeGuardDocuments(safeUpdates.documents);
+      }
 
       await adminDb.collection("guards").doc(id).update({
         ...safeUpdates,

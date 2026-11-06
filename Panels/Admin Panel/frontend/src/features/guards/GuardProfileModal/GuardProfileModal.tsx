@@ -162,7 +162,7 @@ export function GuardProfileModal({ guard, onClose }: GuardProfileModalProps) {
             </>
           )}
 
-          {(guard.characterCertificateUrl || guard.policeVerificationUrl) && (
+          {(guard.characterCertificateUrl || guard.policeVerificationUrl || (guard.documents?.length ?? 0) > 0) && (
             <>
               <SectionHeading title="Documents" />
               <div className="guard-profile-modal__docs">
@@ -176,6 +176,17 @@ export function GuardProfileModal({ guard, onClose }: GuardProfileModalProps) {
                     📄 Police Verification
                   </a>
                 )}
+                {guard.documents?.map((document) => (
+                  <a
+                    key={document.url}
+                    href={document.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="guard-profile-modal__doc-link"
+                  >
+                    📄 {document.name || "Document"}
+                  </a>
+                ))}
               </div>
             </>
           )}

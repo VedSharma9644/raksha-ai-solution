@@ -24,6 +24,18 @@ export function normalizeGuardEmail(raw: string): string {
   return String(raw ?? "").trim().toLowerCase();
 }
 
+/**
+ * Email stored for Firebase Auth. A blank guard email still needs an Auth
+ * address so the guard can sign in with mobile number or Guard ID.
+ * The synthetic address is not shown on the guard record.
+ */
+export function guardAuthEmail(email: string, phone: string): string {
+  const normalized = normalizeGuardEmail(email);
+  if (normalized.includes("@")) return normalized;
+  const digits = normalizeGuardPhone(phone);
+  return `guard.${digits || "unknown"}@guards.invalid`;
+}
+
 /** Phone spellings commonly stored by Admin/HR forms. */
 export function guardPhoneLookupVariants(raw: string): string[] {
   const normalized = normalizeGuardPhone(raw);
@@ -125,6 +137,9 @@ export async function checkGuardEmailAvailability(
   excludeGuardId?: string
 ): Promise<GuardContactAvailability> {
   const normalized = normalizeGuardEmail(email);
+  if (!normalized) {
+    return { available: true };
+  }
   if (!normalized.includes("@")) {
     return { available: false, message: "Enter a valid email address." };
   }

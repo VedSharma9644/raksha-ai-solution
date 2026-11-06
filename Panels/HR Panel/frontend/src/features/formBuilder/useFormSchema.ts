@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getDefaultFields } from "@raskha/form-builder";
+import { applyGuardFormFields, getDefaultFields } from "@raskha/form-builder";
 import type { FormField, FormSchema, FormType } from "@raskha/form-builder";
 import { fetchFormSchemaApi } from "./formSchemaApi";
 
@@ -37,7 +37,7 @@ export function useFormSchema(
             (a, b) => a.order - b.order
           );
           setSchema(result as unknown as FormSchema);
-          setFields(sorted);
+          setFields(formType === "guard" ? applyGuardFormFields(sorted) : sorted);
         } else {
           setSchema(null);
           setFields(getDefaultFields(formType));

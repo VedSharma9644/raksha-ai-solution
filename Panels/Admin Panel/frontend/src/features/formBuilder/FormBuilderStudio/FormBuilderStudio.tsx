@@ -170,6 +170,20 @@ function PreviewField({ field }: { field: FormField }) {
           disabled
         />
       );
+    case "files":
+      return (
+        <div key={field.id} style={{ gridColumn: "1 / -1" }}>
+          <FileField
+            label={field.label}
+            name={`preview_${field.id}`}
+            onChange={() => undefined}
+            disabled
+          />
+          <p style={{ margin: "0.35rem 0 0", fontSize: "0.78rem", color: "var(--color-text-secondary, #9ca3af)" }}>
+            Accepts several images or files.
+          </p>
+        </div>
+      );
 
     case "profilePicture":
       return (

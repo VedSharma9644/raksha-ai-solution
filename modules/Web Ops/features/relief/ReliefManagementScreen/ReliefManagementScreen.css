@@ -118,3 +118,21 @@
   gap: var(--space-sm);
   flex-wrap: wrap;
 }
+
+@media (max-width: 700px) {
+  .relief-management-screen__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .relief-request-card__header {
+    flex-direction: column;
+  }
+
+  .relief-request-card__actions {
+    flex-direction: column-reverse;
+  }
+
+  .relief-request-card__actions .button {
+    width: 100%;
+  }
+}

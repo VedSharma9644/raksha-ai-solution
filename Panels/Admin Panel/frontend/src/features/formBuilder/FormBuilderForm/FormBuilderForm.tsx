@@ -9,6 +9,8 @@ import { TextField } from "../../../components/TextField";
 import { TextAreaField } from "../../../components/TextAreaField";
 import { SelectField } from "../../../components/SelectField";
 import { FileField } from "../../../components/FileField";
+import { MultiFileField } from "../../../components/MultiFileField";
+import type { GuardDocument } from "@raskha/guard-management";
 import { SiteLocationPicker } from "../../sites/SiteLocationPicker/SiteLocationPicker";
 import type { SiteShiftRowValues } from "../../sites/siteFormTypes";
 import { EMPTY_SHIFT_ROW } from "../../sites/siteFormTypes";
@@ -16,9 +18,9 @@ import "./FormBuilderForm.css";
 
 /** ── Profile picture field renderer ────────────────────────────────────── */
 function renderProfilePictureField(
-  formData: Record<string, string | File | null>,
+  formData: Record<string, unknown>,
   disabled: boolean,
-  handleFieldValue: (id: string, val: string | File | null) => void
+  handleFieldValue: (id: string, val: unknown) => void
 ) {
   return (
     <ProfilePictureField
@@ -34,10 +36,10 @@ function renderProfilePictureField(
 /** ── Password field renderer (Password + Confirm Password) ─────────────── */
 function renderPasswordField(
   field: FormField,
-  formData: Record<string, string | File | null>,
+  formData: Record<string, unknown>,
   errors: Record<string, string>,
   disabled: boolean,
-  handleFieldValue: (id: string, val: string | File | null) => void
+  handleFieldValue: (id: string, val: unknown) => void
 ) {
   return (
     <div key={field.id} className="fb-fill__password-group">
@@ -73,9 +75,9 @@ function renderPasswordField(
 
 /** ── Location field renderer (SiteLocationPicker) ──────────────────────── */
 function renderLocationField(
-  formData: Record<string, string | File | null>,
+  formData: Record<string, unknown>,
   disabled: boolean,
-  handleFieldValue: (id: string, val: string | File | null) => void
+  handleFieldValue: (id: string, val: unknown) => void
 ) {
   return (
     <div key="location" className="fb-fill__location-group">
@@ -443,9 +445,9 @@ export interface FormBuilderFormProps {
   formType: FormType;
   fields: FormField[];
   isSubmitting: boolean;
-  initialValues?: Record<string, string | File | null>;
+  initialValues?: Record<string, unknown>;
   submitLabel?: string;
-  onSubmit: (data: Record<string, string | File | null>) => void | Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => void | Promise<void>;
   onCancel: () => void;
   onDelete?: () => void | Promise<void>;
   isDeleting?: boolean;
@@ -462,7 +464,7 @@ export function FormBuilderForm({
   onDelete,
   isDeleting = false,
 }: FormBuilderFormProps) {
-  const [formData, setFormData] = useState<Record<string, string | File | null>>(
+  const [formData, setFormData] = useState<Record<string, unknown>>(
     () => initialValues ?? {}
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -513,7 +515,7 @@ export function FormBuilderForm({
     }
   }, [initialValues]);
 
-  function handleFieldValue(fieldId: string, value: string | File | null) {
+  function handleFieldValue(fieldId: string, value: unknown) {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
     setErrors((prev) => ({ ...prev, [fieldId]: "" }));
   }
@@ -559,6 +561,18 @@ export function FormBuilderForm({
         }
         continue;
       }
+      if (field.type === "email") {
+        const email = String(formData[field.id] ?? "").trim();
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          nextErrors[field.id] = "Enter a valid email address.";
+        } else if (field.required && !email) {
+          nextErrors[field.id] = `${field.label} is required.`;
+        }
+        continue;
+      }
+      if (field.type === "files") {
+        continue;
+      }
       if (field.required) {
         const val = formData[field.id];
         if (!val || (typeof val === "string" && !val.trim())) {
@@ -580,7 +594,7 @@ export function FormBuilderForm({
       payload["intervalCheckinMinutes"] = intervalCheckinMinutes;
       payload["shifts"] = shifts;
     }
-    await onSubmit(payload as Record<string, string | File | null>);
+    await onSubmit(payload);
   }
 
   const defaultLabels: Record<FormType, string> = {
@@ -632,9 +646,31 @@ export function FormBuilderForm({
                 updateShift
               );
             }
+            if (field.type === "files") {
+              const chosen = Array.isArray(formData.documentFiles)
+                ? (formData.documentFiles as File[])
+                : [];
+              const stored = Array.isArray(formData.documents)
+                ? (formData.documents as GuardDocument[])
+                : [];
+              return (
+                <MultiFileField
+                  key={field.id}
+                  label={field.label}
+                  name={field.id}
+                  files={chosen}
+                  existing={stored}
+                  disabled={isSubmitting || isDeleting}
+                  errorMessage={errors[field.id]}
+                  onFilesChange={(files) => handleFieldValue("documentFiles", files)}
+                  onExistingChange={(documents) => handleFieldValue("documents", documents)}
+                />
+              );
+            }
             return renderField(
               field,
-              formData[field.id] ?? (field.type === "file" ? null : ""),
+              (formData[field.id] as string | File | null) ??
+                (field.type === "file" ? null : ""),
               errors[field.id],
               isSubmitting || isDeleting,
               (val) => handleFieldValue(field.id, val)

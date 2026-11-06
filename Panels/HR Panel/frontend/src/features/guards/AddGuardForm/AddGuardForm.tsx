@@ -2,6 +2,7 @@ import type { FormEvent, ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { Button } from "../../../components/Button";
 import { FileField } from "../../../components/FileField";
+import { MultiFileField } from "../../../components/MultiFileField";
 import { FormPanel } from "../../../components/FormPanel";
 import { PasswordField } from "../../../components/PasswordField";
 import { SelectField } from "../../../components/SelectField";
@@ -74,9 +75,8 @@ export function AddGuardForm({
     } else if (!/^[0-9+\-\s]{8,15}$/.test(values.phone.trim())) {
       nextErrors.phone = "Enter a valid phone number.";
     }
-    if (!values.email.trim()) {
-      nextErrors.email = "Enter an email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+    const email = values.email.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       nextErrors.email = "Enter a valid email address.";
     }
     if (!values.employeeCode.trim())
@@ -113,7 +113,7 @@ export function AddGuardForm({
         phoneStatus.message ||
         "This mobile number is already registered to another guard.";
     }
-    if (emailStatus.available === false) {
+    if (values.email.trim() && emailStatus.available === false) {
       nextErrors.email =
         emailStatus.message ||
         "This email is already registered to another guard.";
@@ -228,16 +228,17 @@ export function AddGuardForm({
             onChange={(e) => updateField("email", e.target.value)}
             errorMessage={
               errors.email ||
-              (emailStatus.available === false ? emailStatus.message : undefined)
+              (values.email.trim() && emailStatus.available === false
+                ? emailStatus.message
+                : undefined)
             }
             hint={
-              !errors.email && emailStatus.available === true
+              values.email.trim() && !errors.email && emailStatus.available === true
                 ? emailStatus.message
-                : emailStatus.checking
+                : values.email.trim() && emailStatus.checking
                   ? "Checking availability…"
-                  : undefined
+                  : "Optional"
             }
-            required
             disabled={isSubmitting}
           />
           <SelectField
@@ -498,6 +499,15 @@ export function AddGuardForm({
             currentUrl={values.policeVerificationUrl}
             onChange={(file) => updateField("policeVerificationFile", file)}
             errorMessage={errors.policeVerificationFile as string | undefined}
+            disabled={isSubmitting}
+          />
+          <MultiFileField
+            label="Documents"
+            name="documents"
+            files={values.documentFiles}
+            existing={values.documents}
+            onFilesChange={(files) => updateField("documentFiles", files)}
+            onExistingChange={(documents) => updateField("documents", documents)}
             disabled={isSubmitting}
           />
         </div>

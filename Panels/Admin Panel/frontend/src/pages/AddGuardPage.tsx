@@ -115,6 +115,12 @@ export function AddGuardPage() {
               characterCertificateUrl:   (data["characterCertificateUrl"]   as string) ?? "",
               policeVerificationFile:    (data["policeVerificationFile"]    as File | null) ?? null,
               policeVerificationUrl:     (data["policeVerificationUrl"]     as string) ?? "",
+              documentFiles: Array.isArray(data["documentFiles"])
+                ? (data["documentFiles"] as File[])
+                : [],
+              documents: Array.isArray(data["documents"])
+                ? (data["documents"] as StaffMemberFormValues["documents"])
+                : [],
             };
             await saveGuard(values);
           }}

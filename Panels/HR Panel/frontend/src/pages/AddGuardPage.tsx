@@ -99,6 +99,12 @@ export function AddGuardPage() {
               (data["characterCertificateFile"] as File | null) ?? null;
             values.policeVerificationFile =
               (data["policeVerificationFile"] as File | null) ?? null;
+            values.documentFiles = Array.isArray(data["documentFiles"])
+              ? (data["documentFiles"] as File[])
+              : [];
+            values.documents = Array.isArray(data["documents"])
+              ? (data["documents"] as GuardFormValues["documents"])
+              : [];
             await saveGuard(values);
           }}
         />

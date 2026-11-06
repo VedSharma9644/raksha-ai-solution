@@ -57,3 +57,10 @@
   line-height: var(--line-height-body);
   color: var(--color-on-surface-variant);
 }
+
+@media (max-width: 640px) {
+  .action-card {
+    min-height: 0;
+    padding: var(--space-md);
+  }
+}
