@@ -10,7 +10,7 @@
     max(var(--space-lg), env(safe-area-inset-left, 0px));
   overflow-x: hidden;
   overflow-y: auto;
-
+}
 
 .login-screen__atmosphere {
   position: absolute;

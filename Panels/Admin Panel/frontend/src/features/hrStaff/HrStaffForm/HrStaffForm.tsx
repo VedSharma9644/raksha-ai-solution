@@ -72,7 +72,7 @@ export function HrStaffForm({
     const branchSet = new Set(values.assignedBranchIds);
     if (branchSet.size === 0) return [];
     return sites
-      .filter((s) => s.branchId && branchSet.has(s.branchId))
+      .filter((s) => !s.branchId || branchSet.has(s.branchId))
       .sort((a, b) => a.siteName.localeCompare(b.siteName));
   }, [sites, values.assignedBranchIds]);
 
@@ -86,7 +86,7 @@ export function HrStaffForm({
 
   function setAssignedBranches(ids: string[]) {
     const allowedSites = sites.filter(
-      (s) => s.branchId && ids.includes(s.branchId)
+      (s) => !s.branchId || ids.includes(s.branchId)
     );
     const allowedSiteIds = new Set(allowedSites.map((s) => s.id));
     setValues((current) => ({
