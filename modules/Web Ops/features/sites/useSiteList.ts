@@ -3,6 +3,7 @@ import { listSitesByAgency } from "@raskha/site-management";
 import type { Site } from "@raskha/site-management";
 import { useWebOps } from "../../context/WebOpsContext";
 import { filterByBranch } from "../../lib/branchFilter";
+import { sortByName } from "../../lib/sortByName";
 
 export function useSiteList() {
   const { agencyId, activeBranchId, db, role, assignedSiteIds } = useWebOps();
@@ -31,7 +32,7 @@ export function useSiteList() {
           const allowed = new Set(assignedSiteIds);
           filtered = filtered.filter((s) => allowed.has(s.id));
         }
-        setSites(filtered);
+        setSites(sortByName(filtered, (site) => site.siteName));
       })
       .catch((err: unknown) => {
         const e = err as { message?: string };

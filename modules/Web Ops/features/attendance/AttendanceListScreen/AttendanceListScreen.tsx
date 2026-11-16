@@ -5,6 +5,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { SearchableSelect } from "../../../components/SearchableSelect";
 import { TextField } from "../../../components/TextField";
 import { useWebOps } from "../../../context/WebOpsContext";
+import { sortByName } from "../../../lib/sortByName";
 import type {
   AttendanceRecord,
   AttendanceStats,
@@ -73,7 +74,7 @@ export function AttendanceListScreen({
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return records.filter((r) => {
+    const list = records.filter((r) => {
       if (siteFilter !== "all" && r.siteId !== siteFilter) return false;
       if (q) {
         const haystack = `${r.guardName} ${r.guardEmployeeCode}`.toLowerCase();
@@ -81,11 +82,15 @@ export function AttendanceListScreen({
       }
       return true;
     });
+    return sortByName(list, (r) => r.guardName);
   }, [records, searchQuery, siteFilter]);
 
   const siteOptions = [
     { value: "all", label: "All Sites" },
-    ...sites.map((s) => ({ value: s.siteId, label: s.siteName })),
+    ...sortByName(sites, (s) => s.siteName).map((s) => ({
+      value: s.siteId,
+      label: s.siteName,
+    })),
   ];
 
   const onShiftCount = filtered.filter((r) => r.punchOutTime === null).length;

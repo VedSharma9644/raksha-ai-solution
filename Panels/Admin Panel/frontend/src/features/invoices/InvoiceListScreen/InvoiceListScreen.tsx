@@ -11,6 +11,7 @@ import { SearchableSelect } from "../../../components/SearchableSelect";
 import { useAuthContext } from "../../authentication";
 import { useBranchContext } from "../../branches";
 import { filterByBranch } from "../../../lib/branchFilter";
+import { sortByName } from "@raskha/web-ops";
 import { db } from "../../../lib/firebase";
 import { EarningsPeriodSelect } from "../../earnings/EarningsPeriodSelect";
 import {
@@ -64,7 +65,7 @@ export function InvoiceListScreen() {
   }, []);
 
   const branchSites = useMemo(
-    () => filterByBranch(sites, activeBranchId),
+    () => sortByName(filterByBranch(sites, activeBranchId), (s) => s.siteName),
     [sites, activeBranchId]
   );
 
@@ -267,7 +268,7 @@ export function InvoiceListScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoices.map((inv) => (
+                  {sortByName(invoices, (inv) => inv.siteName || inv.invoiceNumber).map((inv) => (
                     <tr key={inv.id}>
                       <td>
                         <button

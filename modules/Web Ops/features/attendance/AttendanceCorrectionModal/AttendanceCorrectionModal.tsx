@@ -12,6 +12,7 @@ import {
   ATTENDANCE_CORRECTION_STATUS_OPTIONS,
   type AttendanceCorrectionStatus,
 } from "../attendanceTypes";
+import { sortByName } from "../../../lib/sortByName";
 import "./AttendanceCorrectionModal.css";
 
 export type CorrectionGuardOption = {
@@ -47,7 +48,10 @@ export function AttendanceCorrectionModal({
   const guardOptions = useMemo(
     () => [
       { value: "", label: "Select guard…" },
-      ...guards.map((g) => ({ value: g.id, label: g.label })),
+      ...sortByName(guards, (g) => g.label).map((g) => ({
+        value: g.id,
+        label: g.label,
+      })),
     ],
     [guards]
   );

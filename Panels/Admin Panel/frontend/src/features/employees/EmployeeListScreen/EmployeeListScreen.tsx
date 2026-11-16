@@ -5,6 +5,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
 import type { EmployeeListItem } from "../employeeListTypes";
+import { sortByName } from "@raskha/web-ops";
 import "./EmployeeListScreen.css";
 
 const STATUS_LABELS = {
@@ -74,7 +75,7 @@ export function EmployeeListScreen({
 
   const filteredEmployees = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return employees.filter((employee) => {
+    const list = employees.filter((employee) => {
       const matchesQuery =
         query.length === 0 ||
         employee.fullName.toLowerCase().includes(query) ||
@@ -83,6 +84,7 @@ export function EmployeeListScreen({
       const matchesStatus = statusFilter.length === 0 || employee.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
+    return sortByName(list, (employee) => employee.fullName);
   }, [employees, searchQuery, statusFilter]);
 
   return (

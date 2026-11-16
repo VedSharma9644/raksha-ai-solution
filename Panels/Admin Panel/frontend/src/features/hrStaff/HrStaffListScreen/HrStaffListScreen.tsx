@@ -4,6 +4,7 @@ import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import type { HrStaff } from "@raskha/hr-management";
+import { sortByName } from "@raskha/web-ops";
 import "./HrStaffListScreen.css";
 
 const STATUS_LABELS: Record<HrStaff["status"], string> = {
@@ -30,13 +31,15 @@ export function HrStaffListScreen({
 
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return hrStaff;
-    return hrStaff.filter(
-      (hr) =>
-        hr.fullName.toLowerCase().includes(query) ||
-        hr.employeeCode.toLowerCase().includes(query) ||
-        hr.email.toLowerCase().includes(query)
-    );
+    const list = !query
+      ? hrStaff
+      : hrStaff.filter(
+          (hr) =>
+            hr.fullName.toLowerCase().includes(query) ||
+            hr.employeeCode.toLowerCase().includes(query) ||
+            hr.email.toLowerCase().includes(query)
+        );
+    return sortByName(list, (hr) => hr.fullName);
   }, [hrStaff, searchQuery]);
 
   return (

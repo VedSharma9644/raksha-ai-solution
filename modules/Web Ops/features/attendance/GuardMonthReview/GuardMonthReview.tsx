@@ -8,6 +8,7 @@ import {
   type GuardAttendanceHistoryLog,
 } from "../attendanceApi";
 import type { CorrectionGuardOption } from "../AttendanceCorrectionModal";
+import { sortByName } from "../../../lib/sortByName";
 import "./GuardMonthReview.css";
 
 export interface GuardMonthReviewProps {
@@ -69,7 +70,10 @@ export function GuardMonthReview({
   const guardOptions = useMemo(
     () => [
       { value: "", label: "Select guard…" },
-      ...guards.map((g) => ({ value: g.id, label: g.label })),
+      ...sortByName(guards, (g) => g.label).map((g) => ({
+        value: g.id,
+        label: g.label,
+      })),
     ],
     [guards]
   );

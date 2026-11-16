@@ -23,6 +23,7 @@ import { TextField } from "../../../components/TextField";
 import { useAuthContext } from "../../authentication";
 import { useBranchContext } from "../../branches";
 import { filterByBranch } from "../../../lib/branchFilter";
+import { sortByName } from "@raskha/web-ops";
 import { EarningsPeriodSelect } from "../../earnings/EarningsPeriodSelect";
 import { db } from "../../../lib/firebase";
 import {
@@ -126,11 +127,11 @@ export function MoneyOutScreen() {
   }, []);
 
   const branchGuards = useMemo(
-    () => filterByBranch(guards, activeBranchId),
+    () => sortByName(filterByBranch(guards, activeBranchId), (g) => g.fullName),
     [guards, activeBranchId]
   );
   const branchSites = useMemo(
-    () => filterByBranch(sites, activeBranchId),
+    () => sortByName(filterByBranch(sites, activeBranchId), (s) => s.siteName),
     [sites, activeBranchId]
   );
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
+import { sortByName } from "@raskha/web-ops";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 import { filterByBranch } from "../../lib/branchFilter";
@@ -24,7 +25,9 @@ export function useGuardList() {
     setError("");
 
     listGuardsByAgency(db, agency.id)
-      .then((data) => setGuards(filterByBranch(data, activeBranchId)))
+      .then((data) =>
+        setGuards(sortByName(filterByBranch(data, activeBranchId), (g) => g.fullName))
+      )
       .catch((err: unknown) => {
         const e = err as { message?: string };
         setError(e.message ?? "Failed to load guards.");

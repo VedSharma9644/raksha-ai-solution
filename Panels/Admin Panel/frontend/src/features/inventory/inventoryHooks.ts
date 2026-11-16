@@ -10,6 +10,7 @@ import {
 import type { InventoryItem } from "@raskha/inventory-management";
 import type { BranchStock } from "@raskha/branch-stock";
 import { adminFetch } from "@raskha/shared";
+import { sortByName } from "@raskha/web-ops";
 import { db } from "../../lib/firebase";
 import { useAuthContext } from "../authentication";
 import type { InventoryItemFormValues } from "./inventoryFormTypes";
@@ -52,15 +53,18 @@ export function useInventoryList() {
       }
 
       setItems(
-        master.map((item) => {
-          const totals = byItem.get(item.id) ?? { allocated: 0, assigned: 0 };
-          return {
-            ...item,
-            allocatedToBranches: totals.allocated,
-            assignedToGuards: totals.assigned,
-            unallocated: Math.max(0, item.totalStock - totals.allocated),
-          };
-        })
+        sortByName(
+          master.map((item) => {
+            const totals = byItem.get(item.id) ?? { allocated: 0, assigned: 0 };
+            return {
+              ...item,
+              allocatedToBranches: totals.allocated,
+              assignedToGuards: totals.assigned,
+              unallocated: Math.max(0, item.totalStock - totals.allocated),
+            };
+          }),
+          (item) => item.name
+        )
       );
     } catch (err: unknown) {
       const e = err as { message?: string };

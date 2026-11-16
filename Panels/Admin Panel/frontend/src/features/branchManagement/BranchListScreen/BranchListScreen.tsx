@@ -4,6 +4,7 @@ import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import type { Branch } from "@raskha/branch-management";
+import { sortByName } from "@raskha/web-ops";
 import "./BranchListScreen.css";
 
 export interface BranchListScreenProps {
@@ -29,13 +30,15 @@ export function BranchListScreen({
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return branches;
-    return branches.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        b.city.toLowerCase().includes(q) ||
-        (b.managerName ?? "").toLowerCase().includes(q)
-    );
+    const list = !q
+      ? branches
+      : branches.filter(
+          (b) =>
+            b.name.toLowerCase().includes(q) ||
+            b.city.toLowerCase().includes(q) ||
+            (b.managerName ?? "").toLowerCase().includes(q)
+        );
+    return sortByName(list, (b) => b.name);
   }, [branches, searchQuery]);
 
   return (

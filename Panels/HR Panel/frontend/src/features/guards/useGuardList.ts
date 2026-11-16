@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listGuardsByAgency } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
+import { sortByName } from "@raskha/web-ops";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 import { filterByBranch } from "../../lib/branchFilter";
@@ -35,7 +36,7 @@ export function useGuardList() {
             (g) => g.assignedSiteId && allowed.has(g.assignedSiteId)
           );
         }
-        setGuards(filtered);
+        setGuards(sortByName(filtered, (g) => g.fullName));
       })
       .catch((err: unknown) => {
         const e = err as { message?: string };

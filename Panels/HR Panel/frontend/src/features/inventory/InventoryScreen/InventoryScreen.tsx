@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { BranchInventoryRow } from "../inventoryHooks";
+import { sortByName } from "@raskha/web-ops";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
@@ -34,12 +35,13 @@ export function InventoryScreen({
 
   const filtered = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return rows.filter((row) => {
+    const list = rows.filter((row) => {
       const matchesQuery    = !query || row.name.toLowerCase().includes(query) || row.category.toLowerCase().includes(query);
       const matchesCategory = !categoryFilter || row.category === categoryFilter;
       const matchesStatus   = !statusFilter || row.status === statusFilter;
       return matchesQuery && matchesCategory && matchesStatus;
     });
+    return sortByName(list, (row) => row.name);
   }, [rows, searchQuery, categoryFilter, statusFilter]);
 
   return (

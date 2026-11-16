@@ -3,6 +3,7 @@ import { listGuardsByAgency } from "@raskha/guard-management";
 import type { Guard } from "@raskha/guard-management";
 import { useWebOps } from "../../context/WebOpsContext";
 import { filterByBranch } from "../../lib/branchFilter";
+import { sortByName } from "../../lib/sortByName";
 
 export type UseGuardListOptions = {
   /**
@@ -42,7 +43,7 @@ export function useGuardList(options: UseGuardListOptions = {}) {
             return allowed.has(siteId);
           });
         }
-        setGuards(filtered);
+        setGuards(sortByName(filtered, (guard) => guard.fullName));
       })
       .catch((err: unknown) => {
         const e = err as { message?: string };

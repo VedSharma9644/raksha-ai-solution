@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { InventoryCatalogRow } from "../inventoryHooks";
+import { sortByName } from "@raskha/web-ops";
 import { AppScreenLayout } from "../../../components/AppScreenLayout";
 import { Button } from "../../../components/Button";
 import { PageHeader } from "../../../components/PageHeader";
@@ -40,7 +41,7 @@ export function InventoryListScreen({
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return items.filter((item) => {
+    const list = items.filter((item) => {
       const matchesQuery =
         !q ||
         item.name.toLowerCase().includes(q) ||
@@ -50,6 +51,7 @@ export function InventoryListScreen({
       const matchesStatus = !statusFilter || item.status === statusFilter;
       return matchesQuery && matchesCategory && matchesStatus;
     });
+    return sortByName(list, (item) => item.name);
   }, [items, searchQuery, categoryFilter, statusFilter]);
 
   const categories = useMemo(

@@ -18,6 +18,7 @@ export {
   adminFetchBlob,
 } from "./lib/adminApi";
 export { filterByBranch, appendBranchParam } from "./lib/branchFilter";
+export { compareNames, sortByName } from "./lib/sortByName";
 
 // Manage schedule hub
 export {

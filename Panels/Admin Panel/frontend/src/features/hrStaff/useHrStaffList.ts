@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listHrStaffByAgency } from "@raskha/hr-management";
 import type { HrStaff } from "@raskha/hr-management";
+import { sortByName } from "@raskha/web-ops";
 import { useAuthContext } from "../authentication";
 import { db } from "../../lib/firebase";
 
@@ -23,7 +24,7 @@ export function useHrStaffList() {
     setError("");
 
     listHrStaffByAgency(db, agency.id)
-      .then((data) => setHrStaff(data))
+      .then((data) => setHrStaff(sortByName(data, (hr) => hr.fullName)))
       .catch((err: unknown) => {
         const e = err as { message?: string };
         setError(e.message ?? "Failed to load HR staff.");

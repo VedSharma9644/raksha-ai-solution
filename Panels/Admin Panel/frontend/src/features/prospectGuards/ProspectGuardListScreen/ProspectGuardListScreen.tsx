@@ -11,6 +11,7 @@ import {
   guardStatusColorClass,
 } from "../prospectGuardFormTypes";
 import type { ProspectGuardListItem } from "../useProspectGuardList";
+import { sortByName } from "@raskha/web-ops";
 import "./ProspectGuardListScreen.css";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ export function ProspectGuardListScreen({
           g.city.toLowerCase().includes(q)
       );
     }
-    return list;
+    return sortByName(list, (g) => g.fullName);
   }, [guards, activeTab, searchQuery]);
 
   const countByStatus = useMemo(() => {

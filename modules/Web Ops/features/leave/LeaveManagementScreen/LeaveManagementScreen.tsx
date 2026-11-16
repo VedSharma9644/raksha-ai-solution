@@ -5,6 +5,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
 import type { LeaveRequest, LeaveRequestStatus } from "../leaveTypes";
+import { sortByName } from "../../../lib/sortByName";
 import "./LeaveManagementScreen.css";
 
 const STATUS_LABELS = {
@@ -52,7 +53,7 @@ export function LeaveManagementScreen({
   const filteredRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return leaveRequests.filter((request) => {
+    const list = leaveRequests.filter((request) => {
       const matchesQuery =
         query.length === 0 ||
         request.guardName.toLowerCase().includes(query) ||
@@ -63,6 +64,7 @@ export function LeaveManagementScreen({
 
       return matchesQuery && matchesStatus;
     });
+    return sortByName(list, (request) => request.guardName);
   }, [leaveRequests, searchQuery, statusFilter]);
 
   return (

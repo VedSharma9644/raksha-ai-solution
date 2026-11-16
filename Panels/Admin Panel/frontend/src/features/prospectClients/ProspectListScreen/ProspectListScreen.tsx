@@ -5,6 +5,7 @@ import { useConfirmDialog } from "../../../components/ConfirmDialog";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextField } from "../../../components/TextField";
 import type { ProspectClient, ProspectStatus } from "@raskha/client-management";
+import { sortByName } from "@raskha/web-ops";
 import {
   PROSPECT_STATUS_OPTIONS,
   statusLabel,
@@ -100,7 +101,7 @@ export function ProspectListScreen({
           p.primaryPhone.includes(q)
       );
     }
-    return list;
+    return sortByName(list, (p) => p.orgName);
   }, [prospects, activeTab, searchQuery]);
 
   // Count per status for tab badges

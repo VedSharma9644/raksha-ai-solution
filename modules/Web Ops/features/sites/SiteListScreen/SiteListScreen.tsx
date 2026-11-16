@@ -6,6 +6,7 @@ import { TextField } from "../../../components/TextField";
 import type { Site } from "@raskha/site-management";
 import type { Guard } from "@raskha/guard-management";
 import { useWebOps } from "../../../context/WebOpsContext";
+import { sortByName } from "../../../lib/sortByName";
 import "./SiteListScreen.css";
 
 const SITE_TYPE_LABELS: Record<string, string> = {
@@ -112,14 +113,16 @@ export function SiteListScreen({
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return sites;
-    return sites.filter(
-      (s) =>
-        s.siteName.toLowerCase().includes(q) ||
-        s.clientName.toLowerCase().includes(q) ||
-        s.city.toLowerCase().includes(q) ||
-        s.managerName?.toLowerCase().includes(q)
-    );
+    const list = !q
+      ? sites
+      : sites.filter(
+          (s) =>
+            s.siteName.toLowerCase().includes(q) ||
+            s.clientName.toLowerCase().includes(q) ||
+            s.city.toLowerCase().includes(q) ||
+            s.managerName?.toLowerCase().includes(q)
+        );
+    return sortByName(list, (s) => s.siteName);
   }, [sites, searchQuery]);
 
   // Guard count per site — computed client-side, no extra reads

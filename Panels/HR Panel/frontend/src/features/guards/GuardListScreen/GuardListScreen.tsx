@@ -5,6 +5,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
 import type { GuardListItem } from "../guardTypes";
+import { sortByName } from "@raskha/web-ops";
 import "./GuardListScreen.css";
 
 const STATUS_LABELS = {
@@ -61,7 +62,7 @@ export function GuardListScreen({
 
   const filteredGuards = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return guards.filter((guard) => {
+    const list = guards.filter((guard) => {
       const matchesQuery =
         query.length === 0 ||
         guard.fullName.toLowerCase().includes(query) ||
@@ -69,6 +70,7 @@ export function GuardListScreen({
       const matchesStatus = statusFilter.length === 0 || guard.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
+    return sortByName(list, (guard) => guard.fullName);
   }, [guards, searchQuery, statusFilter]);
 
   return (

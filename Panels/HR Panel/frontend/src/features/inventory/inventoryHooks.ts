@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { InventoryItem } from "@raskha/inventory-management";
 import type { BranchStock } from "@raskha/branch-stock";
 import { adminFetch } from "@raskha/shared";
+import { sortByName } from "@raskha/web-ops";
 import { useAuthContext } from "../authentication";
 import { useBranchContext } from "../branches";
 
@@ -76,7 +77,7 @@ export function useInventoryList() {
             }) as InventoryItem
         )
       );
-      setRows(merged);
+      setRows(sortByName(merged, (row) => row.name));
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message ?? "Failed to load inventory.");

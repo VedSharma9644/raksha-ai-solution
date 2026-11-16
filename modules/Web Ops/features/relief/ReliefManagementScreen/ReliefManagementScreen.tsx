@@ -6,6 +6,7 @@ import { SearchableSelect } from "../../../components/SearchableSelect";
 import { SelectField } from "../../../components/SelectField";
 import { TextField } from "../../../components/TextField";
 import type { ReliefRequest, ReliefRequestStatus } from "../reliefTypes";
+import { sortByName } from "../../../lib/sortByName";
 import "./ReliefManagementScreen.css";
 
 const STATUS_LABELS = {
@@ -52,7 +53,7 @@ export function ReliefManagementScreen({
   const filteredRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return reliefRequests.filter((request) => {
+    const list = reliefRequests.filter((request) => {
       const matchesQuery =
         query.length === 0 ||
         request.guardName.toLowerCase().includes(query) ||
@@ -63,6 +64,7 @@ export function ReliefManagementScreen({
 
       return matchesQuery && matchesStatus;
     });
+    return sortByName(list, (request) => request.guardName);
   }, [reliefRequests, searchQuery, statusFilter]);
 
   return (
@@ -120,8 +122,9 @@ export function ReliefManagementScreen({
               const busy = updatingId === request.id;
               const selectedAssignee =
                 assigneeByRequest[request.id] ?? request.assignedGuardId ?? "";
-              const eligibleAssignees = assignees.filter(
-                (guard) => guard.id !== request.guardId,
+              const eligibleAssignees = sortByName(
+                assignees.filter((guard) => guard.id !== request.guardId),
+                (guard) => guard.fullName
               );
 
               return (
